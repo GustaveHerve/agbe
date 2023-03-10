@@ -24,13 +24,11 @@ int ld_16bit(uint16_t *pc, int opcode)
 	*pc++;
 	int *rr;
 	//TODO
-
 	short nn;
 	//nn = //TODO  //Get MSB of nn
 	nn == nn << 8;
 	//nn += //TODO
 	pc += 3;
-
 	return 3;
 }
 

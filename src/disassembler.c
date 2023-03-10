@@ -3,6 +3,5 @@
 int get_opcode(int pc)
 {
 	return 0;
-
 }
 
