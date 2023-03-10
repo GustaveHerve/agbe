@@ -1,0 +1,19 @@
+#MacOS Trash
+.DS_Store
+
+#Compilation files
+*.o
+*.d
+
+#VSCode trash
+.vscode
+
+#Vim trash
+*.swp
+
+
+#Debugging
+*.dSYM
+
+testroms
+test.c
