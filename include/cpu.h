@@ -36,21 +36,35 @@ struct cpu
 void cpu_init(struct cpu *new_cpu);
 void cpu_free(struct cpu *todelete);
 
+int get_z(struct cpu_register *regist);
 void set_z(struct cpu_register *regist, int value);
+
+int get_n(struct cpu_register *regist);
 void set_n(struct cpu_register *regist, int value);
+
+int get_h(struct cpu_register *regist);
 void set_h(struct cpu_register *regist, int value);
+
+int get_c(struct cpu_register *regist);
 void set_c(struct cpu_register *regist, int value);
 
 uint16_t convert_8to16(uint8_t *hi, uint8_t *lo);
 
 int nop();
 
-int ld_16bit(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo);
+int ld_rr_u16(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo);
 int ld_bc_a(struct cpu *gb_cpu);
+int ld_r_u8(struct cpu *gb_cpu, uint8_t *dest);
+int ld_hl_u8(struct cpu *gb_cpu);
 
-int inc_16bit(uint8_t *hi, uint8_t *lo);
-int inc_16bit_sp(uint16_t *dest);
+int inc_rr(uint8_t *hi, uint8_t *lo);
+int inc_rr_sp(uint16_t *dest);
 int inc_r(struct cpu *gb_cpu, uint8_t *dest);
 int inc_hl(struct cpu *gb_cpu);
+
+int dec_r(struct cpu *gb_cpu, uint8_t *dest);
+int dec_hl(struct cpu *gb_cpu);
+
+int rlca(struct cpu *gb_cpu);
 
 #endif
