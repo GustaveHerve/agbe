@@ -172,11 +172,11 @@ int inc_r(struct cpu *gb_cpu, uint8_t *dest)
 	return 1;
 }
 
-/*
-//inc hl (8 bit)
+//inc (HL) (8 bit)
 //x34	3 MCycle
 int inc_hl(struct cpu *gb_cpu)
 {
+	uint16_t address = convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
+	gb_cpu->membus[address]++;
 	return 3;
 }
-*/

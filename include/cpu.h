@@ -51,5 +51,6 @@ int ld_bc_a(struct cpu *gb_cpu);
 int inc_16bit(uint8_t *hi, uint8_t *lo);
 int inc_16bit_sp(uint16_t *dest);
 int inc_r(struct cpu *gb_cpu, uint8_t *dest);
+int inc_hl(struct cpu *gb_cpu);
 
 #endif
