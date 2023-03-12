@@ -3,12 +3,28 @@
 
 struct cpu_register
 {
-	uint16_t af;
-	uint16_t bc;
-	uint16_t de;
-	uint16_t hl;
+	uint8_t a;
+	uint8_t f;
+	uint8_t b;
+	uint8_t c;
+	uint8_t d;
+	uint8_t e;
+	uint8_t h;
+	uint8_t l;
+	//uint16_t af;
+	//uint16_t bc;
+	//uint16_t de;
+	//uint16_t hl;
+
 	uint16_t sp; //full 16 bit
 	uint16_t pc; //full 16 bit
+	/*
+	uint8_t *sp_lo;
+	uint8_t *sp_hi;
+
+	uint8_t *pc_lo;
+	uint8_t *pc_hi;
+	*/
 };
 
 struct cpu
@@ -25,10 +41,15 @@ void set_n(struct cpu_register *regist, int value);
 void set_h(struct cpu_register *regist, int value);
 void set_c(struct cpu_register *regist, int value);
 
+uint16_t convert_8to16(uint8_t *hi, uint8_t *lo);
+
 int nop();
-int ld_16bit(struct cpu *gb_cpu, uint16_t *dest);
-int inc_16bit(uint16_t *dest);
+
+int ld_16bit(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo);
+int ld_bc_a(struct cpu *gb_cpu);
+
+int inc_16bit(uint8_t *hi, uint8_t *lo);
+int inc_16bit_sp(uint16_t *dest);
 int inc_r(struct cpu *gb_cpu, uint8_t *dest);
-uint16_t convert_8to16(uint8_t hi, uint8_t lo);
 
 #endif
