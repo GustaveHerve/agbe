@@ -259,6 +259,22 @@ int ld_rr_u16(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo)
 	return 3;
 }
 
+//ld (nn)_SP
+//x08	5 MCycle
+int ld_nn_sp(struct cpu *gb_cpu)
+{
+	gb_cpu->regist->pc++;
+	uint8_t *lo = &gb_cpu->membus[gb_cpu->regist->pc];
+	gb_cpu->regist->pc++;
+	uint8_t *hi = &gb_cpu->membus[gb_cpu->regist->pc];
+
+	uint16_t address = convert_8to16(hi, lo);
+	gb_cpu->membus[address] = regist_lo(&gb_cpu->regist->sp);
+	gb_cpu->membus[address+1] = regist_hi(&gb_cpu->regist->sp);
+
+	return 5;
+}
+
 ////inc rr (16 bit)
 //x(0-3)3	2 MCycle
 int inc_rr(uint8_t *hi, uint8_t *lo)
@@ -272,9 +288,25 @@ int inc_rr(uint8_t *hi, uint8_t *lo)
 	return 2;
 }
 
+//inc rr_SP
+//
 int inc_rr_sp(uint16_t *dest)
 {
 	*dest += 1;
+	return 2;
+}
+
+// add HL,rr
+// x(0-2)9	2 MCycle
+int add_hl_rr(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo)
+{
+	set_n(gb_cpu->regist, 0);
+	hflag_add_set(gb_cpu->regist, gb_cpu->regist->l, *lo);
+
+	uint16_t sum = convert_8to16(hi, lo) +
+		convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
+	gb_cpu->regist->h = regist_hi(&sum);
+	gb_cpu->regist->l = regist_lo(&sum);
 	return 2;
 }
 
@@ -294,9 +326,15 @@ int rlca(struct cpu *gb_cpu)
 	return 1;
 }
 
-/*
+
+//rla A
+//x17	1 MCycle
 int rla(struct cpu *gb_cpu)
 {
-
+	rotl_carry(gb_cpu->regist, &gb_cpu->regist->a);
+	set_z(gb_cpu->regist, 0);
+	set_n(gb_cpu->regist, 0);
+	set_h(gb_cpu->regist, 0);
+	return 1;
 }
-*/
+
