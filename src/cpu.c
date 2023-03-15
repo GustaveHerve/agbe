@@ -8,12 +8,6 @@
 void cpu_init(struct cpu *new_cpu)
 {
 	new_cpu->regist = malloc(sizeof(struct cpu_register));
-	/*
-	new_cpu->sp_lo = (uint8_t*)&new_cpu->regist->sp;
-	new_cpu->sp_hi = new_cpu->regist->sp_lo + 1;
-	new_cpu->pc_lo = (uint8_t*)&new_cpu->regist->pc;
-	new_cpu->pc_hi = new_cpu->regist->pc_lo + 1;
-	*/
 	new_cpu->membus = malloc(sizeof(uint8_t) * MEMBUS_SIZE);
 }
 
@@ -53,13 +47,14 @@ uint16_t convert_8to16(uint8_t *hi, uint8_t *lo)
 	return res;
 }
 
+
 ///////////////
 //Flags methods
 ///////////////
 
 int get_z(struct cpu_register *regist)
 {
-	return regist->f | 1UL << 7;
+	return (regist->f >> 7) | 1UL;
 }
 
 void set_z(struct cpu_register *regist, int value)
@@ -72,7 +67,7 @@ void set_z(struct cpu_register *regist, int value)
 
 int get_n(struct cpu_register *regist)
 {
-	return regist->f | 1UL << 6;
+	return (regist->f >> 6) | 1UL;
 }
 
 void set_n(struct cpu_register *regist, int value)
@@ -85,7 +80,7 @@ void set_n(struct cpu_register *regist, int value)
 
 int get_h(struct cpu_register *regist)
 {
-	return regist->f | 1UL << 5;
+	return (regist->f >> 5) | 1UL;
 }
 
 void set_h(struct cpu_register *regist, int value)
@@ -98,7 +93,7 @@ void set_h(struct cpu_register *regist, int value)
 
 int get_c(struct cpu_register *regist)
 {
-	return regist->f | 1UL << 4;
+	return (regist->f >> 4) | 1UL;
 }
 
 void set_c(struct cpu_register *regist, int value)
@@ -337,4 +332,3 @@ int rla(struct cpu *gb_cpu)
 	set_h(gb_cpu->regist, 0);
 	return 1;
 }
-

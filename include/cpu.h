@@ -66,5 +66,6 @@ int dec_r(struct cpu *gb_cpu, uint8_t *dest);
 int dec_hl(struct cpu *gb_cpu);
 
 int rlca(struct cpu *gb_cpu);
+int rla(struct cpu *gb_cpu);
 
 #endif

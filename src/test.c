@@ -7,7 +7,8 @@ int main()
 {
 	struct cpu *cpu = malloc(sizeof(struct cpu));
 	cpu_init(cpu);
-	cpu->regist->a = 0x80;
+	cpu->regist->a = 0xE0;
+	cpu->regist->f = 0xF0;
 	cpu->regist->b = 0xF0;
 	cpu->regist->c = 0x00;
 	cpu->regist->d = 0x01;
@@ -19,12 +20,10 @@ int main()
 	cpu->membus[66] = 0x23;
 	cpu->membus[400] = 0x02;
 
-	inc_hl(cpu);
-	dec_hl(cpu);
-
-	ld_hl_u8(cpu);
-	rlca(cpu);
-	rlca(cpu);
+	rla(cpu);
+	rla(cpu);
+	rla(cpu);
+	rla(cpu);
 
 	cpu_free(cpu);
 	return 0;
