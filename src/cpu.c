@@ -17,36 +17,6 @@ void cpu_free(struct cpu *todelete)
 	free(todelete);
 }
 
-uint8_t regist_hi(uint16_t *rr)
-{
-	uint8_t res = (*rr >> 8) & 0xFF;
-	return res;
-}
-
-uint8_t regist_lo(uint16_t *rr)
-{
-	uint8_t res = *rr & 0xFF;
-	return res;
-}
-
-uint8_t get_lsb_nibble(uint8_t byte)
-{
-	return byte & 0xF;
-}
-
-uint8_t get_msb_nibble(uint8_t byte)
-{
-	return (byte >> 4) & 0xF;
-}
-
-uint16_t convert_8to16(uint8_t *hi, uint8_t *lo)
-{
-	uint16_t res = 0;
-	res = (res | *hi) << 8;
-	res = res | *lo;
-	return res;
-}
-
 
 ///////////////
 //Flags methods
@@ -54,7 +24,7 @@ uint16_t convert_8to16(uint8_t *hi, uint8_t *lo)
 
 int get_z(struct cpu_register *regist)
 {
-	return (regist->f >> 7) | 1UL;
+	return (regist->f >> 7) & 1UL;
 }
 
 void set_z(struct cpu_register *regist, int value)
@@ -67,7 +37,7 @@ void set_z(struct cpu_register *regist, int value)
 
 int get_n(struct cpu_register *regist)
 {
-	return (regist->f >> 6) | 1UL;
+	return (regist->f >> 6) & 1UL;
 }
 
 void set_n(struct cpu_register *regist, int value)
@@ -80,7 +50,7 @@ void set_n(struct cpu_register *regist, int value)
 
 int get_h(struct cpu_register *regist)
 {
-	return (regist->f >> 5) | 1UL;
+	return (regist->f >> 5) & 1UL;
 }
 
 void set_h(struct cpu_register *regist, int value)
@@ -93,7 +63,7 @@ void set_h(struct cpu_register *regist, int value)
 
 int get_c(struct cpu_register *regist)
 {
-	return (regist->f >> 4) | 1UL;
+	return (regist->f >> 4) & 1UL;
 }
 
 void set_c(struct cpu_register *regist, int value)
@@ -157,6 +127,14 @@ void cflag_rotr_set(struct cpu_register *regist, uint8_t src)
 //x00	1 MCycle
 int nop()
 {
+	return 1;
+}
+
+//sto
+//x10	1 MCycle
+int stop()
+{
+	//TODO
 	return 1;
 }
 
@@ -235,11 +213,75 @@ int ld_hl_u8(struct cpu *gb_cpu)
 	return 3;
 }
 
+//ld u8,r
+//x(0-1)A	2 MCycle
+int ld_u8_r(struct cpu *gb_cpu, uint8_t *src)
+{
+	struct cpu_register *regist = gb_cpu->regist;
+	uint8_t *mem = gb_cpu->membus;
+
+	gb_cpu->regist->pc++;
+	mem[regist->pc] = *src;
+
+	return 2;
+}
+
+//ldi (HL+),A
+//x22	2 MCycle
+int ldi_hl_a(struct cpu *gb_cpu)
+{
+	uint16_t address = convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
+	gb_cpu->membus[address] = gb_cpu->regist->a;
+
+	address++;
+	gb_cpu->regist->h = regist_hi(&address);
+	gb_cpu->regist->l = regist_lo(&address);
+	return 2;
+}
+
+//ldd (HL-),A
+//x32	2 MCycle
+int ldd_hl_a(struct cpu *gb_cpu)
+{
+	uint16_t address = convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
+	gb_cpu->membus[address] = gb_cpu->regist->a;
+
+	address--;
+	gb_cpu->regist->h = regist_hi(&address);
+	gb_cpu->regist->l = regist_lo(&address);
+	return 2;
+}
+
+//ldi A,(HL+)
+//x2A	2 MCycle
+int ldi_a_hl(struct cpu *gb_cpu)
+{
+	uint16_t address = convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
+	gb_cpu->regist->a = gb_cpu->membus[address];
+
+	address++;
+	gb_cpu->regist->h = regist_hi(&address);
+	gb_cpu->regist->l = regist_lo(&address);
+	return 2;
+}
+
+//ldd A,(HL-)
+//x3A	2 MCycle
+int ldd_a_hl(struct cpu *gb_cpu)
+{
+	uint16_t address = convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
+	gb_cpu->regist->a = gb_cpu->membus[address];
+
+	address--;
+	gb_cpu->regist->h = regist_hi(&address);
+	gb_cpu->regist->l = regist_lo(&address);
+	return 2;
+}
 ////
 //16 bit operations
 ////
 
-//ld rr,nn (16-bit)
+//ld rr,nn
 //x(0-3)1	3 MCycle
 int ld_rr_u16(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo)
 {
@@ -270,7 +312,7 @@ int ld_nn_sp(struct cpu *gb_cpu)
 	return 5;
 }
 
-////inc rr (16 bit)
+////inc rr
 //x(0-3)3	2 MCycle
 int inc_rr(uint8_t *hi, uint8_t *lo)
 {
@@ -283,9 +325,9 @@ int inc_rr(uint8_t *hi, uint8_t *lo)
 	return 2;
 }
 
-//inc rr_SP
-//
-int inc_rr_sp(uint16_t *dest)
+//inc SP
+//x/
+int inc_sp(uint16_t *dest)
 {
 	*dest += 1;
 	return 2;
@@ -305,6 +347,41 @@ int add_hl_rr(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo)
 	return 2;
 }
 
+// add HL,SP
+// x39	2 MCycle
+int add_hl_sp(struct cpu *gb_cpu)
+{
+	set_n(gb_cpu->regist, 0);
+	//hflag_add_set(gb_cpu->regist, gb_cpu->regist->l, *lo);
+	//TODO
+
+	uint16_t sum = gb_cpu->regist->sp +
+		convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
+	gb_cpu->regist->h = regist_hi(&sum);
+	gb_cpu->regist->l = regist_lo(&sum);
+	return 2;
+}
+
+//dec rr
+//x(0-2)B	2MCycle
+int dec_rr(uint8_t *hi, uint8_t *lo)
+{
+	uint16_t temp = convert_8to16(hi, lo);
+	temp--;
+
+	*lo = regist_lo(&temp);
+	*hi = regist_hi(&temp);
+	return 2;
+}
+
+//dec sp
+//x3B	2 MCycle
+int dec_sp(uint16_t *sp)
+{
+	*sp -= 1;
+	return 2;
+}
+
 /////
 //Shift and Rotations
 /////
@@ -321,7 +398,6 @@ int rlca(struct cpu *gb_cpu)
 	return 1;
 }
 
-
 //rla A
 //x17	1 MCycle
 int rla(struct cpu *gb_cpu)
@@ -332,3 +408,5 @@ int rla(struct cpu *gb_cpu)
 	set_h(gb_cpu->regist, 0);
 	return 1;
 }
+
+
