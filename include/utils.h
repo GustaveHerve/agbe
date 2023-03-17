@@ -1,6 +1,29 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+int get_z(struct cpu_register *regist);
+void set_z(struct cpu_register *regist, int value);
+
+int get_n(struct cpu_register *regist);
+void set_n(struct cpu_register *regist, int value);
+
+int get_h(struct cpu_register *regist);
+void set_h(struct cpu_register *regist, int value);
+
+int get_c(struct cpu_register *regist);
+void set_c(struct cpu_register *regist, int value);
+
+int hflag_add_check(uint8_t a, uint8_t b);
+void hflag_add_set(struct cpu_register *regist, uint8_t a, uint8_t b);
+int hflag_sub_check(uint8_t a, uint8_t b);
+void hflag_sub_set(struct cpu_register *regist, uint8_t a, uint8_t b);
+
+int hflag16_add_set(struct cpu_register *regist, uint16_t a, uint16_t b);
+
+void cflag_rotl_set(struct cpu_register *regist, uint8_t src);
+int cflag_rotr_check(uint8_t src);
+void cflag_rotr_set(struct cpu_register *regist, uint8_t src);
+
 uint8_t regist_hi(uint16_t *rr);
 uint8_t regist_lo(uint16_t *rr);
 

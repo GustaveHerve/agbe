@@ -18,107 +18,6 @@ void cpu_free(struct cpu *todelete)
 }
 
 
-///////////////
-//Flags methods
-///////////////
-
-int get_z(struct cpu_register *regist)
-{
-	return (regist->f >> 7) & 1UL;
-}
-
-void set_z(struct cpu_register *regist, int value)
-{
-	if (value)
-		regist->f = regist->f | 1UL << 7;
-	else
-		regist->f = regist->f & ~(1UL << 7);
-}
-
-int get_n(struct cpu_register *regist)
-{
-	return (regist->f >> 6) & 1UL;
-}
-
-void set_n(struct cpu_register *regist, int value)
-{
-	if (value)
-		regist->f = regist->f | 1UL << 6;
-	else
-		regist->f = regist->f & ~(1UL << 6);
-}
-
-int get_h(struct cpu_register *regist)
-{
-	return (regist->f >> 5) & 1UL;
-}
-
-void set_h(struct cpu_register *regist, int value)
-{
-	if (value)
-		regist->f = regist->f | 1UL << 5;
-	else
-		regist->f = regist->f & ~(1UL << 5);
-}
-
-int get_c(struct cpu_register *regist)
-{
-	return (regist->f >> 4) & 1UL;
-}
-
-void set_c(struct cpu_register *regist, int value)
-{
-	if (value)
-		regist->f = regist->f | 1UL << 4;
-	else
-		regist->f = regist->f & ~(1UL << 4);
-}
-
-int hflag_check(uint8_t result)
-{
-	return (result & 0x10) == 0x10;
-}
-
-int hflag_add_check(uint8_t a, uint8_t b)
-{
-	return hflag_check(get_lsb_nibble(a) + get_lsb_nibble(b));
-}
-
-void hflag_add_set(struct cpu_register *regist, uint8_t a, uint8_t b)
-{
-	set_h(regist, hflag_add_check(a, b));
-}
-
-int hflag_sub_check(uint8_t a, uint8_t b)
-{
-	return hflag_check(get_lsb_nibble(a) - get_lsb_nibble(b));
-}
-
-void hflag_sub_set(struct cpu_register *regist, uint8_t a, uint8_t b)
-{
-	set_h(regist, hflag_sub_check(a, b));
-}
-
-int cflag_rotl_check(uint8_t src)
-{
-	return (src & 0x01) == 0x01;
-}
-
-void cflag_rotl_set(struct cpu_register *regist, uint8_t src)
-{
-	set_c(regist, cflag_rotl_check(src));
-}
-
-int cflag_rotr_check(uint8_t src)
-{
-	return (src & 0x80) == 0x80;
-}
-
-void cflag_rotr_set(struct cpu_register *regist, uint8_t src)
-{
-	set_c(regist, cflag_rotr_check(src));
-}
-
 /////////////////
 //Instruction set
 /////////////////
@@ -135,6 +34,56 @@ int nop()
 int stop()
 {
 	//TODO
+	return 1;
+}
+
+//ccf
+//x3F	1 MCycle
+int ccf(struct cpu *gb_cpu)
+{
+	set_n(gb_cpu->regist, 0);
+	set_h(gb_cpu->regist, 0);
+	gb_cpu->regist->f ^= 0x10;
+	return 1;
+}
+
+//scf
+//x37	1 MCycle
+int scf(struct cpu *gb_cpu)
+{
+	set_c(gb_cpu->regist, 1);
+	set_n(gb_cpu->regist, 0);
+	set_h(gb_cpu->regist, 0);
+	return 1;
+}
+
+//daa A
+//x27	1 MCycle
+int daa(struct cpu *gb_cpu)
+{
+	uint8_t *a = &gb_cpu->regist->a;
+	if (!get_n(gb_cpu->regist))	//Additioncase
+	{
+		if (get_c(gb_cpu->regist) || *a > 0x99) //check high nibble
+		{
+			*a += 0x60;
+			set_c(gb_cpu->regist, 1);
+		}
+
+		if (get_h(gb_cpu->regist)|| (*a & 0x0F) > 0x09)	//check low nibble
+		{
+			*a += 0x06;
+		}
+	}
+
+	else	//Subtraction case
+	{
+		if (get_c(gb_cpu->regist))
+			*a -= 0x60;
+		if (get_h(gb_cpu->regist))
+			*a -= 0x06;
+	}
+
 	return 1;
 }
 
@@ -282,7 +231,7 @@ int ldd_a_hl(struct cpu *gb_cpu)
 ////
 
 //ld rr,nn
-//x(0-3)1	3 MCycle
+//x(0-2)1	3 MCycle
 int ld_rr_u16(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo)
 {
 	struct cpu_register *regist = gb_cpu->regist;
@@ -292,6 +241,22 @@ int ld_rr_u16(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo)
 	*lo = mem[regist->pc];
 	gb_cpu->regist->pc++;
 	*hi = mem[regist->pc];
+
+	return 3;
+}
+
+//ld sp_nn
+//x31	3 MCycle
+int ld_sp_u16(struct cpu *gb_cpu)
+{
+	struct cpu_register *regist = gb_cpu->regist;
+	uint8_t *mem = gb_cpu->membus;
+
+	gb_cpu->regist->pc++;
+	uint8_t lo = mem[regist->pc];
+	gb_cpu->regist->pc++;
+	uint8_t hi = mem[regist->pc];
+	gb_cpu->regist->sp = convert_8to16(&hi, &lo);
 
 	return 3;
 }
@@ -326,7 +291,7 @@ int inc_rr(uint8_t *hi, uint8_t *lo)
 }
 
 //inc SP
-//x/
+//x33	2 MCycle
 int inc_sp(uint16_t *dest)
 {
 	*dest += 1;
@@ -338,8 +303,8 @@ int inc_sp(uint16_t *dest)
 int add_hl_rr(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo)
 {
 	set_n(gb_cpu->regist, 0);
-	hflag_add_set(gb_cpu->regist, gb_cpu->regist->l, *lo);
-
+	hflag16_add_set(gb_cpu->regist, convert_8to16(&gb_cpu->regist->h,
+				&gb_cpu->regist->l), convert_8to16(hi, lo));
 	uint16_t sum = convert_8to16(hi, lo) +
 		convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
 	gb_cpu->regist->h = regist_hi(&sum);
@@ -352,9 +317,8 @@ int add_hl_rr(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo)
 int add_hl_sp(struct cpu *gb_cpu)
 {
 	set_n(gb_cpu->regist, 0);
-	//hflag_add_set(gb_cpu->regist, gb_cpu->regist->l, *lo);
-	//TODO
-
+	hflag16_add_set(gb_cpu->regist, convert_8to16(&gb_cpu->regist->h,
+				&gb_cpu->regist->l), gb_cpu->regist->sp);
 	uint16_t sum = gb_cpu->regist->sp +
 		convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
 	gb_cpu->regist->h = regist_hi(&sum);
@@ -386,7 +350,7 @@ int dec_sp(uint16_t *sp)
 //Shift and Rotations
 /////
 
-//rlc A
+//rlca A
 //x07	1 MCycle
 int rlca(struct cpu *gb_cpu)
 {
@@ -409,4 +373,118 @@ int rla(struct cpu *gb_cpu)
 	return 1;
 }
 
+//rrca A
+//x0F	1 MCycle
+int rrca(struct cpu *gb_cpu)
+{
+	rotr(&gb_cpu->regist->a);
+	set_z(gb_cpu->regist, 0);
+	set_n(gb_cpu->regist, 0);
+	set_h(gb_cpu->regist, 0);
+	cflag_rotr_set(gb_cpu->regist, gb_cpu->regist->a);
+	return 1;
+}
+
+//rra A
+//x1F	1 MCycle
+int rra(struct cpu *gb_cpu)
+{
+	rotr_carry(gb_cpu->regist, &gb_cpu->regist->a);
+	set_z(gb_cpu->regist, 0);
+	set_n(gb_cpu->regist, 0);
+	set_h(gb_cpu->regist, 0);
+	return 1;
+}
+
+////////////
+
+
+//cpl
+//x2F	1 MCycle
+int cpl(struct cpu *gb_cpu)
+{
+	gb_cpu->regist->a = ~gb_cpu->regist->a;
+	set_n(gb_cpu->regist, 1);
+	set_h(gb_cpu->regist, 1);
+	return 1;
+}
+
+//////////////
+///Jump instructions
+/////////////
+
+//jr e (signed 8 bit)
+//x18	3 MCycle
+int jr_e(struct cpu *gb_cpu)
+{
+	gb_cpu->regist->pc++;
+	int8_t e = gb_cpu->membus[gb_cpu->regist->pc];
+	gb_cpu->regist->pc = gb_cpu->regist->pc + e;
+
+	return 3;
+}
+
+//jr nz e (signed 8 bit)
+//x20	2 MCycle if condition false, 3 MCycle if condition true
+int jr_nz_e(struct cpu *gb_cpu)
+{
+	gb_cpu->regist->pc++;
+	gb_cpu->regist->pc++;
+	int8_t e = gb_cpu->membus[gb_cpu->regist->pc];
+	if (!get_z(gb_cpu->regist))
+	{
+		gb_cpu->regist->pc += e;
+		return 3;
+	}
+
+	return 2;
+}
+
+//jr z e (signed 8 bit)
+//x28	2 MCycle if condition false, 3 MCycle if condition true
+int jr_z_e(struct cpu *gb_cpu)
+{
+	gb_cpu->regist->pc++;
+	gb_cpu->regist->pc++;
+	int8_t e = gb_cpu->membus[gb_cpu->regist->pc];
+	if (get_z(gb_cpu->regist))
+	{
+		gb_cpu->regist->pc += e;
+		return 3;
+	}
+
+	return 2;
+}
+
+//jr nc e (signed 8 bit)
+//x30	2 MCycle if condition false, 3 MCycle if condition true
+int jr_nc_e(struct cpu *gb_cpu)
+{
+	gb_cpu->regist->pc++;
+	gb_cpu->regist->pc++;
+	int8_t e = gb_cpu->membus[gb_cpu->regist->pc];
+	if (!get_c(gb_cpu->regist))
+	{
+		gb_cpu->regist->pc += e;
+		return 3;
+	}
+
+	return 2;
+}
+
+//jr c e (signed 8 bit)
+//x38	2 MCycle if condition false, 3 MCycle if condition true
+int jr_c_e(struct cpu *gb_cpu)
+{
+	gb_cpu->regist->pc++;
+	gb_cpu->regist->pc++;
+	int8_t e = gb_cpu->membus[gb_cpu->regist->pc];
+	if (get_c(gb_cpu->regist))
+	{
+		gb_cpu->regist->pc += e;
+		return 3;
+	}
+
+	return 2;
+}
 

@@ -11,20 +11,9 @@ struct cpu_register
 	uint8_t e;
 	uint8_t h;
 	uint8_t l;
-	//uint16_t af;
-	//uint16_t bc;
-	//uint16_t de;
-	//uint16_t hl;
 
 	uint16_t sp; //full 16 bit
 	uint16_t pc; //full 16 bit
-	/*
-	uint8_t *sp_lo;
-	uint8_t *sp_hi;
-
-	uint8_t *pc_lo;
-	uint8_t *pc_hi;
-	*/
 };
 
 struct cpu
@@ -35,18 +24,6 @@ struct cpu
 
 void cpu_init(struct cpu *new_cpu);
 void cpu_free(struct cpu *todelete);
-
-int get_z(struct cpu_register *regist);
-void set_z(struct cpu_register *regist, int value);
-
-int get_n(struct cpu_register *regist);
-void set_n(struct cpu_register *regist, int value);
-
-int get_h(struct cpu_register *regist);
-void set_h(struct cpu_register *regist, int value);
-
-int get_c(struct cpu_register *regist);
-void set_c(struct cpu_register *regist, int value);
 
 
 int nop();
