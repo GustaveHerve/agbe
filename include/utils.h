@@ -23,10 +23,10 @@ int hflag16_add_set(struct cpu_register *regist, uint16_t a, uint16_t b);
 void cflag_rotl_set(struct cpu_register *regist, uint8_t src);
 int cflag_rotr_check(uint8_t src);
 void cflag_rotr_set(struct cpu_register *regist, uint8_t src);
-int cflag_add_check(uint8_t a, uint8_t b);
-void cflag_add_set(struct cpu_register *regist, uint8_t a, uint8_t b);
-int cflag16_add_check(uint16_t a, uint16_t b);
-void cflag16_add_set(struct cpu_register *regist, uint16_t a, uint16_t b);
+//int cflag_add_check(uint8_t a, uint8_t b);
+//void cflag_add_set(struct cpu_register *regist, uint8_t a, uint8_t b);
+//int cflag16_add_check(uint16_t a, uint16_t b);
+//void cflag16_add_set(struct cpu_register *regist, uint16_t a, uint16_t b);
 
 uint8_t regist_hi(uint16_t *rr);
 uint8_t regist_lo(uint16_t *rr);
