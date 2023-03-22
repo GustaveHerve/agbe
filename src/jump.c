@@ -5,25 +5,25 @@
 
 //jr e (signed 8 bit)
 //x18	3 MCycle
-int jr_e(struct cpu *gb_cpu)
+int jr_e(struct cpu *cpu)
 {
-	gb_cpu->regist->pc++;
-	int8_t e = gb_cpu->membus[gb_cpu->regist->pc];
-	gb_cpu->regist->pc = gb_cpu->regist->pc + e;
+	cpu->regist->pc++;
+	int8_t e = cpu->membus[cpu->regist->pc];
+	cpu->regist->pc = cpu->regist->pc + e;
 
 	return 3;
 }
 
 //jr nz e (signed 8 bit)
 //x20	2 MCycle if condition false, 3 MCycle if condition true
-int jr_nz_e(struct cpu *gb_cpu)
+int jr_nz_e(struct cpu *cpu)
 {
-	gb_cpu->regist->pc++;
-	gb_cpu->regist->pc++;
-	int8_t e = gb_cpu->membus[gb_cpu->regist->pc];
-	if (!get_z(gb_cpu->regist))
+	cpu->regist->pc++;
+	cpu->regist->pc++;
+	int8_t e = cpu->membus[cpu->regist->pc];
+	if (!get_z(cpu->regist))
 	{
-		gb_cpu->regist->pc += e;
+		cpu->regist->pc += e;
 		return 3;
 	}
 
@@ -32,14 +32,14 @@ int jr_nz_e(struct cpu *gb_cpu)
 
 //jr z e (signed 8 bit)
 //x28	2 MCycle if condition false, 3 MCycle if condition true
-int jr_z_e(struct cpu *gb_cpu)
+int jr_z_e(struct cpu *cpu)
 {
-	gb_cpu->regist->pc++;
-	gb_cpu->regist->pc++;
-	int8_t e = gb_cpu->membus[gb_cpu->regist->pc];
-	if (get_z(gb_cpu->regist))
+	cpu->regist->pc++;
+	cpu->regist->pc++;
+	int8_t e = cpu->membus[cpu->regist->pc];
+	if (get_z(cpu->regist))
 	{
-		gb_cpu->regist->pc += e;
+		cpu->regist->pc += e;
 		return 3;
 	}
 
@@ -48,14 +48,14 @@ int jr_z_e(struct cpu *gb_cpu)
 
 //jr nc e (signed 8 bit)
 //x30	2 MCycle if condition false, 3 MCycle if condition true
-int jr_nc_e(struct cpu *gb_cpu)
+int jr_nc_e(struct cpu *cpu)
 {
-	gb_cpu->regist->pc++;
-	gb_cpu->regist->pc++;
-	int8_t e = gb_cpu->membus[gb_cpu->regist->pc];
-	if (!get_c(gb_cpu->regist))
+	cpu->regist->pc++;
+	cpu->regist->pc++;
+	int8_t e = cpu->membus[cpu->regist->pc];
+	if (!get_c(cpu->regist))
 	{
-		gb_cpu->regist->pc += e;
+		cpu->regist->pc += e;
 		return 3;
 	}
 
@@ -64,14 +64,14 @@ int jr_nc_e(struct cpu *gb_cpu)
 
 //jr c e (signed 8 bit)
 //x38	2 MCycle if condition false, 3 MCycle if condition true
-int jr_c_e(struct cpu *gb_cpu)
+int jr_c_e(struct cpu *cpu)
 {
-	gb_cpu->regist->pc++;
-	gb_cpu->regist->pc++;
-	int8_t e = gb_cpu->membus[gb_cpu->regist->pc];
-	if (get_c(gb_cpu->regist))
+	cpu->regist->pc++;
+	cpu->regist->pc++;
+	int8_t e = cpu->membus[cpu->regist->pc];
+	if (get_c(cpu->regist))
 	{
-		gb_cpu->regist->pc += e;
+		cpu->regist->pc += e;
 		return 3;
 	}
 

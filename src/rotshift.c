@@ -5,46 +5,46 @@
 
 //rlca A
 //x07	1 MCycle
-int rlca(struct cpu *gb_cpu)
+int rlca(struct cpu *cpu)
 {
-	rotl(&gb_cpu->regist->a);
-	set_z(gb_cpu->regist, 0);
-	set_n(gb_cpu->regist, 0);
-	set_h(gb_cpu->regist, 0);
-	cflag_rotl_set(gb_cpu->regist, gb_cpu->regist->a);
+	rotl(&cpu->regist->a);
+	set_z(cpu->regist, 0);
+	set_n(cpu->regist, 0);
+	set_h(cpu->regist, 0);
+	cflag_rotl_set(cpu->regist, cpu->regist->a);
 	return 1;
 }
 
 //rla A
 //x17	1 MCycle
-int rla(struct cpu *gb_cpu)
+int rla(struct cpu *cpu)
 {
-	rotl_carry(gb_cpu->regist, &gb_cpu->regist->a);
-	set_z(gb_cpu->regist, 0);
-	set_n(gb_cpu->regist, 0);
-	set_h(gb_cpu->regist, 0);
+	rotl_carry(cpu->regist, &cpu->regist->a);
+	set_z(cpu->regist, 0);
+	set_n(cpu->regist, 0);
+	set_h(cpu->regist, 0);
 	return 1;
 }
 
 //rrca A
 //x0F	1 MCycle
-int rrca(struct cpu *gb_cpu)
+int rrca(struct cpu *cpu)
 {
-	rotr(&gb_cpu->regist->a);
-	set_z(gb_cpu->regist, 0);
-	set_n(gb_cpu->regist, 0);
-	set_h(gb_cpu->regist, 0);
-	cflag_rotr_set(gb_cpu->regist, gb_cpu->regist->a);
+	rotr(&cpu->regist->a);
+	set_z(cpu->regist, 0);
+	set_n(cpu->regist, 0);
+	set_h(cpu->regist, 0);
+	cflag_rotr_set(cpu->regist, cpu->regist->a);
 	return 1;
 }
 
 //rra A
 //x1F	1 MCycle
-int rra(struct cpu *gb_cpu)
+int rra(struct cpu *cpu)
 {
-	rotr_carry(gb_cpu->regist, &gb_cpu->regist->a);
-	set_z(gb_cpu->regist, 0);
-	set_n(gb_cpu->regist, 0);
-	set_h(gb_cpu->regist, 0);
+	rotr_carry(cpu->regist, &cpu->regist->a);
+	set_z(cpu->regist, 0);
+	set_n(cpu->regist, 0);
+	set_h(cpu->regist, 0);
 	return 1;
 }

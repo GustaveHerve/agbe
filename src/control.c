@@ -10,7 +10,7 @@ int nop()
 	return 1;
 }
 
-//sto
+//stop
 //x10	1 MCycle
 int stop()
 {
@@ -18,23 +18,30 @@ int stop()
 	return 1;
 }
 
+//halt
+int halt()
+{
+	//TODO
+	return 1;
+}
+
 //ccf
 //x3F	1 MCycle
-int ccf(struct cpu *gb_cpu)
+int ccf(struct cpu *cpu)
 {
-	set_n(gb_cpu->regist, 0);
-	set_h(gb_cpu->regist, 0);
-	gb_cpu->regist->f ^= 0x10;
+	set_n(cpu->regist, 0);
+	set_h(cpu->regist, 0);
+	cpu->regist->f ^= 0x10;
 	return 1;
 }
 
 //scf
 //x37	1 MCycle
-int scf(struct cpu *gb_cpu)
+int scf(struct cpu *cpu)
 {
-	set_c(gb_cpu->regist, 1);
-	set_n(gb_cpu->regist, 0);
-	set_h(gb_cpu->regist, 0);
+	set_c(cpu->regist, 1);
+	set_n(cpu->regist, 0);
+	set_h(cpu->regist, 0);
 	return 1;
 }
 

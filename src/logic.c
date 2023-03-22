@@ -5,26 +5,26 @@
 
 //inc r (8 bit)
 //x(0-3)(4 or C)	1 MCycle
-int inc_r(struct cpu *gb_cpu, uint8_t *dest)
+int inc_r(struct cpu *cpu, uint8_t *dest)
 {
-	set_n(gb_cpu->regist, 0);
-	hflag_add_set(gb_cpu->regist, *dest, 1);
+	set_n(cpu->regist, 0);
+	hflag_add_set(cpu->regist, *dest, 1);
 
 	*dest += 1;
-	set_z(gb_cpu->regist, *dest == 0);
+	set_z(cpu->regist, *dest == 0);
 	return 1;
 }
 
 //inc (HL) (8 bit)
 //x34	3 MCycle
-int inc_hl(struct cpu *gb_cpu)
+int inc_hl(struct cpu *cpu)
 {
-	set_n(gb_cpu->regist, 0);
-	uint16_t address = convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
-	uint8_t value = gb_cpu->membus[address];
-	hflag_add_set(gb_cpu->regist, value, 1);
-	gb_cpu->membus[address]++;
-	set_z(gb_cpu->regist, gb_cpu->membus[address] == 0);
+	set_n(cpu->regist, 0);
+	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+	uint8_t value = cpu->membus[address];
+	hflag_add_set(cpu->regist, value, 1);
+	cpu->membus[address]++;
+	set_z(cpu->regist, cpu->membus[address] == 0);
 	return 3;
 }
 
@@ -53,25 +53,25 @@ int inc_sp(uint16_t *dest)
 
 //dec r (8 bit)
 //x(0-3)(5 or D)	1 MCycle
-int dec_r(struct cpu *gb_cpu, uint8_t *dest)
+int dec_r(struct cpu *cpu, uint8_t *dest)
 {
-	set_n(gb_cpu->regist, 1);
-	hflag_sub_set(gb_cpu->regist, *dest, 1);
+	set_n(cpu->regist, 1);
+	hflag_sub_set(cpu->regist, *dest, 1);
 
 	*dest -= 1;
-	set_z(gb_cpu->regist, *dest == 0);
+	set_z(cpu->regist, *dest == 0);
 	return 1;
 }
 
 //dec (HL) (8 bit)
 //x35	3 MCycle
-int dec_hl(struct cpu *gb_cpu)
+int dec_hl(struct cpu *cpu)
 {
-	set_n(gb_cpu->regist, 1);
-	uint16_t address = convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
+	set_n(cpu->regist, 1);
+	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
 	//TODO HALF CARRY
-	gb_cpu->membus[address]--;
-	set_z(gb_cpu->regist, gb_cpu->membus[address] == 0);
+	cpu->membus[address]--;
+	set_z(cpu->regist, cpu->membus[address] == 0);
 	return 3;
 }
 
@@ -99,49 +99,49 @@ int dec_sp(uint16_t *sp)
 
 // add HL,rr
 // x(0-2)9	2 MCycle
-int add_hl_rr(struct cpu *gb_cpu, uint8_t *hi, uint8_t *lo)
+int add_hl_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
 	//TODO C FLAG
-	set_n(gb_cpu->regist, 0);
-	hflag16_add_set(gb_cpu->regist, convert_8to16(&gb_cpu->regist->h,
-				&gb_cpu->regist->l), convert_8to16(hi, lo));
+	set_n(cpu->regist, 0);
+	hflag16_add_set(cpu->regist, convert_8to16(&cpu->regist->h,
+				&cpu->regist->l), convert_8to16(hi, lo));
 	uint16_t sum = convert_8to16(hi, lo) +
-		convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
-	gb_cpu->regist->h = regist_hi(&sum);
-	gb_cpu->regist->l = regist_lo(&sum);
+		convert_8to16(&cpu->regist->h, &cpu->regist->l);
+	cpu->regist->h = regist_hi(&sum);
+	cpu->regist->l = regist_lo(&sum);
 	return 2;
 }
 
 // add HL,SP
 // x39	2 MCycle
-int add_hl_sp(struct cpu *gb_cpu)
+int add_hl_sp(struct cpu *cpu)
 {
 	//TODO C FLAG
-	set_n(gb_cpu->regist, 0);
-	hflag16_add_set(gb_cpu->regist, convert_8to16(&gb_cpu->regist->h,
-				&gb_cpu->regist->l), gb_cpu->regist->sp);
-	uint16_t sum = gb_cpu->regist->sp +
-		convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
-	gb_cpu->regist->h = regist_hi(&sum);
-	gb_cpu->regist->l = regist_lo(&sum);
+	set_n(cpu->regist, 0);
+	hflag16_add_set(cpu->regist, convert_8to16(&cpu->regist->h,
+				&cpu->regist->l), cpu->regist->sp);
+	uint16_t sum = cpu->regist->sp +
+		convert_8to16(&cpu->regist->h, &cpu->regist->l);
+	cpu->regist->h = regist_hi(&sum);
+	cpu->regist->l = regist_lo(&sum);
 	return 2;
 }
 
 
 //daa A
 //x27	1 MCycle
-int daa(struct cpu *gb_cpu)
+int daa(struct cpu *cpu)
 {
-	uint8_t *a = &gb_cpu->regist->a;
-	if (!get_n(gb_cpu->regist))	//Additioncase
+	uint8_t *a = &cpu->regist->a;
+	if (!get_n(cpu->regist))	//Additioncase
 	{
-		if (get_c(gb_cpu->regist) || *a > 0x99) //check high nibble
+		if (get_c(cpu->regist) || *a > 0x99) //check high nibble
 		{
 			*a += 0x60;
-			set_c(gb_cpu->regist, 1);
+			set_c(cpu->regist, 1);
 		}
 
-		if (get_h(gb_cpu->regist)|| (*a & 0x0F) > 0x09)	//check low nibble
+		if (get_h(cpu->regist)|| (*a & 0x0F) > 0x09)	//check low nibble
 		{
 			*a += 0x06;
 		}
@@ -149,9 +149,9 @@ int daa(struct cpu *gb_cpu)
 
 	else	//Subtraction case
 	{
-		if (get_c(gb_cpu->regist))
+		if (get_c(cpu->regist))
 			*a -= 0x60;
-		if (get_h(gb_cpu->regist))
+		if (get_h(cpu->regist))
 			*a -= 0x06;
 	}
 
@@ -162,10 +162,10 @@ int daa(struct cpu *gb_cpu)
 
 //cpl
 //x2F	1 MCycle
-int cpl(struct cpu *gb_cpu)
+int cpl(struct cpu *cpu)
 {
-	gb_cpu->regist->a = ~gb_cpu->regist->a;
-	set_n(gb_cpu->regist, 1);
-	set_h(gb_cpu->regist, 1);
+	cpu->regist->a = ~cpu->regist->a;
+	set_n(cpu->regist, 1);
+	set_h(cpu->regist, 1);
 	return 1;
 }
