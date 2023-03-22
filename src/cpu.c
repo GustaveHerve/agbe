@@ -5,10 +5,10 @@
 
 #define MEMBUS_SIZE 65536 //In bytes
 
-void cpu_init(struct cpu *new_cpu)
+void cpu_init(struct cpu *cpu)
 {
-	new_cpu->regist = malloc(sizeof(struct cpu_register));
-	new_cpu->membus = malloc(sizeof(uint8_t) * MEMBUS_SIZE);
+	cpu->regist = malloc(sizeof(struct cpu_register));
+	cpu->membus = malloc(sizeof(uint8_t) * MEMBUS_SIZE);
 }
 
 void cpu_free(struct cpu *todelete)

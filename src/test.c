@@ -6,6 +6,7 @@
 int main()
 {
 	struct cpu *cpu = malloc(sizeof(struct cpu));
+	printf("%i", value);
 	cpu_init(cpu);
 	cpu->regist->a = 0x01;
 	cpu->regist->f = 0x00;

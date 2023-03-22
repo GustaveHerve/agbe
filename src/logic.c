@@ -20,8 +20,9 @@ int inc_r(struct cpu *gb_cpu, uint8_t *dest)
 int inc_hl(struct cpu *gb_cpu)
 {
 	set_n(gb_cpu->regist, 0);
-	//TODO H FLAG
 	uint16_t address = convert_8to16(&gb_cpu->regist->h, &gb_cpu->regist->l);
+	uint8_t value = gb_cpu->membus[address];
+	hflag_add_set(gb_cpu->regist, value, 1);
 	gb_cpu->membus[address]++;
 	set_z(gb_cpu->regist, gb_cpu->membus[address] == 0);
 	return 3;

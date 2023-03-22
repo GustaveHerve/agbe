@@ -103,6 +103,7 @@ void hflag_add_set(struct cpu_register *regist, uint8_t a, uint8_t b)
 	set_h(regist, hflag_add_check(a, b));
 }
 
+//TODO Probably wrong Complementary addition instead ?
 int hflag_sub_check(uint8_t a, uint8_t b)
 {
 	return hflag_check(get_lsb_nibble(a) - get_lsb_nibble(b));
@@ -148,6 +149,25 @@ void cflag_rotr_set(struct cpu_register *regist, uint8_t src)
 	set_c(regist, cflag_rotr_check(src));
 }
 
+int cflag_add_check(uint8_t a, uint8_t b)
+{
+	return ((a + b) & 0x100) == 0x100;
+}
+
+void cflag_add_set(struct cpu_register *regist, uint8_t a, uint8_t b)
+{
+	set_c(regist, cflag_add_check(a, b));
+}
+
+int cflag_sub_check(uint8_t a, uint8_t b)
+{
+	return ((a - b) & 0x100) == 0x100;
+}
+
+void cflag_sub_set(struct cpu_register *regist, uint8_t a, uint8_t b)
+{
+	set_c(regist, cflag_sub_check(a, b));
+}
 
 
 //Rotations, returns 1 if carry else 0
