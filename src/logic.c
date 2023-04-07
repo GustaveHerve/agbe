@@ -95,7 +95,31 @@ int dec_sp(uint16_t *sp)
 	return 2;
 }
 
+//add A,r
+//x     1 MCycle
+int add_a_r(struct cpu *cpu, uint8_t *src)
+{
+    set_n(cpu->regist, 0);
+    hflag_add_set(cpu->regist, cpu->regist->a, *src);
+    cflag_add_set(cpu->regist, cpu->regist->a, *src);
+    cpu->regist->a += *src;
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 1;
+}
 
+//add A,(HL)
+//x     2 MCycle
+int add_a_hl(struct cpu *cpu)
+{
+    set_n(cpu->regist, 0);
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    uint8_t val = cpu->membus[address];
+    hflag_add_set(cpu->regist, cpu->regist->a, val);
+    cflag_add_set(cpu->regist, cpu->regist->a, val);
+    cpu->regist->a += val;
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 2;
+}
 
 // add HL,rr
 // x(0-2)9	2 MCycle
