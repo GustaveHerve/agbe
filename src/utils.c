@@ -169,6 +169,15 @@ void cflag_sub_set(struct cpu_register *regist, uint8_t a, uint8_t b)
 	set_c(regist, cflag_sub_check(a, b));
 }
 
+int cflag16_add_check(uint16_t a, uint16_t b)
+{
+    return ((a+b) & 0x10000) == 0x10000;
+}
+
+void cflag16_add_set(struct cpu_register *regist, uint16_t a, uint16_t b)
+{
+    set_c(regist, cflag16_add_check(a,b));
+}
 
 //Rotations, returns 1 if carry else 0
 void rotl(uint8_t *src)

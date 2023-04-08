@@ -18,12 +18,13 @@ int dec_sp(uint16_t *sp);
 int add_a_r(struct cpu *cpu, uint8_t *src);
 int add_a_hl(struct cpu *cpu);
 
-//int adc_a_r(struct cpu *cpu, uint8_t *src);
-//int adc_a_hl(struct cpu *cpu);
+int adc_a_r(struct cpu *cpu, uint8_t *src);
+int adc_a_hl(struct cpu *cpu);
 
 int add_hl_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo);
 int add_hl_sp(struct cpu *cpu);
 
+int sub_r(struct cpu *cpu, uint8_t *src);
 
 int cpl(struct cpu *cpu);
 int daa(struct cpu *cpu);

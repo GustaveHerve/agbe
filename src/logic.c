@@ -121,6 +121,42 @@ int add_a_hl(struct cpu *cpu)
     return 2;
 }
 
+//adc A,r
+//x     1 MCycle
+int adc_a_r(struct cpu *cpu, uint8_t *src)
+{
+    set_n(cpu->regist, 0);
+    hflag_add_set(cpu->regist->a, *src);
+    cflag_add_set(cpu->regist->a, *src);
+    cpu->regist->a += *src;
+    if (!get_h)
+        hflag_add_set(cpu->regist->a, 1);
+    if (!get_c)
+        cflag_add_set(cpu->reigst->a, 1);
+    cpu->regist->a++;
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 1;
+}
+
+//adc A,(HL)
+//x     2 MCycle
+int adc_a_hl(struct cpu *cpu)
+{
+    set_n(cpu->regist, 0);
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    uint8_t val = cpu->membus[address];
+    hflag_add_set(cpu->regist->a, val);
+    cflag_add_set(cpu->regist->a, val);
+    cpu->regist->a += val;
+    if (!get_h)
+        hflag_add_set(cpu->regist->a, 1);
+    if (!get_c)
+        cflag_add_set(cpu->regist->a, 1);
+    cpu->regist->a++;
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 2;
+}
+
 // add HL,rr
 // x(0-2)9	2 MCycle
 int add_hl_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
@@ -151,6 +187,12 @@ int add_hl_sp(struct cpu *cpu)
 	return 2;
 }
 
+//sub A,r
+//x     1 MCycle
+int sub_r(struct cpu *cpu, uint8_t *src)
+{
+    return 1;
+}
 
 //daa A
 //x27	1 MCycle
