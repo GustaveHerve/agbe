@@ -103,7 +103,6 @@ void hflag_add_set(struct cpu_register *regist, uint8_t a, uint8_t b)
 	set_h(regist, hflag_add_check(a, b));
 }
 
-//TODO Probably wrong Complementary addition instead ?
 int hflag_sub_check(uint8_t a, uint8_t b)
 {
 	return hflag_check(get_lsb_nibble(a) - get_lsb_nibble(b));

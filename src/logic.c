@@ -69,7 +69,7 @@ int dec_hl(struct cpu *cpu)
 {
 	set_n(cpu->regist, 1);
 	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-	//TODO HALF CARRY
+    hflag_sub_set(cpu->regist, cpu->membus[address], 1);
 	cpu->membus[address]--;
 	set_z(cpu->regist, cpu->membus[address] == 0);
 	return 3;
@@ -126,13 +126,13 @@ int add_a_hl(struct cpu *cpu)
 int adc_a_r(struct cpu *cpu, uint8_t *src)
 {
     set_n(cpu->regist, 0);
-    hflag_add_set(cpu->regist->a, *src);
-    cflag_add_set(cpu->regist->a, *src);
+    hflag_add_set(cpu->regist, cpu->regist->a, *src);
+    cflag_add_set(cpu->regist, cpu->regist->a, *src);
     cpu->regist->a += *src;
-    if (!get_h)
-        hflag_add_set(cpu->regist->a, 1);
-    if (!get_c)
-        cflag_add_set(cpu->reigst->a, 1);
+    if (!get_h(cpu->regist))
+        hflag_add_set(cpu->regist, cpu->regist->a, 1);
+    if (!get_c(cpu->regist))
+        cflag_add_set(cpu->regist, cpu->regist->a, 1);
     cpu->regist->a++;
     set_z(cpu->regist, cpu->regist->a == 0);
     return 1;
@@ -145,13 +145,13 @@ int adc_a_hl(struct cpu *cpu)
     set_n(cpu->regist, 0);
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     uint8_t val = cpu->membus[address];
-    hflag_add_set(cpu->regist->a, val);
-    cflag_add_set(cpu->regist->a, val);
+    hflag_add_set(cpu->regist, cpu->regist->a, val);
+    cflag_add_set(cpu->regist, cpu->regist->a, val);
     cpu->regist->a += val;
-    if (!get_h)
-        hflag_add_set(cpu->regist->a, 1);
-    if (!get_c)
-        cflag_add_set(cpu->regist->a, 1);
+    if (!get_h(cpu->regist))
+        hflag_add_set(cpu->regist, cpu->regist->a, 1);
+    if (!get_c(cpu->regist))
+        cflag_add_set(cpu->regist, cpu->regist->a, 1);
     cpu->regist->a++;
     set_z(cpu->regist, cpu->regist->a == 0);
     return 2;
@@ -161,12 +161,12 @@ int adc_a_hl(struct cpu *cpu)
 // x(0-2)9	2 MCycle
 int add_hl_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
-	//TODO C FLAG
 	set_n(cpu->regist, 0);
-	hflag16_add_set(cpu->regist, convert_8to16(&cpu->regist->h,
-				&cpu->regist->l), convert_8to16(hi, lo));
-	uint16_t sum = convert_8to16(hi, lo) +
-		convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    uint16_t hl = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    uint16_t rr = convert_8to16(hi, lo);
+	hflag16_add_set(cpu->regist, hl, rr);
+    cflag16_add_set(cpu->regist, hl, rr);
+	uint16_t sum = hl + rr;
 	cpu->regist->h = regist_hi(&sum);
 	cpu->regist->l = regist_lo(&sum);
 	return 2;
@@ -176,12 +176,11 @@ int add_hl_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 // x39	2 MCycle
 int add_hl_sp(struct cpu *cpu)
 {
-	//TODO C FLAG
 	set_n(cpu->regist, 0);
-	hflag16_add_set(cpu->regist, convert_8to16(&cpu->regist->h,
-				&cpu->regist->l), cpu->regist->sp);
-	uint16_t sum = cpu->regist->sp +
-		convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    uint16_t hl = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+	hflag16_add_set(cpu->regist, hl, cpu->regist->sp);
+    cflag16_add_set(cpu->regist, hl, cpu->regist->sp);
+	uint16_t sum = cpu->regist->sp + hl;
 	cpu->regist->h = regist_hi(&sum);
 	cpu->regist->l = regist_lo(&sum);
 	return 2;

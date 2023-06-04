@@ -16,3 +16,5 @@
 *.dSYM
 
 testroms
+
+.ycm_extra_conf.py

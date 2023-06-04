@@ -16,7 +16,7 @@ int ld_bc_a(struct cpu *cpu)
 
 //ld r,r
 //		1 MCycle
-int ld_r_r(uint8_t *dest, uint8_t *src))
+int ld_r_r(uint8_t *dest, uint8_t *src)
 {
 	*dest = *src;
 	return 1;
