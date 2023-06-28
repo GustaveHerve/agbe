@@ -248,6 +248,104 @@ int sbc_a_hl(struct cpu *cpu)
     return 2;
 }
 
+//and a,r
+//xA(0-7)   1 MCycle
+int and_a_r(struct cpu *cpu, uint8_t *src)
+{
+    cpu->regist->a = cpu->regist->a & *src;
+    set_n(cpu->regist, 0);
+    set_h(cpu->regist, 1);
+    set_c(cpu->regist, 0);
+    set_z(cpu->regist, cpu->regist->a);
+    return 1;
+}
+
+//and a,(HL)
+//x6A   2 MCycle
+int and_a_hl(struct cpu *cpu)
+{
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    cpu->regist->a = cpu->regist->a & cpu->membus[address];
+    set_n(cpu->regist, 0);
+    set_h(cpu->regist, 1);
+    set_c(cpu->regist, 0);
+    set_z(cpu->regist, cpu->regist->a);
+    return 2;
+}
+
+//xor A,r
+//xA(8-F)   1 MCycle
+int xor_a_r(struct cpu *cpu, uint8_t *src)
+{
+    cpu->regist->a = cpu->regist->a ^ *src;
+    set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
+    set_c(cpu->regist, 0);
+    set_z(cpu->regist, cpu->regist->a);
+    return 1;
+}
+
+//xor A,(HL)
+//xAE   2 MCycle
+int xor_a_hl(struct cpu *cpu)
+{
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    cpu->regist->a = cpu->regist->a ^ cpu->membus[address];
+    set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
+    set_c(cpu->regist, 0);
+    set_z(cpu->regist, cpu->regist->a);
+    return 2;
+}
+
+//or A,r
+//xB(0-7)   1 MCycle
+int or_a_r(struct cpu *cpu, uint8_t *src)
+{
+    cpu->regist->a = cpu->regist->a | *src;
+    set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
+    set_c(cpu->regist, 0);
+    set_z(cpu->regist, cpu->regist->a);
+    return 1;
+}
+
+//or A,(HL)
+//xB6   2 MCycle
+int or_a_hl(struct cpu *cpu)
+{
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    cpu->regist->a = cpu->regist->a | cpu->membus[address];
+    set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
+    set_c(cpu->regist, 0);
+    set_z(cpu->regist, cpu->regist->a);
+    return 2;
+}
+
+//cp A,r
+//xB(8-F)   1 MCycle
+int cp_a_r(struct cpu *cpu, uint8_t *src)
+{
+    set_n(cpu->regist, 1);
+    cflag_sub_set(cpu->regist, cpu->regist->a, *src);
+    hflag_sub_set(cpu->regist, cpu->regist->a, *src);
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 1;
+}
+
+//cp A,(HL)
+//xBE   2 MCycle
+int cp_a_hl(struct cpu *cpu)
+{
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    set_n(cpu->regist, 1);
+    uint8_t val = cpu->membus[address];
+    cflag_sub_check(cpu->regist->a, val);
+    hflag_sub_check(cpu->regist->a, val);
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 2;
+}
 
 //daa A
 //x27	1 MCycle
