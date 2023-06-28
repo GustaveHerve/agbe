@@ -31,7 +31,6 @@ int ld_r_u8(struct cpu *cpu, uint8_t *dest)
 
 	cpu->regist->pc++;
 	*dest = mem[regist->pc];
-
 	return 2;
 }
 
@@ -54,7 +53,6 @@ int ld_u8_r(struct cpu *cpu, uint8_t *src)
 
 	cpu->regist->pc++;
 	mem[regist->pc] = *src;
-
 	return 2;
 }
 

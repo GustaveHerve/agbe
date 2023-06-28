@@ -187,11 +187,67 @@ int add_hl_sp(struct cpu *cpu)
 }
 
 //sub A,r
-//x     1 MCycle
-int sub_r(struct cpu *cpu, uint8_t *src)
+//x(0-7)9   1 MCycle
+int sub_a_r(struct cpu *cpu, uint8_t *src)
 {
+    set_n(cpu->regist, 1);
+    cflag_sub_set(cpu->regist, cpu->regist->a, *src);
+    hflag_sub_set(cpu->regist, cpu->regist->a, *src);
+    cpu->regist->a -= *src;
+    set_z(cpu->regist, cpu->regist->a == 0);
     return 1;
 }
+
+//sub A,(HL)
+//x69   2 MCycle
+int sub_a_hl(struct cpu *cpu)
+{
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    set_n(cpu->regist, 1);
+    uint8_t val = cpu->membus[address];
+    cflag_sub_check(cpu->regist->a, val);
+    hflag_sub_check(cpu->regist->a, val);
+    cpu->regist->a -= val;
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 2;
+}
+
+//sbc A,r
+//x9(8-F)   1 MCycle
+int sbc_a_r(struct cpu *cpu, uint8_t *src)
+{
+    set_n(cpu->regist, 1);
+    hflag_sub_set(cpu->regist, cpu->regist->a, *src);
+    cflag_sub_set(cpu->regist, cpu->regist->a, *src);
+    cpu->regist->a -= *src;
+    if (!get_h(cpu->regist))
+        hflag_sub_set(cpu->regist, cpu->regist->a, 1);
+    if (!get_c(cpu->regist))
+        cflag_sub_set(cpu->regist, cpu->regist->a, 1);
+    cpu->regist->a--;
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 1;
+}
+
+//sbc A,(HL)
+//x8E   2 MCycle
+int sbc_a_hl(struct cpu *cpu)
+{
+    set_n(cpu->regist, 1);
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    uint8_t val = cpu->membus[address];
+    hflag_sub_set(cpu->regist, cpu->regist->a, val);
+    cflag_sub_set(cpu->regist, cpu->regist->a, val);
+    cpu->regist->a -= val;
+    if (!get_h(cpu->regist))
+        hflag_sub_set(cpu->regist, cpu->regist->a, 1);
+    if (!get_c(cpu->regist))
+        cflag_sub_set(cpu->regist, cpu->regist->a, 1);
+    cpu->regist->a--;
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 2;
+}
+
 
 //daa A
 //x27	1 MCycle

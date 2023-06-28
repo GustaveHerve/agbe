@@ -1,6 +1,8 @@
 #ifndef CPU_H
 #define CPU_H
 
+#include <stdlib.h>
+
 struct cpu_register
 {
 	uint8_t a;
