@@ -133,3 +133,52 @@ int jp_nn(struct cpu *cpu)
     cpu->regist->pc = address;
     return  4;
 }
+
+int jp_cc_nn(struct cpu *cpu, int cc)
+{
+    cpu->regist->pc++;
+    uint8_t lo = cpu->membus[cpu->regist->pc];
+    cpu->regist->pc++;
+    uint8_t hi = cpu->membus[cpu->regist->pc];
+    uint16_t address = convert_8to16(&hi, &lo);
+    if (cc)
+    {
+        cpu->regist->pc = address;
+        return 4;
+    }
+    return 3;
+}
+
+int call_nn(struct cpu *cpu)
+{
+    cpu->regist->pc++;
+    uint8_t lo = cpu->membus[cpu->regist->pc];
+    cpu->regist->pc++;
+    uint8_t hi = cpu->membus[cpu->regist->pc];
+    uint16_t nn = convert_8to16(&hi, &lo);
+    cpu->regist->sp--;
+    cpu->membus[cpu->regist->sp] = hi;
+    cpu->regist->sp--;
+    cpu->membus[cpu->regist->sp] = lo;
+    cpu->regist->pc = nn;
+    return 6;
+}
+
+int call_cc_nn(struct cpu *cpu, int cc)
+{
+    cpu->regist->pc++;
+    uint8_t lo = cpu->membus[cpu->regist->pc];
+    cpu->regist->pc++;
+    uint8_t hi = cpu->membus[cpu->regist->pc];
+    uint16_t nn = convert_8to16(&hi, &lo);
+    if (cc)
+    {
+        cpu->regist->sp--;
+        cpu->membus[cpu->regist->sp] = hi;
+        cpu->regist->sp--;
+        cpu->membus[cpu->regist->sp] = lo;
+        cpu->regist->pc = nn;
+        return 6;
+    }
+    return 3;
+}

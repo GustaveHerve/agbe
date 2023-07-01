@@ -15,5 +15,9 @@ int ret_cc(struct cpu *cpu, int cc);
 
 int jp_hl(struct cpu *cpu);
 int jp_nn(struct cpu *cpu);
+int jp_cc_nn(struct cpu *cpu, int cc);
+
+int call_nn(struct cpu *cpu);
+int call_cc_nn(struct cpu *cpu, int cc);
 
 #endif
