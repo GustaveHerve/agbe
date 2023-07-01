@@ -12,16 +12,16 @@ int nop()
 
 //stop
 //x10	1 MCycle
-int stop()
+int stop(struct cpu *cpu)
 {
-	//TODO
+    cpu->stop = 1;
 	return 1;
 }
 
 //halt
-int halt()
+int halt(struct cpu *cpu)
 {
-	//TODO
+    cpu->halt = 1;
 	return 1;
 }
 
@@ -45,4 +45,14 @@ int scf(struct cpu *cpu)
 	return 1;
 }
 
+int di(struct cpu *cpu)
+{
+    cpu->membus[0xFFFF] = 0;
+    return 1;
+}
 
+int ei(struct cpu *cpu)
+{
+    cpu->ime_enable = 1;
+    return 1;
+}

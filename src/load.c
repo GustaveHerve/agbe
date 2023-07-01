@@ -152,6 +152,9 @@ int ldd_a_hl(struct cpu *cpu)
 	cpu->regist->l = regist_lo(&address);
 	return 2;
 }
+
+
+
 ////
 //16 bit operations
 ////
@@ -203,8 +206,33 @@ int ld_nn_sp(struct cpu *cpu)
 	return 5;
 }
 
-int ldh_
+int ldh_n_a(struct cpu *cpu)
+{
+    cpu->regist->pc++;
+    uint8_t offset = cpu->membus[cpu->regist->pc];
+    cpu->membus[0xFF00 + offset] = cpu->regist->a;
+    return 3;
+}
 
+int ldh_a_n(struct cpu *cpu)
+{
+    cpu->regist->pc++;
+    uint8_t offset = cpu->membus[cpu->regist->pc];
+    cpu->regist->a = cpu->membus[0xFF00 + offset];
+    return 3;
+}
+
+int ldh_a_c(struct cpu *cpu)
+{
+    cpu->regist->a = cpu->membus[0xFF00 + cpu->regist->c];
+    return 2;
+}
+
+int ldh_c_a(struct cpu *cpu)
+{
+    cpu->membus[0xFF00 + cpu->regist->c] = cpu->regist->a;
+    return 3;
+}
 
 int pop_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {

@@ -156,10 +156,11 @@ int call_nn(struct cpu *cpu)
     cpu->regist->pc++;
     uint8_t hi = cpu->membus[cpu->regist->pc];
     uint16_t nn = convert_8to16(&hi, &lo);
+    cpu->regist->pc++;
     cpu->regist->sp--;
-    cpu->membus[cpu->regist->sp] = hi;
+    cpu->membus[cpu->regist->sp] = regist_hi(&cpu->regist->pc);
     cpu->regist->sp--;
-    cpu->membus[cpu->regist->sp] = lo;
+    cpu->membus[cpu->regist->sp] = regist_lo(&cpu->regist->pc);
     cpu->regist->pc = nn;
     return 6;
 }
@@ -173,12 +174,26 @@ int call_cc_nn(struct cpu *cpu, int cc)
     uint16_t nn = convert_8to16(&hi, &lo);
     if (cc)
     {
+        cpu->regist->pc++;
         cpu->regist->sp--;
-        cpu->membus[cpu->regist->sp] = hi;
+        cpu->membus[cpu->regist->sp] = regist_hi(&cpu->regist->pc);
         cpu->regist->sp--;
-        cpu->membus[cpu->regist->sp] = lo;
+        cpu->membus[cpu->regist->sp] = regist_lo(&cpu->regist->pc);
         cpu->regist->pc = nn;
         return 6;
     }
     return 3;
+}
+
+int rst(struct cpu *cpu, uint8_t vec)
+{
+    //if ?
+    cpu->regist->sp--;
+    cpu->membus[cpu->regist->sp] = regist_hi(&cpu->regist->pc);
+    cpu->regist->sp--;
+    cpu->membus[cpu->regist->sp] = regist_lo(&cpu->regist->pc);
+    uint8_t lo = 0x00;
+    uint16_t newpc = convert_8to16(&lo, &vec);
+    cpu->regist->pc = newpc;
+    return 4;
 }

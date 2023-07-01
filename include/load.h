@@ -13,6 +13,12 @@ int ld_r_hl(struct cpu *cpu, uint8_t *dest);
 int ld_nn_a(struct cpu *cpu);
 int ld_a_nn(struct cpu *cpu);
 
+int ldh_n_a(struct cpu *cpu);
+int ldh_a_n(struct cpu *cpu);
+
+int ldh_a_c(struct cpu *cpu);
+int ldh_c_a(struct cpu *cpu);
+
 int ldi_hl_a(struct cpu *cpu);
 int ldd_hl_a(struct cpu *cpu);
 

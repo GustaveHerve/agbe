@@ -22,6 +22,9 @@ struct cpu
 {
 	struct cpu_register *regist;
 	uint8_t *membus; //16-bit address bus that stores ROM RAM I/O
+    int ime_enable;
+    int halt;
+    int stop;
 };
 
 void cpu_init(struct cpu *new_cpu);

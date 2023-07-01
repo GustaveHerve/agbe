@@ -9,6 +9,7 @@ void cpu_init(struct cpu *cpu)
 {
 	cpu->regist = malloc(sizeof(struct cpu_register));
 	cpu->membus = malloc(sizeof(uint8_t) * MEMBUS_SIZE);
+    cpu->ime_enable = 0;
 }
 
 void cpu_free(struct cpu *todelete)
