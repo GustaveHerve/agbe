@@ -178,4 +178,31 @@ int ld_nn_sp(struct cpu *cpu)
 	return 5;
 }
 
+int pop_af(struct cpu *cpu)
+{
+    uint8_t lo_a = cpu->membus[cpu->regist->sp];
+    cpu->regist->sp++;
+    uint8_t hi_a = cpu->membus[cpu->regist->sp];
+    cpu->regist->sp++;
+    uint16_t address = convert_8to16(&hi_a, &lo_a);
+    cpu->regist->f = cpu->membus[address];
+    cpu->regist->a = cpu->membus[address + 1];
 
+    set_z(cpu->regist, lo_a >> 7 & 0x1);
+    set_n(cpu->regist, lo_a >> 6 & 0x1);
+    set_h(cpu->regist, lo_a >> 5 & 0x1);
+    set_c(cpu->regist, lo_a >> 4 & 0x1);
+    return 3;
+}
+
+int pop_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
+{
+    uint8_t lo_a = cpu->membus[cpu->regist->sp];
+    cpu->regist->sp++;
+    uint8_t hi_a = cpu->membus[cpu->regist->sp];
+    cpu->regist->sp++;
+    uint16_t address = convert_8to16(&hi_a, &lo_a);
+    *lo = cpu->membus[address];
+    *hi = cpu->membus[address + 1];
+    return 3;
+}
