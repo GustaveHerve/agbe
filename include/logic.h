@@ -34,15 +34,23 @@ int sub_a_n(struct cpu *cpu);
 
 int sbc_a_r(struct cpu *cpu, uint8_t *src);
 int sbc_a_hl(struct cpu *cpu);
+int sbc_a_n(struct cpu *cpu);
 
 int and_a_r(struct cpu *cpu, uint8_t *src);
 int and_a_hl(struct cpu *cpu);
+int and_a_n(struct cpu *cpu);
+
 int xor_a_r(struct cpu *cpu, uint8_t *src);
 int xor_a_hl(struct cpu *cpu);
+int xor_a_n(struct cpu *cpu);
+
 int or_a_r(struct cpu *cpu, uint8_t *src);
 int or_a_hl(struct cpu *cpu, uint8_t *src);
+int or_a_n(struct cpu *cpu);
+
 int cp_a_r(struct cpu *cpu, uint8_t *src);
 int cp_a_hl(struct cpu *cpu);
+int cp_a_n(struct cpu *cpu);
 
 int cpl(struct cpu *cpu);
 int daa(struct cpu *cpu);
