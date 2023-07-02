@@ -13,6 +13,7 @@ int jr_c_e(struct cpu *cpu);
 */
 int ret(struct cpu *cpu);
 int ret_cc(struct cpu *cpu, int cc);
+int reti(struct cpu *cpu);
 
 int jp_hl(struct cpu *cpu);
 int jp_nn(struct cpu *cpu);

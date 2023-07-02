@@ -19,7 +19,6 @@ int main()
 	cpu->regist->pc = 0x09;
     cpu->regist->sp = 0x0A;
     cpu->membus[10] = 251;
-    add_sp_e8(cpu);
 
 	cpu_free(cpu);
 	return 0;

@@ -108,7 +108,7 @@ int add_a_r(struct cpu *cpu, uint8_t *src)
 }
 
 //add A,(HL)
-//x     2 MCycle
+//x86   2 MCycle
 int add_a_hl(struct cpu *cpu)
 {
     set_n(cpu->regist, 0);
@@ -117,6 +117,20 @@ int add_a_hl(struct cpu *cpu)
     hflag_add_set(cpu->regist, cpu->regist->a, val);
     cflag_add_set(cpu->regist, cpu->regist->a, val);
     cpu->regist->a += val;
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 2;
+}
+
+//add A,n
+//xC6   2 MCycle
+int add_a_n(struct cpu *cpu)
+{
+    cpu->regist->pc++;
+    uint8_t n =cpu->membus[cpu->regist->pc];
+    set_n(cpu->regist, 0);
+    hflag_add_set(cpu->regist, cpu->regist->a, n);
+    cflag_add_set(cpu->regist, cpu->regist->a, n);
+    cpu->regist->a += n;
     set_z(cpu->regist, cpu->regist->a == 0);
     return 2;
 }
@@ -157,6 +171,13 @@ int adc_a_hl(struct cpu *cpu)
     return 2;
 }
 
+//adc A,n
+//xCE   2 MCycle
+int adc_a_n(struct cpu *cpu)
+{
+    return 2;
+}
+
 // add HL,rr
 // x(0-2)9	2 MCycle
 int add_hl_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
@@ -193,6 +214,8 @@ int add_sp_e8(struct cpu *cpu)
     uint8_t p = regist_lo(&cpu->regist->sp);
     hflag_add_set(cpu->regist, p, offset);
     cflag_add_set(cpu->regist, p, offset);
+    set_z(cpu->regist, 0);
+    set_n(cpu->regist, 0);
     cpu->regist->sp += offset;
     return 4;
 }
@@ -218,6 +241,18 @@ int sub_a_hl(struct cpu *cpu)
     cflag_sub_check(cpu->regist->a, val);
     hflag_sub_check(cpu->regist->a, val);
     cpu->regist->a -= val;
+    set_z(cpu->regist, cpu->regist->a == 0);
+    return 2;
+}
+
+int sub_a_n(struct cpu *cpu)
+{
+    cpu->regist->pc++;
+    uint8_t n = cpu->membus[cpu->regist->pc];
+    set_n(cpu->regist, 1);
+    cflag_sub_set(cpu->regist, cpu->regist->a, n);
+    hflag_sub_set(cpu->regist, cpu->regist->a, n);
+    cpu->regist->a -= n;
     set_z(cpu->regist, cpu->regist->a == 0);
     return 2;
 }
@@ -386,8 +421,6 @@ int daa(struct cpu *cpu)
 
 	return 1;
 }
-
-
 
 //cpl
 //x2F	1 MCycle

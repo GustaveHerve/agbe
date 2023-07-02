@@ -53,6 +53,6 @@ int di(struct cpu *cpu)
 
 int ei(struct cpu *cpu)
 {
-    cpu->ime_enable = 1;
+    cpu->ime_enable = 2;
     return 1;
 }

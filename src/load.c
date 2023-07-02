@@ -202,8 +202,32 @@ int ld_nn_sp(struct cpu *cpu)
 	uint16_t address = convert_8to16(hi, lo);
 	cpu->membus[address] = regist_lo(&cpu->regist->sp);
 	cpu->membus[address+1] = regist_hi(&cpu->regist->sp);
-
 	return 5;
+}
+
+//ld HL,SP+e8
+//xF8   3 MCycle
+int ld_hl_spe8(struct cpu *cpu)
+{
+    cpu->regist->pc++;
+    uint8_t offset = cpu->membus[cpu->regist->pc];
+    uint8_t p = regist_lo(&cpu->regist->sp);
+    hflag_add_set(cpu->regist, p, offset);
+    cflag_add_set(cpu->regist, p, offset);
+    set_z(cpu->regist, 0);
+    set_n(cpu->regist, 0);
+    uint16_t res = cpu->regist->sp + offset;
+    cpu->regist->h = regist_hi(&res);
+    cpu->regist->l = regist_lo(&res);
+    return 3;
+}
+
+//ld SP,HL
+//xF9   2 MCycle
+int ld_sp_hl(struct cpu *cpu)
+{
+    cpu->regist->sp = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    return 2;
 }
 
 int ldh_n_a(struct cpu *cpu)

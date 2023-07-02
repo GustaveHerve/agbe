@@ -116,6 +116,15 @@ int ret_cc(struct cpu *cpu, int cc)
     return 2;
 }
 
+//reti
+//xD9   4 MCycle
+int reti(struct cpu *cpu)
+{
+    ret(cpu);
+    cpu->ime_enable = 1;
+    return 4;
+}
+
 int jp_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);

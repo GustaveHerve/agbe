@@ -31,6 +31,8 @@ int ld_rr_u16(struct cpu *cpu, uint8_t *hi, uint8_t *lo);
 int ld_sp_u16(struct cpu *cpu);
 int ld_nn_sp(struct cpu *cpu);
 
+int ld_hl_spe8(struct cpu *cpu);
+
 int pop_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo);
 int pop_af(struct cpu *cpu);
 
