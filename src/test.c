@@ -16,7 +16,10 @@ int main()
 	cpu->regist->e = 0xFF;
 	cpu->regist->h = 0x00;
 	cpu->regist->l = 0x7B;
-	cpu->regist->pc = 0x0040;
+	cpu->regist->pc = 0x09;
+    cpu->regist->sp = 0x0A;
+    cpu->membus[10] = 251;
+    add_sp_e8(cpu);
 
 	cpu_free(cpu);
 	return 0;

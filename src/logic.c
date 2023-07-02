@@ -186,6 +186,16 @@ int add_hl_sp(struct cpu *cpu)
 	return 2;
 }
 
+int add_sp_e8(struct cpu *cpu)
+{
+    cpu->regist->pc++;
+    uint8_t offset = cpu->membus[cpu->regist->pc];
+    uint8_t p = regist_lo(&cpu->regist->sp);
+    hflag_add_set(cpu->regist, p, offset);
+    cflag_add_set(cpu->regist, p, offset);
+    cpu->regist->sp += offset;
+    return 4;
+}
 //sub A,r
 //x(0-7)9   1 MCycle
 int sub_a_r(struct cpu *cpu, uint8_t *src)
