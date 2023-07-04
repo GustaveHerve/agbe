@@ -3,6 +3,7 @@
 #include "cpu.h"
 #include "utils.h"
 #include "logic.h"
+#include "prefix.h"
 
 int main()
 {
@@ -19,6 +20,7 @@ int main()
 	cpu->regist->pc = 0x09;
     cpu->regist->sp = 0x0A;
     cpu->membus[10] = 251;
+    swap(&cpu->regist->f);
 
 	cpu_free(cpu);
 	return 0;
