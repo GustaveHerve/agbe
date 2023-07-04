@@ -235,7 +235,37 @@ int bit_hl(struct cpu *cpu, int n)
 
 //res
 //x
-int res(struct cpu *cpu, uint8_t *dest, int n)
+int res(uint8_t *dest, int n)
 {
+    *dest ^= (0x01 << n);
     return 2;
 }
+
+//res (HL)
+//x
+int res_hl(struct cpu *cpu, int n)
+{
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    uint8_t *dest = &cpu->membus[address];
+    *dest ^= (0x01 << n);
+    return 4;
+}
+
+//set
+//x
+int set(uint8_t *dest, int n)
+{
+    *dest |= (0x01 << n);
+    return 2;
+}
+
+//set (HL)
+//x
+int set_hl(struct cpu *cpu, int n)
+{
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    uint8_t *dest = &cpu->membus[address];
+    *dest |= (0x01 << n);
+    return 4;
+}
+

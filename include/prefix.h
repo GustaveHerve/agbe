@@ -27,9 +27,10 @@ int srl_hl(struct cpu *cpu);
 int bit(struct cpu *cpu, uint8_t *dest, int n);
 int bit_hl(struct cpu *cpu, int n);
 
-int res(struct cpu *cpu, uint8_t *dest, int n);
+int res(int8_t *dest, int n);
 int res_hl(struct cpu *cpu, int n);
-int set(struct cpu *cpu, uint8_t *dest, int n);
+
+int set(uint8_t *dest, int n);
 int set_hl(struct cpu *cpu, int n);
 
 #endif
