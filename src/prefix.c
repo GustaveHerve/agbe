@@ -268,4 +268,3 @@ int set_hl(struct cpu *cpu, int n)
     *dest |= (0x01 << n);
     return 4;
 }
-

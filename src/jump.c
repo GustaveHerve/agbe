@@ -2,15 +2,17 @@
 #include <err.h>
 #include "cpu.h"
 #include "utils.h"
+#include "emulation.h"
 
 //jr e (signed 8 bit)
 //x18	3 MCycle
 int jr_e8(struct cpu *cpu)
 {
 	cpu->regist->pc++;
-	int8_t e = cpu->membus[cpu->regist->pc];
+	int8_t e = read_mem(cpu, cpu->regist->pc);
+	cpu->regist->pc++;
+    //TODO add tick +1 MCycle (nothing happens)
 	cpu->regist->pc = cpu->regist->pc + e;
-
 	return 3;
 }
 
@@ -18,9 +20,11 @@ int jr_e8(struct cpu *cpu)
 int jr_cc_e8(struct cpu *cpu, int cc)
 {
     cpu->regist->pc++;
-    int8_t e = cpu->membus[cpu->regist->pc];
+    int8_t e = read_mem(cpu, cpu->regist->pc);
     if (cc)
     {
+        cpu->regist->pc++;
+        //TODO add tick +1 MCycle (nothing happens)
         cpu->regist->pc += e;
         return 3;
     }
@@ -92,10 +96,11 @@ int jr_c_e(struct cpu *cpu)
 //xC9   4 MCycles
 int ret(struct cpu *cpu)
 {
-    uint8_t lo = cpu->membus[cpu->regist->sp];
+    uint8_t lo = read_mem(cpu, cpu->regist->sp);
     cpu->regist->sp += 1;
-    uint8_t hi  = cpu->membus[cpu->regist->sp];
+    uint8_t hi  = read_mem(cpu, cpu->regist->sp);
     cpu->regist->sp += 1;
+    //TODO add tick 1 MCycle (nothing)
     cpu->regist->pc = convert_8to16(&hi, &lo);
     return 4;
 }
@@ -104,12 +109,14 @@ int ret(struct cpu *cpu)
 //
 int ret_cc(struct cpu *cpu, int cc)
 {
+    //TODO add tick 1 MCycle (nothing)
     if (cc)
     {
-        uint8_t lo = cpu->membus[cpu->regist->sp];
+        uint8_t lo = read_mem(cpu, cpu->regist->sp);
         cpu->regist->sp += 1;
-        uint8_t hi = cpu->membus[cpu->regist->sp];
+        uint8_t hi  = read_mem(cpu, cpu->regist->sp);
         cpu->regist->sp += 1;
+        //TODO add tick 1 MCycle (nothing)
         cpu->regist->pc = convert_8to16(&hi, &lo);
         return 5;
     }
@@ -135,10 +142,11 @@ int jp_hl(struct cpu *cpu)
 int jp_nn(struct cpu *cpu)
 {
     cpu->regist->pc++;
-    uint8_t lo = cpu->membus[cpu->regist->pc];
+    uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
-    uint8_t hi = cpu->membus[cpu->regist->pc];
+    uint8_t hi = read_mem(cpu, cpu->regist->pc);
     uint16_t address = convert_8to16(&hi, &lo);
+    //TODO add tick 1 MCycle (nothing)
     cpu->regist->pc = address;
     return  4;
 }
@@ -146,12 +154,13 @@ int jp_nn(struct cpu *cpu)
 int jp_cc_nn(struct cpu *cpu, int cc)
 {
     cpu->regist->pc++;
-    uint8_t lo = cpu->membus[cpu->regist->pc];
+    uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
-    uint8_t hi = cpu->membus[cpu->regist->pc];
+    uint8_t hi = read_mem(cpu, cpu->regist->pc);
     uint16_t address = convert_8to16(&hi, &lo);
     if (cc)
     {
+        //TODO add tick 1 MCycle (nothing)
         cpu->regist->pc = address;
         return 4;
     }
@@ -161,15 +170,16 @@ int jp_cc_nn(struct cpu *cpu, int cc)
 int call_nn(struct cpu *cpu)
 {
     cpu->regist->pc++;
-    uint8_t lo = cpu->membus[cpu->regist->pc];
+    uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
-    uint8_t hi = cpu->membus[cpu->regist->pc];
+    uint8_t hi = read_mem(cpu, cpu->regist->pc);
     uint16_t nn = convert_8to16(&hi, &lo);
     cpu->regist->pc++;
     cpu->regist->sp--;
-    cpu->membus[cpu->regist->sp] = regist_hi(&cpu->regist->pc);
+    //TODO add tick 1 MCycle (nothing)
+    write_mem(cpu, cpu->regist->sp, regist_hi(&cpu->regist->pc));
     cpu->regist->sp--;
-    cpu->membus[cpu->regist->sp] = regist_lo(&cpu->regist->pc);
+    write_mem(cpu, cpu->regist->sp, regist_lo(&cpu->regist->pc));
     cpu->regist->pc = nn;
     return 6;
 }
@@ -177,17 +187,18 @@ int call_nn(struct cpu *cpu)
 int call_cc_nn(struct cpu *cpu, int cc)
 {
     cpu->regist->pc++;
-    uint8_t lo = cpu->membus[cpu->regist->pc];
+    uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
-    uint8_t hi = cpu->membus[cpu->regist->pc];
+    uint8_t hi = read_mem(cpu, cpu->regist->pc);
     uint16_t nn = convert_8to16(&hi, &lo);
     if (cc)
     {
         cpu->regist->pc++;
         cpu->regist->sp--;
-        cpu->membus[cpu->regist->sp] = regist_hi(&cpu->regist->pc);
+        //TODO add tick 1 MCycle (nothing)
+        write_mem(cpu, cpu->regist->sp, regist_hi(&cpu->regist->pc));
         cpu->regist->sp--;
-        cpu->membus[cpu->regist->sp] = regist_lo(&cpu->regist->pc);
+        write_mem(cpu, cpu->regist->sp, regist_lo(&cpu->regist->pc));
         cpu->regist->pc = nn;
         return 6;
     }
@@ -196,13 +207,18 @@ int call_cc_nn(struct cpu *cpu, int cc)
 
 int rst(struct cpu *cpu, uint8_t vec)
 {
-    //if ?
-    cpu->regist->sp--;
-    cpu->membus[cpu->regist->sp] = regist_hi(&cpu->regist->pc);
-    cpu->regist->sp--;
-    cpu->membus[cpu->regist->sp] = regist_lo(&cpu->regist->pc);
-    uint8_t lo = 0x00;
-    uint16_t newpc = convert_8to16(&lo, &vec);
-    cpu->regist->pc = newpc;
-    return 4;
+    //TODO add tick 1 MCycle (nothing)
+    if (vec == 0x00 || vec == 0x10 || vec == 0x20 || vec == 0x30 ||
+            vec == 0x08 || vec == 0x18 || vec == 0x28 || vec == 0x38)
+    {
+        cpu->regist->sp--;
+        write_mem(cpu, cpu->regist->sp, regist_hi(&cpu->regist->pc));
+        cpu->regist->sp--;
+        write_mem(cpu, cpu->regist->sp, regist_lo(&cpu->regist->pc));
+        uint8_t lo = 0x00;
+        uint16_t newpc = convert_8to16(&lo, &vec);
+        cpu->regist->pc = newpc;
+        return 4;
+    }
+    return 1;
 }

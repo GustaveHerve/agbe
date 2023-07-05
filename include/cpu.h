@@ -28,6 +28,8 @@ struct cpu
 };
 
 void cpu_init(struct cpu *new_cpu);
+void cpu_init_regist(struct cpu *cpu);
+void cpu_start(struct cpu *cpu);
 void cpu_free(struct cpu *todelete);
 
 
