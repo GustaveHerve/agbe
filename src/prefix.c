@@ -2,6 +2,7 @@
 #include <err.h>
 #include "cpu.h"
 #include "utils.h"
+#include "emulation.h"
 
 //rlc
 //x0(0-7)   2 MCycle
@@ -20,12 +21,13 @@ int rlc(struct cpu *cpu, uint8_t *dest)
 int rlc_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    rotl(dest);
-	set_z(cpu->regist, *dest == 0);
+    uint8_t val = read_mem(cpu, address);
+    rotl(&val);
+    write_mem(cpu, address, val);
+	set_z(cpu->regist, val == 0);
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 0);
-	cflag_rotl_set(cpu->regist, *dest);
+	cflag_rotl_set(cpu->regist, val);
     return 4;
 }
 
@@ -46,12 +48,13 @@ int rrc(struct cpu *cpu, uint8_t *dest)
 int rrc_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    rotr(dest);
-    set_z(cpu->regist, *dest == 0);
+    uint8_t val = read_mem(cpu, address);
+    rotr(&val);
+    write_mem(cpu, address, val);
+    set_z(cpu->regist, val == 0);
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 0);
-    cflag_rotr_set(cpu->regist, *dest);
+    cflag_rotr_set(cpu->regist, val);
     return 4;
 }
 
@@ -71,9 +74,10 @@ int rl(struct cpu *cpu, uint8_t *dest)
 int rl_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    rotl_carry(cpu->regist, dest);
-    set_z(cpu->regist, *dest == 0);
+    uint8_t val = read_mem(cpu, address);
+    rotl_carry(cpu->regist, &val);
+    write_mem(cpu, address, val);
+    set_z(cpu->regist, val == 0);
 	set_n(cpu->regist, 0);
 	set_h(cpu->regist, 0);
     return 4;
@@ -95,9 +99,10 @@ int rr(struct cpu *cpu, uint8_t *dest)
 int rr_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    rotr_carry(cpu->regist, dest);
-    set_z(cpu->regist, *dest == 0);
+    uint8_t val = read_mem(cpu, address);
+    rotr_carry(cpu->regist, &val);
+    write_mem(cpu, address, val);
+    set_z(cpu->regist, val == 0);
 	set_n(cpu->regist, 0);
 	set_h(cpu->regist, 0);
     return 4;
@@ -120,10 +125,11 @@ int sla(struct cpu *cpu, uint8_t *dest)
 int sla_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    set_c(cpu->regist, *dest & 0x80);
-    *dest = *dest << 1;
-    set_z(cpu->regist, *dest == 0);
+    uint8_t val = read_mem(cpu, address);
+    set_c(cpu->regist, val & 0x80);
+    val = val << 1;
+    write_mem(cpu, address, val);
+    set_z(cpu->regist, val == 0);
     set_n(cpu->regist, 0);
     return 4;
 }
@@ -147,12 +153,13 @@ int sra(struct cpu *cpu, uint8_t *dest)
 int sra_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    uint8_t temp = 0x80 & *dest;
-    set_c(cpu->regist, *dest & 0x01);
-    *dest = *dest >> 1;
-    *dest = *dest | temp;
-    set_z(cpu->regist, *dest == 0);
+    uint8_t val = read_mem(cpu, address);
+    uint8_t temp = 0x80 & val;
+    set_c(cpu->regist, val & 0x01);
+    val = val >> 1;
+    val = val | temp;
+    write_mem(cpu, address, val);
+    set_z(cpu->regist, val == 0);
     set_n(cpu->regist, 0);
     return 4;
 }
@@ -175,9 +182,10 @@ int swap(struct cpu *cpu, uint8_t *dest)
 int swap_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    *dest = get_msb_nibble(*dest) | (get_lsb_nibble(*dest) << 4);
-    set_z(cpu->regist, *dest == 0);
+    uint8_t val = read_mem(cpu, address);
+    val = get_msb_nibble(val) | (get_lsb_nibble(val) << 4);
+    write_mem(cpu, address, val);
+    set_z(cpu->regist, val == 0);
     set_n(cpu->regist, 0);
     set_c(cpu->regist, 0);
     set_h(cpu->regist, 0);
@@ -201,10 +209,11 @@ int srl(struct cpu *cpu, uint8_t *dest)
 int srl_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    set_c(cpu->regist, *dest & 0x01);
-    *dest = *dest >> 1;
-    set_z(cpu->regist, *dest == 0);
+    uint8_t val = read_mem(cpu, address);
+    set_c(cpu->regist, val & 0x01);
+    val = val >> 1;
+    write_mem(cpu, address, val);
+    set_z(cpu->regist, val == 0);
     set_n(cpu->regist, 0);
     return 4;
 }
@@ -225,12 +234,12 @@ int bit(struct cpu *cpu, uint8_t *dest, int n)
 int bit_hl(struct cpu *cpu, int n)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    uint8_t bit = (*dest >> n) & 0x01;
+    uint8_t val = read_mem(cpu, address);
+    uint8_t bit = (val >> n) & 0x01;
     set_z(cpu->regist, bit == 0x00);
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 1);
-    return 4;
+    return 3;
 }
 
 //res
@@ -246,8 +255,9 @@ int res(uint8_t *dest, int n)
 int res_hl(struct cpu *cpu, int n)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    *dest ^= (0x01 << n);
+    uint8_t val = read_mem(cpu, address);
+    val ^= (0x01 << n);
+    write_mem(cpu, address, val);
     return 4;
 }
 
@@ -264,7 +274,8 @@ int set(uint8_t *dest, int n)
 int set_hl(struct cpu *cpu, int n)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t *dest = &cpu->membus[address];
-    *dest |= (0x01 << n);
+    uint8_t val = read_mem(cpu, address);
+    val |= (0x01 << n);
+    write_mem(cpu, address, val);
     return 4;
 }

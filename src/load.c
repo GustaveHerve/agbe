@@ -11,7 +11,6 @@ int ld_bc_a(struct cpu *cpu)
 {
 	uint16_t address = 0;
     address = convert_8to16(&cpu->regist->b, &cpu->regist->c);
-	//address = (cpu->regist->b << 8) | cpu->regist->c;
     write_mem(cpu, address, cpu->regist->a);
 	return 2;
 }
