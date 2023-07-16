@@ -2,21 +2,7 @@
 #define PPU_H
 
 #include <stdlib.h>
-
-struct pixel
-{
-    int color;
-    int palette;
-    int priority;
-};
-
-struct obj
-{
-    uint8_t *x;
-    uint8_t *y;
-    uint8_t *index;
-    uint8_t *attributes;
-};
+#include "queue.h"
 
 struct ppu
 {
@@ -26,8 +12,28 @@ struct ppu
     uint8_t *lcdc;
     uint8_t lx;
     uint8_t *ly;
-    //int mode;
-    struct obj *obj_slots;
+    uint8_t *lyc;
+
+    uint8_t *scy;
+    uint8_t *scx;
+    uint8_t *wy;
+    uint8_t *wx;
+    uint8_t *stat;
+
+    struct obj obj_slots[10];
+
+    queue *bg_fifo;
+    queue *obj_fifo;
+
+    int oam_locked;
+    int vram_locked;
 };
+
+void ppu_init(struct ppu *ppu, struct cpu *cpu);
+void ppu_tick(struct ppu *ppu);
+int oam_scan(struct ppu *ppu);
+int drawing_pixels(struct ppu *ppu);
+int get_lcdc(struct ppu *ppu, int bit);
+int in_window(struct ppu *ppu);
 
 #endif

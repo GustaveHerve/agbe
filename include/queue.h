@@ -1,7 +1,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include "ppu.h"
+#include "ppu_utils.h"
 
 struct queue_node
 {

@@ -2,6 +2,7 @@
 #define CPU_H
 
 #include <stdlib.h>
+#include "ppu.h"
 
 struct cpu_register
 {
@@ -20,6 +21,7 @@ struct cpu_register
 
 struct cpu
 {
+    struct ppu *ppu;
 	struct cpu_register *regist;
 	uint8_t *membus; //16-bit address bus that stores ROM RAM I/O
     int ime_enable;
