@@ -8,6 +8,8 @@ void cpu_init(struct cpu *cpu)
 {
 	cpu->regist = malloc(sizeof(struct cpu_register));
 	cpu->membus = malloc(sizeof(uint8_t) * MEMBUS_SIZE);
+    cpu->ppu = malloc(sizeof(struct ppu));
+    ppu_init(cpu->ppu, cpu);
     cpu->ime_enable = 0;
     cpu->halt = 0;
     cpu->stop = 0;
@@ -28,13 +30,10 @@ void cpu_init_regist(struct cpu *cpu)
     cpu->regist->pc = 0x0100;
 }
 
-void cpu_start(struct cpu *cpu)
-{
-
-}
-
 void cpu_free(struct cpu *todelete)
 {
+    ppu_free(todelete->ppu);
 	free(todelete->membus);
+    free(todelete->regist);
 	free(todelete);
 }

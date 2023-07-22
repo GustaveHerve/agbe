@@ -8,6 +8,7 @@ queue *queue_init()
     queue *q = malloc(sizeof(queue));
     q->front = NULL;
     q->rear = NULL;
+    q->count = 0;
     return q;
 }
 
@@ -32,6 +33,7 @@ void queue_push(queue *q, struct pixel data)
         q->rear->next = new;
         q->rear = new;
     }
+    q->count++;
 }
 
 struct pixel queue_pop(queue *q)
@@ -43,6 +45,7 @@ struct pixel queue_pop(queue *q)
     q->front = q->front->next;
     if (q->front == NULL)
         q->rear = NULL;
+    q->count--;
     return res;
 }
 

@@ -4,6 +4,11 @@
 #include "ppu.h"
 #include "utils.h"
 
+void main_loop()
+{
+
+}
+
 void tick(struct cpu *cpu)
 {
     //TODO advance one t-state
