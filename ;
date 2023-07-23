@@ -97,23 +97,7 @@ void ppu_tick_m(struct ppu *ppu)
             }
             case 1: //Mode 1 - VBlank
             {
-                if (ppu->line_dot_count < 456)
-                {
-                    ppu->line_dot_count++;
-                    ppu->frame_dot_count++;
-                }
-                else if (*ppu->ly < 153)    //Go to next VBlank line
-                {
-                    *ppu->ly += 1;
-                    ppu->line_dot_count = 0;
-                }
-                else    //Exit VBlank
-                {
-                    ppu->line_dot_count = 0;
-                    ppu->frame_dot_count = 0;
-                    ppu->current_mode = 2;
-                }
-                dots--;
+
                 break;
             }
         }

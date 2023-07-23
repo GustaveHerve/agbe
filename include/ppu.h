@@ -51,7 +51,6 @@ struct ppu
 
     int frame_dot_count;//Dot count for current frame
     int line_dot_count; //Dot count for current scanline
-    int mode_dot;       //Dot count for current mode
     uint8_t current_mode;
 
     uint8_t win_mode;
@@ -73,7 +72,6 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index);
 int push_pixel(queue *target, struct pixel p);
 int push_slice(struct ppu *ppu, queue *q, uint8_t hi, uint8_t lo, int obj_i);
 
-int hblank(struct ppu *ppu, int prev_time);
 int vblank(struct ppu *ppu);
 
 int get_lcdc(struct ppu *ppu, int bit);
