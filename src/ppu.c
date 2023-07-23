@@ -26,17 +26,14 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu)
     ppu->bg_fifo = queue_init();
     ppu->obj_fifo = queue_init();
 
-    ppu->bg_fetcher = malloc(sizeof(fetcher));
-    ppu->obj_fetcher = malloc(sizeof(fetcher));
+    ppu->fetcher = malloc(sizeof(fetcher));
 
-    fetcher_init(ppu, ppu->bg_fetcher, 0);
-    fetcher_init(ppu, ppu->obj_fetcher, 1);
+    fetcher_init(ppu->fetcher);
 }
 
 void ppu_free(struct ppu *ppu)
 {
-    free(ppu->bg_fetcher);
-    free(ppu->obj_fetcher);
+    free(ppu->fetcher);
     queue_free(ppu->bg_fifo);
     queue_free(ppu->obj_fifo);
     free(ppu);
@@ -58,19 +55,42 @@ void ppu_tick_m(struct ppu *ppu)
             }
             case 3: //Mode 3 - Drawing pixels and FIFOs fetcher activity
             {
-                //BG/Win Fetcher
-                if (in_window(ppu)) // Window mode -> clear + reset BG FIFO
+                ppu->oam_locked = 1;
+                ppu->vram_locked = 1;
+
+                int time = 0;
+                //reset FIFOs at beginning of Mode 3
+                if (ppu->line_dot_count == 0)
+                {
+                    ppu->obj_mode = 0;
+                    queue_clear(ppu->bg_fifo);
+                    queue_clear(ppu->obj_fifo);
+                }
+                //End of line, go to HBlank
+                else if (ppu->lx == 160)
+                {
+                    ppu->current_mode = 0;
+                    ppu->line_dot_count = 0;
+                    break;
+                }
+
+                //check if OBJ Fetcher mode enabled, else BG/Win mode
+                if (ppu->obj_mode)
+                    time = fetcher_step(ppu, ppu->fetcher->obj_index);
+                else if (in_window(ppu)) //Window mode -> clear + reset BG FIFO
                 {
                     ppu->win_mode = 1;
                     queue_clear(ppu->bg_fifo);
-                    ppu->bg_fetcher->current_step = 0;
+                    ppu->fetcher->current_step = 0;
                 }
-                //TODO draw pixel SDL x2
-                //
-                fetcher_step(ppu->bg_fetcher, ppu, -1);
-                ppu->frame_dot_count += 2;
-                ppu->line_dot_count += 2;
-                dots -= 2;
+                else
+                    time = fetcher_step(ppu, -1);
+
+                ppu->frame_dot_count += time;
+                ppu->line_dot_count += time;
+
+                //TODO insert time x pixel rendered (1 dot = 1 pixel popped)
+                dots -= time;
                 break;
             }
             case 0: //Mode 0 - HBlank
@@ -101,6 +121,7 @@ void ppu_tick_m(struct ppu *ppu)
                 {
                     ppu->line_dot_count++;
                     ppu->frame_dot_count++;
+                    dots--;
                 }
                 else if (*ppu->ly < 153)    //Go to next VBlank line
                 {
@@ -113,7 +134,6 @@ void ppu_tick_m(struct ppu *ppu)
                     ppu->frame_dot_count = 0;
                     ppu->current_mode = 2;
                 }
-                dots--;
                 break;
             }
         }
@@ -308,29 +328,21 @@ int in_object(struct ppu *ppu)
     return -1;
 }
 
-void fetcher_init(struct ppu *ppu, fetcher *f, uint8_t obj)
+void fetcher_init(fetcher *f)
 {
     f->current_step = 0;
     f->hi = 0;
     f->lo = 0;
     f->tileid = 0;
-    if (obj)
-    {
-        f->target = ppu->obj_fifo;
-        f->obj_fetcher = 1;
-    }
-    else
-    {
-        f->target = ppu->bg_fifo;
-        f->obj_fetcher = 0;
-    }
+    f->obj_index = 0;
 }
 
 //Does one fetcher step (2 dots)
-int fetcher_step(fetcher *f, struct ppu *ppu, int obj_index)
+int fetcher_step(struct ppu *ppu, int obj_index)
 {
+    fetcher *f = ppu->fetcher;
     //BG/Win fetcher
-    if (!f->obj_fetcher)
+    if (!ppu->obj_mode)
     {
         switch (f->current_step)
         {
@@ -345,9 +357,21 @@ int fetcher_step(fetcher *f, struct ppu *ppu, int obj_index)
                 break;
             case 3:
                 {
+                    //If BG empty, refill it first
                     if (queue_isempty(ppu->bg_fifo))
                         push_slice(ppu, ppu->bg_fifo, f->hi, f->lo, -1);
-                    break;
+                    //else, check if OBJ Fetcher needs to be refilled
+                    else
+                    {
+                        int obj = in_object(ppu);
+                        if (obj != -1)
+                        {
+                            ppu->obj_mode = 1;
+                            ppu->fetcher->current_step = 0;
+                            ppu->fetcher->obj_index = obj;
+                        }
+                    }
+                    return 1;
                 }
         }
     }
