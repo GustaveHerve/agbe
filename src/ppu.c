@@ -90,6 +90,11 @@ void ppu_tick_m(struct ppu *ppu)
                 ppu->line_dot_count += time;
 
                 //TODO insert time x pixel rendered (1 dot = 1 pixel popped)
+                for (int i = 0; i < time; i++)
+                {
+                    struct pixel p = pop_pixel(ppu, ppu->obj_mode);
+                    //TODO send pixel to SDL rendering
+                }
                 dots -= time;
                 break;
             }
@@ -300,6 +305,15 @@ int push_slice(struct ppu *ppu, queue *q, uint8_t hi, uint8_t lo, int obj_i)
     return 2;
 }
 
+struct pixel pop_pixel(struct ppu *ppu, int obj)
+{
+    struct pixel p;
+    if (obj)
+        p = queue_pop(ppu->obj_fifo);
+    else
+        p = queue_pop(ppu->bg_fifo);
+    return p;
+}
 
 int get_lcdc(struct ppu *ppu, int bit)
 {

@@ -70,8 +70,7 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index);
 uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index);
 int push_pixel(queue *target, struct pixel p);
 int push_slice(struct ppu *ppu, queue *q, uint8_t hi, uint8_t lo, int obj_i);
-
-int vblank(struct ppu *ppu);
+struct pixel pop_pixel(struct ppu *ppu, int obj);
 
 int get_lcdc(struct ppu *ppu, int bit);
 int in_window(struct ppu *ppu);
