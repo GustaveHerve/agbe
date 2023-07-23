@@ -4,6 +4,22 @@
 #include <stdlib.h>
 #include "queue.h"
 
+struct fetcher
+{
+    queue *target;
+    uint8_t obj_fetcher;
+
+    uint8_t tileid; //Variables to Save state between dots
+    uint8_t lo;
+    uint8_t hi;
+
+    uint8_t current_step; //0 = get_tile_id
+                          //1 = get_tile_lo
+                          //2 = get_tile_hi
+                          //3 = push_pixels
+} typedef fetcher;
+
+
 struct ppu
 {
     struct cpu *cpu;
@@ -26,6 +42,9 @@ struct ppu
     queue *bg_fifo;
     queue *obj_fifo;
 
+    fetcher *bg_fetcher;
+    fetcher *obj_fetcher;
+
     uint8_t oam_locked;
     uint8_t vram_locked;
     uint8_t dma_oam_locked;
@@ -36,21 +55,6 @@ struct ppu
     uint8_t current_mode;
 
     uint8_t win_mode;
-};
-
-struct fetcher
-{
-    queue *target;
-    uint8_t obj_fetcher;
-
-    uint8_t tileid; //Variables to Save state between dots
-    uint8_t lo;
-    uint8_t hi;
-
-    uint8_t current_step; //0 = get_tile_id
-                          //1 = get_tile_lo
-                          //2 = get_tile_hi
-                          //3 = push_pixels
 };
 
 void ppu_init(struct ppu *ppu, struct cpu *cpu);
@@ -77,6 +81,7 @@ int in_window(struct ppu *ppu);
 int in_object(struct ppu *ppu);
 
 //Fetcher functions
-int fetcher_step(struct fetcher *f, struct ppu *ppu, int obj_index);
+void fetcher_init(struct ppu *ppu, fetcher *f, uint8_t obj);
+int fetcher_step(fetcher *f, struct ppu *ppu, int obj_index);
 
 #endif

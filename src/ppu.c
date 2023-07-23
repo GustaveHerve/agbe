@@ -25,12 +25,21 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu)
 
     ppu->bg_fifo = queue_init();
     ppu->obj_fifo = queue_init();
+
+    ppu->bg_fetcher = malloc(sizeof(fetcher));
+    ppu->obj_fetcher = malloc(sizeof(fetcher));
+
+    fetcher_init(ppu, ppu->bg_fetcher, 0);
+    fetcher_init(ppu, ppu->obj_fetcher, 1);
 }
 
 void ppu_free(struct ppu *ppu)
 {
+    free(ppu->bg_fetcher);
+    free(ppu->obj_fetcher);
     queue_free(ppu->bg_fifo);
     queue_free(ppu->obj_fifo);
+    free(ppu);
 }
 
 //Tick 4 dots
@@ -50,6 +59,13 @@ void ppu_tick_m(struct ppu *ppu)
             case 3: //Mode 3 - Drawing pixels and FIFOs fetcher activity
             {
                 //BG/Win Fetcher
+                if (in_window(ppu)) // Window mode -> clear BG FIFO, reset f
+                {
+                    ppu->win_mode = 1;
+                    queue_clear(ppu->bg_fifo);
+                    ppu->f
+                }
+                fetcher_step()
                 break;
             }
             case 0: //Mode 0 - HBlank
@@ -112,6 +128,7 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
         }
         else if (!get_lcdc(ppu, 5))
             ppu->win_mode = 0;
+        /*
         else
         {
             if (in_window(ppu))
@@ -119,6 +136,7 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
             else
                 ppu->win_mode = 0;
         }
+        */
 
         uint8_t x_part = 0;
         uint8_t y_part = 0;
@@ -261,8 +279,26 @@ int in_object(struct ppu *ppu)
     return -1;
 }
 
+void fetcher_init(struct ppu *ppu, fetcher *f, uint8_t obj)
+{
+    f->current_step = 0;
+    f->hi = 0;
+    f->lo = 0;
+    f->tileid = 0;
+    if (obj)
+    {
+        f->target = ppu->obj_fifo;
+        f->obj_fetcher = 1;
+    }
+    else
+    {
+        f->target = ppu->bg_fifo;
+        f->obj_fetcher = 0;
+    }
+}
+
 //Does one fetcher step (2 dots)
-int fetcher_step(struct fetcher *f, struct ppu *ppu, int obj_index)
+int fetcher_step(fetcher *f, struct ppu *ppu, int obj_index)
 {
     //BG/Win fetcher
     if (!f->obj_fetcher)
@@ -281,7 +317,7 @@ int fetcher_step(struct fetcher *f, struct ppu *ppu, int obj_index)
             case 3:
                 {
                     if (queue_isempty(ppu->bg_fifo))
-                        push_slice(ppu, ppu->bg_fifo, f->hi, f->lo, obj_index);
+                        push_slice(ppu, ppu->bg_fifo, f->hi, f->lo, NULL);
                     break;
                 }
         }
@@ -301,7 +337,12 @@ int fetcher_step(struct fetcher *f, struct ppu *ppu, int obj_index)
                 f->hi = get_tile_hi(ppu, f->tileid, -1);
                 break;
             case 3:
-                break;
+                {
+                    //TODO implement merging if OBJ FIFO not empty
+                    queue_clear(ppu->obj_fifo);
+                    push_slice(ppu, ppu->obj_fifo, f->hi, f->lo, obj_index);
+                    break;
+                }
         }
     }
 
