@@ -14,7 +14,7 @@ struct fetcher
                           //1 = get_tile_lo
                           //2 = get_tile_hi
                           //3 = push_pixels
-    uint8_t obj_index;    //Used if PPU in OBJ mode
+    int obj_index;    //Used if PPU in OBJ mode
 } typedef fetcher;
 
 
@@ -40,7 +40,8 @@ struct ppu
     queue *bg_fifo;
     queue *obj_fifo;
 
-    fetcher *fetcher;
+    fetcher *bg_fetcher;
+    fetcher *obj_fetcher;
 
     uint8_t oam_locked;
     uint8_t vram_locked;
@@ -51,8 +52,7 @@ struct ppu
     uint8_t current_mode;
 
     uint8_t win_mode;
-
-    uint8_t obj_mode;
+    uint8_t pop_pause;
 };
 
 void ppu_init(struct ppu *ppu, struct cpu *cpu);
@@ -71,13 +71,16 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index);
 int push_pixel(queue *target, struct pixel p);
 int push_slice(struct ppu *ppu, queue *q, uint8_t hi, uint8_t lo, int obj_i);
 struct pixel pop_pixel(struct ppu *ppu, int obj);
+int merge_obj(struct ppu *ppu, uint8_t hi, uint8_t lo, int obj);
 
 int get_lcdc(struct ppu *ppu, int bit);
 int in_window(struct ppu *ppu);
-int in_object(struct ppu *ppu);
+int in_object(struct ppu *ppu, int obj_index);
 
 //Fetcher functions
 void fetcher_init(fetcher *f);
-int fetcher_step(struct ppu *ppu, int obj_index);
+int bg_fetcher_step(struct ppu *ppu);
+int obj_fetcher_step(struct ppu *ppu);
 
+struct pixel select_pixel(struct ppu *ppu);
 #endif
