@@ -17,7 +17,7 @@ int ld_rr_a(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 
 //ld r,r
 //		1 MCycle
-int ld_r_r(uint8_t *dest, uint8_t *src)
+int ld_r_r(struct cpu *cpu, uint8_t *dest, uint8_t *src)
 {
 	*dest = *src;
 	return 1;
@@ -163,7 +163,7 @@ int ld_rr_nn(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 	return 3;
 }
 
-//ld sp,nn
+//ld SP,nn
 //x31	3 MCycle
 int ld_sp_nn(struct cpu *cpu)
 {
@@ -174,6 +174,7 @@ int ld_sp_nn(struct cpu *cpu)
 	cpu->regist->sp = convert_8to16(&hi, &lo);
 	return 3;
 }
+
 
 //ld (nn),SP
 //x08	5 MCycle

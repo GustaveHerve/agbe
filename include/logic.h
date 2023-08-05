@@ -45,7 +45,7 @@ int xor_a_hl(struct cpu *cpu);
 int xor_a_n(struct cpu *cpu);
 
 int or_a_r(struct cpu *cpu, uint8_t *src);
-int or_a_hl(struct cpu *cpu, uint8_t *src);
+int or_a_hl(struct cpu *cpu);
 int or_a_n(struct cpu *cpu);
 
 int cp_a_r(struct cpu *cpu, uint8_t *src);
