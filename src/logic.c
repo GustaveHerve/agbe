@@ -31,7 +31,7 @@ int inc_hl(struct cpu *cpu)
 
 ////inc rr
 //x(0-3)3	2 MCycle
-int inc_rr(uint8_t *hi, uint8_t *lo)
+int inc_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
     //During fetch of the opcode probably writes to lo
 	uint16_t convert = convert_8to16(hi, lo);
@@ -44,10 +44,10 @@ int inc_rr(uint8_t *hi, uint8_t *lo)
 
 //inc SP
 //x33	2 MCycle
-int inc_sp(uint16_t *dest)
+int inc_sp(struct cpu *cpu)
 {
     //During fetch of the opcode probably writes to lo
-	*dest += 1;
+	cpu->regist->sp += 1;
     //TODO add tick 1 MCycle (nothing)
 	return 2;
 }
@@ -79,7 +79,7 @@ int dec_hl(struct cpu *cpu)
 
 //dec rr
 //x(0-2)B	2MCycle
-int dec_rr(uint8_t *hi, uint8_t *lo)
+int dec_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
     //During fetch of the opcode probably writes to lo
 	uint16_t temp = convert_8to16(hi, lo);
@@ -92,10 +92,10 @@ int dec_rr(uint8_t *hi, uint8_t *lo)
 
 //dec sp
 //x3B	2 MCycle
-int dec_sp(uint16_t *sp)
+int dec_sp(struct cpu *cpu)
 {
     //During fetch of the opcode probably writes to lo
-	*sp -= 1;
+	cpu->regist->sp -= 1;
     //TODO add tick 1 MCycle (nothing)
 	return 2;
 }

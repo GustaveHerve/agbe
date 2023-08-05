@@ -32,7 +32,7 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
     }
 
     //OAM read
-    else if (address >= 0xFE00 && address <= 0xFE9F)
+    else if (address >= 0xFE00 && address <= 0xFEFF)
     {
         if (cpu->ppu->oam_locked)
             return 0xFF;
@@ -53,7 +53,7 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
     }
 
     //OAM read
-    else if (address >= 0xFE00 && address <= 0xFE9F)
+    else if (address >= 0xFE00 && address <= 0xFEFF)
     {
         if (cpu->ppu->oam_locked)
             write = 0;

@@ -47,12 +47,13 @@ int scf(struct cpu *cpu)
 
 int di(struct cpu *cpu)
 {
-    cpu->membus[0xFFFF] = 0;
+    *cpu->ie = 0;
     return 1;
 }
 
 int ei(struct cpu *cpu)
 {
-    cpu->ime_enable = 2;
+    //Schedule a IME enable
+    cpu->ime = 2;
     return 1;
 }

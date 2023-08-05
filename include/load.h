@@ -3,11 +3,11 @@
 
 #include "cpu.h"
 
-int ld_bc_a(struct cpu *cpu);
+int ld_rr_a(struct cpu *cpu, uint8_t *hi, uint8_t *lo);
 int ld_r_r(uint8_t *dest, uint8_t *src);
 int ld_r_u8(struct cpu *cpu, uint8_t *dest);
 int ld_hl_u8(struct cpu *cpu);
-int ld_r_n(struct cpu *cpu, uint8_t *hi, uint8_t *lo);
+int ld_a_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo);
 int ld_hl_r(struct cpu *cpu, uint8_t *src);
 int ld_r_hl(struct cpu *cpu, uint8_t *dest);
 int ld_nn_a(struct cpu *cpu);

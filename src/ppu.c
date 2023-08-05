@@ -106,7 +106,7 @@ void ppu_tick_m(struct ppu *ppu)
                     //TODO insert time x pixel rendered (1 dot = 1 pixel pop)
                     for (int i = 0; i < time; i++)
                     {
-                        struct pixel p = pop_pixel(ppu, ppu->pop_pause);
+                        struct pixel p = select_pixel(ppu);
                         //TODO send pixel to SDL rendering
                     }
                 }
@@ -149,7 +149,10 @@ void ppu_tick_m(struct ppu *ppu)
                     ppu->obj_count = 0;
                     //Start VBlank
                     if (*ppu->ly > 143)
+                    {
+                        set_if(ppu->cpu, 0); //Interrupt VBlank
                         ppu->current_mode = 1;
+                    }
                 }
                 break;
             }
@@ -271,6 +274,7 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
 
 uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
 {
+    //TODO flip
     uint8_t y_part = 0;
     int bit_12 = 0;
     if (obj_index != -1)
@@ -296,7 +300,6 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
 
 uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
 {
-    //Get tile low
     uint8_t y_part = 0;
     int bit_12 = 0;
     if (obj_index != -1)
@@ -310,6 +313,11 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
     {
         y_part = (uint8_t)(((*ppu->ly + *ppu->scy)) % 8);
         bit_12 = !(get_lcdc(ppu, 4) | (tileid & 0x80));
+    }
+
+    if (obj_index != -1)
+    {
+        //TODO flip Y
     }
 
     uint16_t address_high = (0x4 << 13) | (bit_12 << 12) |
@@ -473,6 +481,8 @@ int obj_fetcher_step(struct ppu *ppu)
 struct pixel select_pixel(struct ppu *ppu)
 {
     struct pixel bg_p = queue_pop(ppu->bg_fifo);
+    if (queue_isempty(ppu->obj_fifo))
+        return bg_p;
     struct pixel obj_p = queue_pop(ppu->obj_fifo);
     if (!get_lcdc(ppu, 0))
         return obj_p;

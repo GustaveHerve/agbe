@@ -5,12 +5,12 @@
 #include "emulation.h"
 
 
-//ld (BC),A
-//x02	2 MCycle
-int ld_bc_a(struct cpu *cpu)
+//ld (rr),a
+//x(0-1)2	2 MCycle
+int ld_rr_a(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
 	uint16_t address = 0;
-    address = convert_8to16(&cpu->regist->b, &cpu->regist->c);
+    address = convert_8to16(hi, lo);
     write_mem(cpu, address, cpu->regist->a);
 	return 2;
 }
@@ -43,9 +43,9 @@ int ld_hl_u8(struct cpu *cpu)
 	return 3;
 }
 
-//ld r,(rr)
+//ld a,(rr)
 //x(0-1)A	2 MCycle
-int ld_r_n(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
+int ld_a_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
 	cpu->regist->pc++;
     uint16_t address = convert_8to16(hi, lo);
