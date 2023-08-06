@@ -2,6 +2,7 @@
 #define PREFIX_H
 
 #include <stdlib.h>
+#include "cpu.h"
 
 int rlc(struct cpu *cpu, uint8_t *dest);
 int rlc_hl(struct cpu *cpu);
@@ -27,7 +28,7 @@ int srl_hl(struct cpu *cpu);
 int bit(struct cpu *cpu, uint8_t *dest, int n);
 int bit_hl(struct cpu *cpu, int n);
 
-int res(int8_t *dest, int n);
+int res(uint8_t *dest, int n);
 int res_hl(struct cpu *cpu, int n);
 
 int set(uint8_t *dest, int n);
