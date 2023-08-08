@@ -43,10 +43,16 @@ void cpu_init_regist(struct cpu *cpu);
 void cpu_start(struct cpu *cpu);
 void cpu_free(struct cpu *todelete);
 
-void next_op(struct cpu *cpu);
-
 //Interrupts
+int check_interrupt(struct cpu *cpu);
+int handle_interrupt(struct cpu *cpu, int bit);
+
+int get_if(struct cpu *cpu, int bit);
 void set_if(struct cpu *cpu, int bit);
 void clear_if(struct cpu *cpu, int bit);
+
+int get_ie(struct cpu *cpu, int bit);
+void set_ie(struct cpu *cpu, int bit);
+void clear_ie(struct cpu *cpu, int bit);
 
 #endif

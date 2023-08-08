@@ -3,7 +3,7 @@
 
 #include "cpu.h"
 
-void next_op(struct cpu *cpu);
+int next_op(struct cpu *cpu);
 int prefix_op(struct cpu *cpu);
 
 #endif

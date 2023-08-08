@@ -128,7 +128,7 @@ int ret_cc(struct cpu *cpu, int cc)
 int reti(struct cpu *cpu)
 {
     ret(cpu);
-    cpu->ime_enable = 1;
+    cpu->ime = 1;
     return 4;
 }
 

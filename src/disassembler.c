@@ -7,8 +7,9 @@
 #include "rotshift.h"
 #include "utils.h"
 #include "prefix.h"
+#include "disassembler.h"
 
-void next_op(struct cpu *cpu)
+int next_op(struct cpu *cpu)
 {
     int mcycles = 0;
     switch (cpu->membus[cpu->regist->pc])
@@ -752,6 +753,7 @@ void next_op(struct cpu *cpu)
             //TODO undefined opcode behaviour ?
             break;
     }
+    return mcycles;
 }
 
 int prefix_op(struct cpu *cpu)
@@ -1530,4 +1532,5 @@ int prefix_op(struct cpu *cpu)
             mcycles = set(&cpu->regist->a, 7);
             break;
     }
+    return mcycles;
 }

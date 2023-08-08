@@ -5,7 +5,6 @@
 #include "cpu.h"
 #include "ppu.h"
 
-void tick(struct cpu *cpu);
 void tick_m(struct cpu *cpu);
 
 uint8_t read_mem(struct cpu *cpu, uint16_t address);

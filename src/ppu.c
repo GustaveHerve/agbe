@@ -107,6 +107,7 @@ void ppu_tick_m(struct ppu *ppu)
                     for (int i = 0; i < time; i++)
                     {
                         struct pixel p = select_pixel(ppu);
+                        ppu->lx++;
                         //TODO send pixel to SDL rendering
                     }
                 }

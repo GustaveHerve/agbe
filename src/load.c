@@ -242,7 +242,7 @@ int ldh_a_c(struct cpu *cpu)
 int ldh_c_a(struct cpu *cpu)
 {
     write_mem(cpu, 0xFF00 + cpu->regist->c, cpu->regist->a);
-    return 3;
+    return 2;
 }
 
 int pop_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
@@ -281,5 +281,6 @@ int push_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
     write_mem(cpu, cpu->regist->sp, *hi);
     cpu->regist->sp--;
     write_mem(cpu, cpu->regist->sp, *lo);
+    tick_m(cpu);
     return 4;
 }

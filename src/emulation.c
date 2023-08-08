@@ -1,22 +1,23 @@
 #include <stdlib.h>
+#include <SDL2/SDL.h>
 #include <err.h>
 #include "cpu.h"
 #include "ppu.h"
 #include "utils.h"
+#include "disassembler.h"
+#include "emulation.h"
 
-void main_loop()
+void main_loop(struct cpu *cpu)
 {
-
-}
-
-void tick(struct cpu *cpu)
-{
-    //TODO advance one t-state on everything other than CPU
+    tick_m(cpu);
+    int mcycles = next_op(cpu);
+    check_interrupt(cpu);
+    //TODO add interrupt verification
 }
 
 void tick_m(struct cpu *cpu)
 {
-    //TODO advance one MCycle (4 t-states) on everything other than CPU
+    ppu_tick_m(cpu->ppu);
 }
 
 uint8_t read_mem(struct cpu *cpu, uint16_t address)
@@ -58,6 +59,8 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         if (cpu->ppu->oam_locked)
             write = 0;
     }
+    else if (address == 0xFF04)
+        cpu->div = 0;
     tick_m(cpu);
     //TODO PPU tick +1 MCycle (+4 T-State)
     if (write)
