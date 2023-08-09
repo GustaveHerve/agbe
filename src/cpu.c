@@ -27,6 +27,8 @@ void cpu_init(struct cpu *cpu)
     cpu->stop = 0;
 
     *cpu->_if = 0;
+
+    cpu->acc_timer = 0;
 }
 
 //Set registers' default values

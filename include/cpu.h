@@ -30,12 +30,15 @@ struct cpu
     uint8_t *_if;
 
     uint8_t *div;
+    uint16_t div16;
     uint8_t *tima;
     uint8_t *tma;
     uint8_t *tac;
 
     int halt;
     int stop;
+
+    int acc_timer;
 };
 
 void cpu_init(struct cpu *new_cpu);

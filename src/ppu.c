@@ -73,9 +73,13 @@ void ppu_tick_m(struct ppu *ppu)
                 }
                 //End of line, go to HBlank
                 //TODO adapt lx for prefetch and max 167
-                else if (ppu->lx == 160)
+                else if (ppu->lx >= 167)
                 {
                     ppu->current_mode = 0;
+                    clear_stat(ppu, 1);
+                    clear_stat(ppu, 0);
+                    if (get_stat(ppu, 3) && !get_if(ppu->cpu, 1))
+                        set_if(ppu->cpu, 1);
                     break;
                 }
 
@@ -148,10 +152,18 @@ void ppu_tick_m(struct ppu *ppu)
                     ppu->line_dot_count = 0;
                     ppu->current_mode = 2;
                     ppu->obj_count = 0;
+                    set_stat(ppu, 1);
+                    clear_stat(ppu, 0);
+                    if (get_stat(ppu, 5) && !get_stat(ppu, 4))
+                        set_if(ppu->cpu, 1);
                     //Start VBlank
                     if (*ppu->ly > 143)
                     {
+                        clear_stat(ppu, 1);
+                        set_stat(ppu, 0);
                         set_if(ppu->cpu, 0); //Interrupt VBlank
+                        if (get_stat(ppu, 4) && !get_stat(ppu, 3))
+                            set_if(ppu->cpu, 1);
                         ppu->current_mode = 1;
                     }
                 }
@@ -168,13 +180,28 @@ void ppu_tick_m(struct ppu *ppu)
                 else if (*ppu->ly < 153)    //Go to next VBlank line
                 {
                     *ppu->ly += 1;
+                    if (*ppu->ly == *ppu->lyc)
+                        set_stat(ppu, 2);
+                    else
+                        clear_stat(ppu, 2);
                     ppu->line_dot_count = 0;
                 }
-                else    //Exit VBlank
+                else    //Exit VBlank, enter OAM Scan
                 {
                     ppu->line_dot_count = 0;
                     ppu->frame_dot_count = 0;
                     ppu->current_mode = 2;
+                    *ppu->ly = 0;
+                    if (*ppu->ly == *ppu->lyc)
+                    {
+                        set_stat(ppu, 2);
+                        if (get_stat(ppu, 6)) //&& !get_if(ppu->cpu, 1))
+                            set_if(ppu->cpu, 1);
+                    }
+                    else
+                        clear_stat(ppu, 2);
+                    set_stat(ppu, 1);
+                    clear_stat(ppu, 0);
                 }
                 break;
             }
@@ -204,7 +231,11 @@ int oam_scan(struct ppu *ppu)
     ppu->frame_dot_count += 2;
     ppu->line_dot_count += 2;
     if (ppu->line_dot_count >= 80)
+    {
         ppu->current_mode = 3;
+        set_stat(ppu, 1);
+        set_stat(ppu, 0);
+    }
 
     return 2;
 }
@@ -494,4 +525,20 @@ struct pixel select_pixel(struct ppu *ppu)
     if (obj_p.color == 0)
         return bg_p;
     return obj_p;
+}
+
+//STAT
+void set_stat(struct ppu *ppu, int bit)
+{
+    *ppu->stat = *ppu->stat | (0x01 << bit);
+}
+
+int get_stat(struct ppu *ppu, int bit)
+{
+    return (*ppu->stat >> bit) & 0x01;
+}
+
+void clear_stat(struct ppu *ppu, int bit)
+{
+    *ppu->stat = *ppu->stat & ~(0x01 << bit);
 }

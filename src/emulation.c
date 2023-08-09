@@ -17,6 +17,42 @@ void main_loop(struct cpu *cpu)
 
 void tick_m(struct cpu *cpu)
 {
+    if (!cpu->stop)
+    {
+        cpu->div16 += 1;
+        *cpu->div = (cpu->div16 >> 6) & 0xFF;
+    }
+    uint8_t previous = *cpu->tima;
+    if (*cpu->tac >> 2 & 0x01)
+    {
+        int temp = 0;
+        switch ((*cpu->tac | 0x03))
+        {
+            case 0:
+                temp = 256;
+                break;
+            case 1:
+                temp = 4;
+                break;
+            case 2:
+                temp = 16;
+                break;
+            case 3:
+                temp = 64;
+                break;
+        }
+
+        if (cpu->acc_timer >= temp)
+            *cpu->tima += 1;
+    }
+
+    //Overflow
+    if (previous > *cpu->tima)
+    {
+        *cpu->tima = *cpu->tma;
+        set_if(cpu, 2);
+    }
+
     ppu_tick_m(cpu->ppu);
 }
 
@@ -60,7 +96,10 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
             write = 0;
     }
     else if (address == 0xFF04)
-        cpu->div = 0;
+    {
+        *cpu->div = 0;
+        cpu->div16 = 0;
+    }
     tick_m(cpu);
     //TODO PPU tick +1 MCycle (+4 T-State)
     if (write)

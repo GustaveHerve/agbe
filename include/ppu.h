@@ -77,6 +77,12 @@ int get_lcdc(struct ppu *ppu, int bit);
 int in_window(struct ppu *ppu);
 int in_object(struct ppu *ppu, int obj_index);
 
+//STAT
+void set_stat(struct ppu *ppu, int bit);
+void clear_stat(struct ppu *ppu, int bit);
+int get_stat(struct ppu *ppu, int bit);
+void stat_request(struct ppu *ppu, int bit);
+
 //Fetcher functions
 void fetcher_init(fetcher *f);
 int bg_fetcher_step(struct ppu *ppu);
