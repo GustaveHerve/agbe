@@ -1,7 +1,7 @@
 #ifndef CONTROL_H
 #define CONTROL_H
 
-#include "cpu.h"
+struct cpu;
 
 int nop();
 int stop(struct cpu *cpu);

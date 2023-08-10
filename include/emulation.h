@@ -2,9 +2,11 @@
 #define EMULATION_H
 
 #include <stdlib.h>
-#include "cpu.h"
-#include "ppu.h"
 
+struct cpu;
+struct ppu;
+
+void main_loop(struct cpu *cpu);
 void tick_m(struct cpu *cpu);
 void init_cpu(struct cpu *cpu, int checksum);
 void init_hardware(struct cpu *cpu);

@@ -6,7 +6,7 @@ struct pixel make_pixel(uint8_t hi, uint8_t lo, int i, uint8_t *attributes)
     struct pixel res;
     int hi_bit =  (hi >> (7-i)) & 0x01;
     int lo_bit = (lo >> (7-i)) & 0x01;
-    res.color = hi_bit << 1 & lo_bit;
+    res.color = (hi_bit << 1) & lo_bit;
     res.obj = 0;
     if (attributes != NULL)
     {

@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include "ppu.h"
+struct ppu;
 
 struct cpu_register
 {
@@ -41,7 +42,7 @@ struct cpu
     int acc_timer;
 };
 
-void cpu_init(struct cpu *new_cpu);
+void cpu_init(struct cpu *new_cpu, struct renderer *rend);
 void cpu_init_regist(struct cpu *cpu);
 void cpu_start(struct cpu *cpu);
 void cpu_free(struct cpu *todelete);

@@ -12,7 +12,9 @@
 int next_op(struct cpu *cpu)
 {
     int mcycles = 0;
-    switch (cpu->membus[cpu->regist->pc])
+    uint8_t opcode = cpu->membus[cpu->regist->pc];
+    cpu->regist->pc++;
+    switch (opcode)
     {
         case 0x00:
             mcycles = nop();
@@ -114,7 +116,7 @@ int next_op(struct cpu *cpu)
             mcycles = jr_cc_e8(cpu, get_z(cpu->regist) == 0);
             break;
         case 0x21:
-            mcycles = ld_hl_u8(cpu);
+            mcycles = ld_rr_nn(cpu, &cpu->regist->h, &cpu->regist->l);
             break;
         case 0x22:
             mcycles = ldi_hl_a(cpu);

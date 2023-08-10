@@ -9,15 +9,25 @@
 
 void main_loop(struct cpu *cpu)
 {
-    tick_m(cpu); // OPCode fetch
-    int mcycles = next_op(cpu); //Remaining MCycles are ticked in instructions
-    check_interrupt(cpu);
+    FILE *fptr;
+    fptr = fopen("testroms/tetris.gb", "rb");
+    fread(cpu->membus, sizeof(uint8_t), 32768, fptr);
+    fclose(fptr);
+
+    init_cpu(cpu, 0x0a);
+    init_hardware(cpu);
+    while (1)
+    {
+        tick_m(cpu); // OPCode fetch
+        next_op(cpu); //Remaining MCycles are ticked in instructions
+        check_interrupt(cpu);
+    }
 }
 
 void init_cpu(struct cpu *cpu, int checksum)
 {
     cpu->regist->a = 0x01;
-    set_z(cpu->regist, 0);
+    set_z(cpu->regist, 1);
     set_n(cpu->regist, 0);
     if (checksum == 0x00)
     {

@@ -276,7 +276,6 @@ int pop_af(struct cpu *cpu)
 
 int push_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
-    //TODO add tick 1 MCycle (nothing)
     cpu->regist->sp--;
     write_mem(cpu, cpu->regist->sp, *hi);
     cpu->regist->sp--;

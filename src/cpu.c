@@ -10,12 +10,12 @@
 
 #define MEMBUS_SIZE 65536 //In bytes
 
-void cpu_init(struct cpu *cpu)
+void cpu_init(struct cpu *cpu, struct renderer *rend)
 {
 	cpu->regist = malloc(sizeof(struct cpu_register));
 	cpu->membus = malloc(sizeof(uint8_t) * MEMBUS_SIZE);
     cpu->ppu = malloc(sizeof(struct ppu));
-    ppu_init(cpu->ppu, cpu);
+    ppu_init(cpu->ppu, cpu, rend);
     cpu->ime = 0;
     cpu->ie = &cpu->membus[0xFFFF];
     cpu->_if = &cpu->membus[0xFF0F];

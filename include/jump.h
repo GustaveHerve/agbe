@@ -2,7 +2,8 @@
 #define JUMP_H
 
 #include <stdlib.h>
-#include "cpu.h"
+
+struct cpu;
 
 int jr_e8(struct cpu *cpu);
 int jr_cc_e8(struct cpu *cpu, int cc);

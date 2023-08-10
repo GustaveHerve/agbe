@@ -8,7 +8,6 @@
 //x18	3 MCycle
 int jr_e8(struct cpu *cpu)
 {
-	cpu->regist->pc++;
 	int8_t e = read_mem(cpu, cpu->regist->pc);
 	cpu->regist->pc++;
     //TODO add tick +1 MCycle (nothing happens)
@@ -19,7 +18,6 @@ int jr_e8(struct cpu *cpu)
 //jr cc e (signed 8 bit)
 int jr_cc_e8(struct cpu *cpu, int cc)
 {
-    cpu->regist->pc++;
     int8_t e = read_mem(cpu, cpu->regist->pc);
     if (cc)
     {
@@ -141,7 +139,6 @@ int jp_hl(struct cpu *cpu)
 
 int jp_nn(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
     uint8_t hi = read_mem(cpu, cpu->regist->pc);
@@ -153,7 +150,6 @@ int jp_nn(struct cpu *cpu)
 
 int jp_cc_nn(struct cpu *cpu, int cc)
 {
-    cpu->regist->pc++;
     uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
     uint8_t hi = read_mem(cpu, cpu->regist->pc);
@@ -169,7 +165,6 @@ int jp_cc_nn(struct cpu *cpu, int cc)
 
 int call_nn(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
     uint8_t hi = read_mem(cpu, cpu->regist->pc);
@@ -186,7 +181,6 @@ int call_nn(struct cpu *cpu)
 
 int call_cc_nn(struct cpu *cpu, int cc)
 {
-    cpu->regist->pc++;
     uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
     uint8_t hi = read_mem(cpu, cpu->regist->pc);

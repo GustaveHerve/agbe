@@ -1,8 +1,10 @@
 #ifndef PPU_H
 #define PPU_H
 
+#include <SDL2/SDL.h>
 #include <stdlib.h>
 #include "queue.h"
+#include "rendering.h"
 
 struct fetcher
 {
@@ -34,6 +36,10 @@ struct ppu
     uint8_t *wx;
     uint8_t *stat;
 
+    uint8_t *bgp;
+    uint8_t *obp0;
+    uint8_t *obp1;
+
     struct obj obj_slots[10];
     int8_t obj_count;
 
@@ -53,9 +59,11 @@ struct ppu
 
     uint8_t win_mode;
     uint8_t pop_pause;
+
+    struct renderer *renderer;
 };
 
-void ppu_init(struct ppu *ppu, struct cpu *cpu);
+void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer);
 void ppu_free(struct ppu *ppu);
 
 void ppu_tick_m(struct ppu *ppu);

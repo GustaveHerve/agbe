@@ -1,7 +1,8 @@
 #ifndef LOAD_H
 #define LOAD_H
 
-#include "cpu.h"
+#include <stdlib.h>
+struct cpu;
 
 int ld_rr_a(struct cpu *cpu, uint8_t *hi, uint8_t *lo);
 int ld_r_r(struct cpu *cpu, uint8_t *dest, uint8_t *src);

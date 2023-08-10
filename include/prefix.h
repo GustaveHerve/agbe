@@ -2,7 +2,7 @@
 #define PREFIX_H
 
 #include <stdlib.h>
-#include "cpu.h"
+struct cpu;
 
 int rlc(struct cpu *cpu, uint8_t *dest);
 int rlc_hl(struct cpu *cpu);

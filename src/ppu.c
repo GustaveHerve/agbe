@@ -6,8 +6,9 @@
 #include "ppu_utils.h"
 #include "emulation.h"
 #include "queue.h"
+#include "rendering.h"
 
-void ppu_init(struct ppu *ppu, struct cpu *cpu)
+void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
 {
     ppu->cpu = cpu;
     cpu->ppu = ppu;
@@ -23,6 +24,10 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu)
     ppu->wx = cpu->membus + 0xFF4B;
     ppu->stat = cpu->membus + 0xFF41;
 
+    ppu->bgp = cpu->membus + 0xFF47;
+    ppu->obp0 = cpu->membus + 0xFF48;
+    ppu->obp1 = cpu->membus + 0xFF49;
+
     ppu->obj_count = 0;
 
     ppu->bg_fifo = queue_init();
@@ -33,6 +38,8 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu)
 
     fetcher_init(ppu->bg_fetcher);
     fetcher_init(ppu->obj_fetcher);
+
+    ppu->renderer = renderer;
 }
 
 void ppu_free(struct ppu *ppu)
@@ -112,7 +119,7 @@ void ppu_tick_m(struct ppu *ppu)
                     {
                         struct pixel p = select_pixel(ppu);
                         ppu->lx++;
-                        //TODO send pixel to SDL rendering
+                        draw_pixel(ppu->cpu, p);
                     }
                 }
                 else

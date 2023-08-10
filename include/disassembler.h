@@ -1,7 +1,7 @@
 #ifndef DISASSEMBLER_H
 #define DISASSEMBLER_H
 
-#include "cpu.h"
+struct cpu;
 
 int next_op(struct cpu *cpu);
 int prefix_op(struct cpu *cpu);
