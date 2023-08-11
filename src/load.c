@@ -27,8 +27,8 @@ int ld_r_r(struct cpu *cpu, uint8_t *dest, uint8_t *src)
 //x(0-3)(6 or E)	2 MCycle
 int ld_r_u8(struct cpu *cpu, uint8_t *dest)
 {
-	cpu->regist->pc++;
 	*dest = read_mem(cpu, cpu->regist->pc);
+    cpu->regist->pc++;
 	return 2;
 }
 
@@ -37,9 +37,9 @@ int ld_r_u8(struct cpu *cpu, uint8_t *dest)
 int ld_hl_u8(struct cpu *cpu)
 {
 	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-	cpu->regist->pc++;
     uint8_t n = read_mem(cpu, cpu->regist->pc);
 	write_mem(cpu, address, n);
+    cpu->regist->pc++;
 	return 3;
 }
 
@@ -47,7 +47,6 @@ int ld_hl_u8(struct cpu *cpu)
 //x(0-1)A	2 MCycle
 int ld_a_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
-	cpu->regist->pc++;
     uint16_t address = convert_8to16(hi, lo);
     uint8_t n = read_mem(cpu, address);
     cpu->regist->a = n;
@@ -77,12 +76,12 @@ int ld_r_hl(struct cpu *cpu, uint8_t *dest)
 //xEA   4 MCycle
 int ld_nn_a(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
     uint8_t hi = read_mem(cpu, cpu->regist->pc);
     uint16_t address = convert_8to16(&hi, &lo);
     write_mem(cpu, address, cpu->regist->a);
+    cpu->regist->pc++;
     return 4;
 }
 
@@ -90,12 +89,12 @@ int ld_nn_a(struct cpu *cpu)
 //xFA   4 MCycle
 int ld_a_nn(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
     uint8_t hi = read_mem(cpu, cpu->regist->pc);
     uint16_t address = convert_8to16(&hi, &lo);
     cpu->regist->a = read_mem(cpu, address);;
+    cpu->regist->pc++;
     return 4;
 }
 
@@ -156,10 +155,10 @@ int ldd_a_hl(struct cpu *cpu)
 //x(0-2)1	3 MCycle
 int ld_rr_nn(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
-	cpu->regist->pc++;
 	*lo = read_mem(cpu, cpu->regist->pc);
 	cpu->regist->pc++;
 	*hi = read_mem(cpu, cpu->regist->pc);
+    cpu->regist->pc++;
 	return 3;
 }
 
@@ -167,11 +166,11 @@ int ld_rr_nn(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 //x31	3 MCycle
 int ld_sp_nn(struct cpu *cpu)
 {
-	cpu->regist->pc++;
 	uint8_t lo = read_mem(cpu, cpu->regist->pc);
 	cpu->regist->pc++;
 	uint8_t hi = read_mem(cpu, cpu->regist->pc);
 	cpu->regist->sp = convert_8to16(&hi, &lo);
+    cpu->regist->pc++;
 	return 3;
 }
 
@@ -180,13 +179,13 @@ int ld_sp_nn(struct cpu *cpu)
 //x08	5 MCycle
 int ld_nn_sp(struct cpu *cpu)
 {
-	cpu->regist->pc++;
 	uint8_t lo = read_mem(cpu, cpu->regist->pc);
 	cpu->regist->pc++;
 	uint8_t hi = read_mem(cpu, cpu->regist->pc);
 	uint16_t address = convert_8to16(&hi, &lo);
     write_mem(cpu, address, regist_lo(&cpu->regist->sp));
     write_mem(cpu, address+1, regist_hi(&cpu->regist->sp));
+    cpu->regist->pc++;
 	return 5;
 }
 
@@ -194,7 +193,6 @@ int ld_nn_sp(struct cpu *cpu)
 //xF8   3 MCycle
 int ld_hl_spe8(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t offset = read_mem(cpu, cpu->regist->pc);
     uint8_t p = regist_lo(&cpu->regist->sp);
     hflag_add_set(cpu->regist, p, offset);
@@ -202,9 +200,10 @@ int ld_hl_spe8(struct cpu *cpu)
     set_z(cpu->regist, 0);
     set_n(cpu->regist, 0);
     uint16_t res = cpu->regist->sp + offset;
-    //TODO add tick 1 MCycle (nothing)
+    tick_m(cpu);
     cpu->regist->h = regist_hi(&res);
     cpu->regist->l = regist_lo(&res);
+    cpu->regist->pc++;
     return 3;
 }
 
@@ -213,23 +212,23 @@ int ld_hl_spe8(struct cpu *cpu)
 int ld_sp_hl(struct cpu *cpu)
 {
     cpu->regist->sp = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    //TODO add tick 1 MCycle (nothing)
+    tick_m(cpu);
     return 2;
 }
 
 int ldh_n_a(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t offset = read_mem(cpu, cpu->regist->pc);
     write_mem(cpu, 0xFF00 + offset, cpu->regist->a);
+    cpu->regist->pc++;
     return 3;
 }
 
 int ldh_a_n(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t offset = read_mem(cpu, cpu->regist->pc);
     cpu->regist->a = read_mem(cpu, 0xFF00 + offset);
+    cpu->regist->pc++;
     return 3;
 }
 

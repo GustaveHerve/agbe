@@ -36,7 +36,7 @@ int inc_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
     //During fetch of the opcode probably writes to lo
 	uint16_t convert = convert_8to16(hi, lo);
 	convert += 1;
-    //TODO add tick 1 MCycle (nothing)
+    tick_m(cpu);
 	*lo = regist_lo(&convert);
 	*hi = regist_hi(&convert);
 	return 2;
@@ -48,6 +48,7 @@ int inc_sp(struct cpu *cpu)
 {
     //During fetch of the opcode probably writes to lo
 	cpu->regist->sp += 1;
+    tick_m(cpu);
     //TODO add tick 1 MCycle (nothing)
 	return 2;
 }
@@ -84,7 +85,7 @@ int dec_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
     //During fetch of the opcode probably writes to lo
 	uint16_t temp = convert_8to16(hi, lo);
 	temp--;
-    //TODO add tick 1 MCycle (nothing)
+    tick_m(cpu);
 	*lo = regist_lo(&temp);
 	*hi = regist_hi(&temp);
 	return 2;
@@ -96,7 +97,7 @@ int dec_sp(struct cpu *cpu)
 {
     //During fetch of the opcode probably writes to lo
 	cpu->regist->sp -= 1;
-    //TODO add tick 1 MCycle (nothing)
+    tick_m(cpu);
 	return 2;
 }
 
@@ -130,7 +131,6 @@ int add_a_hl(struct cpu *cpu)
 //xC6   2 MCycle
 int add_a_n(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t n = read_mem(cpu, cpu->regist->pc);
     set_n(cpu->regist, 0);
     hflag_add_set(cpu->regist, cpu->regist->a, n);
@@ -180,7 +180,6 @@ int adc_a_hl(struct cpu *cpu)
 //xCE   2 MCycle
 int adc_a_n(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t n = read_mem(cpu, cpu->regist->pc);
     set_n(cpu->regist, 0);
     hflag_add_set(cpu->regist, cpu->regist->a, n);
@@ -208,7 +207,7 @@ int add_hl_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 	uint16_t sum = hl + rr;
 	cpu->regist->h = regist_hi(&sum);
 	cpu->regist->l = regist_lo(&sum);
-    //TODO add tick 1 MCycle (nothing)
+    tick_m(cpu);
 	return 2;
 }
 
@@ -224,13 +223,12 @@ int add_hl_sp(struct cpu *cpu)
 	uint16_t sum = cpu->regist->sp + hl;
 	cpu->regist->h = regist_hi(&sum);
 	cpu->regist->l = regist_lo(&sum);
-    //TODO add tick 1 MCycle (nothing)
+    tick_m(cpu);
 	return 2;
 }
 
 int add_sp_e8(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t offset = read_mem(cpu, cpu->regist->pc);
     uint8_t p = regist_lo(&cpu->regist->sp);
     hflag_add_set(cpu->regist, p, offset);
@@ -238,8 +236,8 @@ int add_sp_e8(struct cpu *cpu)
     set_z(cpu->regist, 0);
     set_n(cpu->regist, 0);
     cpu->regist->sp += offset;
-    //TODO add tick 1 MCycle (nothing) : writing to sp lo
-    //TODO add tick 1 MCycle (nothing) : writing to sp hi
+    tick_m(cpu);
+    tick_m(cpu);
     return 4;
 }
 //sub A,r
@@ -270,7 +268,6 @@ int sub_a_hl(struct cpu *cpu)
 
 int sub_a_n(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t n = read_mem(cpu, cpu->regist->pc);
     set_n(cpu->regist, 1);
     cflag_sub_set(cpu->regist, cpu->regist->a, n);
@@ -320,7 +317,6 @@ int sbc_a_hl(struct cpu *cpu)
 //xDE   2 MCycle
 int sbc_a_n(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t n = read_mem(cpu, cpu->regist->pc);
     set_n(cpu->regist, 1);
     hflag_sub_set(cpu->regist, cpu->regist->a, n);
@@ -364,7 +360,6 @@ int and_a_hl(struct cpu *cpu)
 //xE6   2 MCycle
 int and_a_n(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t n = read_mem(cpu, cpu->regist->pc);
     cpu->regist->a = cpu->regist->a & n;
     set_n(cpu->regist, 0);
@@ -403,7 +398,6 @@ int xor_a_hl(struct cpu *cpu)
 //xEE   2 MCycle
 int xor_a_n(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t n = read_mem(cpu, cpu->regist->pc);
     cpu->regist->a = cpu->regist->a ^ n;
     set_n(cpu->regist, 0);
@@ -442,7 +436,6 @@ int or_a_hl(struct cpu *cpu)
 //xF6   2 MCycle
 int or_a_n(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t n = read_mem(cpu, cpu->regist->pc);
     cpu->regist->a = cpu->regist->a | n;
     set_n(cpu->regist, 0);
@@ -480,7 +473,6 @@ int cp_a_hl(struct cpu *cpu)
 //xFE   2 MCycle
 int cp_a_n(struct cpu *cpu)
 {
-    cpu->regist->pc++;
     uint8_t n = read_mem(cpu, cpu->regist->pc);
     set_n(cpu->regist, 1);
     cflag_sub_set(cpu->regist, cpu->regist->a, n);

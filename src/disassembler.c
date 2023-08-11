@@ -7,6 +7,7 @@
 #include "rotshift.h"
 #include "utils.h"
 #include "prefix.h"
+#include "emulation.h"
 #include "disassembler.h"
 
 int next_op(struct cpu *cpu)
@@ -760,8 +761,8 @@ int next_op(struct cpu *cpu)
 
 int prefix_op(struct cpu *cpu)
 {
-    //TODO tick 1 MCycle
-    cpu->regist->pc++;
+    //Fetch the prefix opcode
+    tick_m(cpu);
     int mcycles = 0;
     switch (cpu->membus[cpu->regist->pc])
     {
