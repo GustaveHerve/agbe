@@ -16,6 +16,7 @@ void main_loop(struct cpu *cpu)
 
     init_cpu(cpu, 0x0a);
     init_hardware(cpu);
+    init_vram(cpu->ppu);
 
     while (1)
     {

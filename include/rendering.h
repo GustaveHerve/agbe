@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 
 struct cpu;
+struct ppu;
 struct pixel;
 
 struct renderer
@@ -15,5 +16,6 @@ struct renderer
 };
 
 void draw_pixel(struct cpu *cpu, struct pixel p);
+void init_vram(struct ppu *ppu);
 
 #endif

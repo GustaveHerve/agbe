@@ -58,3 +58,27 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
         SDL_LockSurface(rend->surface);
     }
 }
+
+void init_vram(struct ppu *ppu)
+{
+    ppu->cpu->membus[0x8010] = 0xF0;
+    ppu->cpu->membus[0x8011] = 0x00;
+    ppu->cpu->membus[0x8012] = 0xF0;
+    ppu->cpu->membus[0x8013] = 0x00;
+    ppu->cpu->membus[0x8014] = 0xFC;
+    ppu->cpu->membus[0x8015] = 0x00;
+    ppu->cpu->membus[0x8016] = 0xFC;
+    ppu->cpu->membus[0x8017] = 0x00;
+    ppu->cpu->membus[0x8018] = 0xFC;
+    ppu->cpu->membus[0x8019] = 0x00;
+    ppu->cpu->membus[0x8020] = 0xFC;
+    ppu->cpu->membus[0x8021] = 0x00;
+    ppu->cpu->membus[0x8022] = 0xF3;
+    ppu->cpu->membus[0x8023] = 0x00;
+    ppu->cpu->membus[0x8024] = 0xF3;
+    ppu->cpu->membus[0x8025] = 0x00;
+
+
+    ppu->cpu->membus[0x9904] = 0x01;
+    ppu->cpu->membus[0x9905] = 0x02;
+}

@@ -134,7 +134,7 @@ void ppu_tick_m(struct ppu *ppu)
                         ppu->lx++;
                     }
                 }
-                else
+                else if (ppu->pop_pause)
                 {
                     //If hasn't pushed gone at step push yet
                     if (ppu->bg_fetcher->current_step < 3)
@@ -295,8 +295,9 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
         int bit = 0;
         if (ppu->win_mode)
         {
-            //x_part: lx + 8 to get next tile
-            x_part = (ppu->lx + 8) / 8;
+            //x_part: lx + 8 to get next tile ?
+            //x_part = (ppu->lx + 8) / 8;
+            x_part = (ppu->lx) / 8;
             y_part = *ppu->wy / 8;
             bit = 6;
         }
@@ -304,8 +305,8 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
         {
             //TODO prefetch
             int lx = ppu->lx;
-            if (ppu->lx > 0)
-                lx += 8;
+            //if (ppu->lx > 0)
+            //    lx += 8;
             x_part =  ((uint8_t) (lx + *ppu->scx)) / 8;
             y_part =  ((uint8_t) (*ppu->ly + *ppu->scy)) / 8;
             bit = 3;
