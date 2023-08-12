@@ -89,7 +89,7 @@ void ppu_tick_m(struct ppu *ppu)
                 }
                 //End of line, go to HBlank
                 //TODO adapt lx for prefetch and max 167
-                else if (ppu->lx >= 167)
+                else if (ppu->lx > 167)
                 {
                     ppu->current_mode = 0;
                     clear_stat(ppu, 1);
@@ -302,7 +302,11 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
         }
         else
         {
-            x_part =  ((uint8_t) (ppu->lx + 8 + *ppu->scx)) / 8;
+            //TODO prefetch
+            int lx = ppu->lx;
+            if (ppu->lx > 0)
+                lx += 8;
+            x_part =  ((uint8_t) (lx + *ppu->scx)) / 8;
             y_part =  ((uint8_t) (*ppu->ly + *ppu->scy)) / 8;
             bit = 3;
         }

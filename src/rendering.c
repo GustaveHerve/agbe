@@ -47,7 +47,7 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
     sdlPixel = SDL_MapRGB(rend->surface->format, r, g, b);
     pixels[*cpu->ppu->ly * 160 + (cpu->ppu->lx - 8)] = sdlPixel;
 
-    if (*cpu->ppu->ly == 143 && cpu->ppu->lx == 159)
+    if (*cpu->ppu->ly == 143 && cpu->ppu->lx == 167)
     {
         SDL_UnlockSurface(rend->surface);
         SDL_UpdateTexture(rend->texture, NULL, pixels, 160 * sizeof(Uint32));
