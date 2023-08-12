@@ -137,6 +137,7 @@ int add_a_n(struct cpu *cpu)
     cflag_add_set(cpu->regist, cpu->regist->a, n);
     cpu->regist->a += n;
     set_z(cpu->regist, cpu->regist->a == 0);
+    cpu->regist->pc++;
     return 2;
 }
 
@@ -238,6 +239,7 @@ int add_sp_e8(struct cpu *cpu)
     cpu->regist->sp += offset;
     tick_m(cpu);
     tick_m(cpu);
+    cpu->regist->pc++;
     return 4;
 }
 //sub A,r
@@ -274,6 +276,7 @@ int sub_a_n(struct cpu *cpu)
     hflag_sub_set(cpu->regist, cpu->regist->a, n);
     cpu->regist->a -= n;
     set_z(cpu->regist, cpu->regist->a == 0);
+    cpu->regist->pc++;
     return 2;
 }
 
@@ -328,6 +331,7 @@ int sbc_a_n(struct cpu *cpu)
         cflag_sub_set(cpu->regist, cpu->regist->a, 1);
     cpu->regist->a--;
     set_z(cpu->regist, cpu->regist->a == 0);
+    cpu->regist->pc++;
     return 2;
 }
 
@@ -366,6 +370,7 @@ int and_a_n(struct cpu *cpu)
     set_h(cpu->regist, 1);
     set_c(cpu->regist, 0);
     set_z(cpu->regist, cpu->regist->a == 0);
+    cpu->regist->pc++;
     return 2;
 }
 
@@ -404,6 +409,7 @@ int xor_a_n(struct cpu *cpu)
     set_h(cpu->regist, 0);
     set_c(cpu->regist, 0);
     set_z(cpu->regist, cpu->regist->a == 0);
+    cpu->regist->pc++;
     return 2;
 }
 
@@ -442,6 +448,7 @@ int or_a_n(struct cpu *cpu)
     set_h(cpu->regist, 1);
     set_c(cpu->regist, 0);
     set_z(cpu->regist, cpu->regist->a == 0);
+    cpu->regist->pc++;
     return 2;
 }
 
@@ -478,6 +485,7 @@ int cp_a_n(struct cpu *cpu)
     cflag_sub_set(cpu->regist, cpu->regist->a, n);
     hflag_sub_set(cpu->regist, cpu->regist->a, n);
     set_z(cpu->regist, cpu->regist->a == 0);
+    cpu->regist->pc++;
     return 2;
 }
 

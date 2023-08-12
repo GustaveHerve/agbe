@@ -40,6 +40,15 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
     fetcher_init(ppu->obj_fetcher);
 
     ppu->renderer = renderer;
+
+    ppu->current_mode = 1;
+    ppu->oam_locked = 0;
+    ppu->vram_locked = 0;
+    ppu->dma_oam_locked = 0;
+    ppu->frame_dot_count = 0;
+    ppu->line_dot_count = 0;
+    ppu->win_mode = 0;
+    ppu->pop_pause = 0;
 }
 
 void ppu_free(struct ppu *ppu)
@@ -72,7 +81,7 @@ void ppu_tick_m(struct ppu *ppu)
 
                 int time = 0;
                 //reset FIFOs at beginning of Mode 3
-                if (ppu->line_dot_count == 0)
+                if (ppu->line_dot_count == 80)
                 {
                     ppu->pop_pause = 0;
                     queue_clear(ppu->bg_fifo);
@@ -94,8 +103,8 @@ void ppu_tick_m(struct ppu *ppu)
                 if (!get_lcdc(ppu, 1))
                     in_object(ppu, ppu->obj_fetcher->obj_index);
 
-                //Check if Window
-                if (in_window(ppu)) //Win mode -> clear + reset BG FIFO
+                //Check if in Window and WIN Enable
+                if (get_lcdc(ppu, 0) && get_lcdc(ppu, 5) && in_window(ppu)) //Win mode -> clear + reset BG FIFO
                 {
                     ppu->win_mode = 1;
                     queue_clear(ppu->bg_fifo);
@@ -111,15 +120,18 @@ void ppu_tick_m(struct ppu *ppu)
 
 
                 //FIFOs popping is paused if OBJ was detected
-                if (!ppu->pop_pause)
+                if (!ppu->pop_pause && !queue_isempty(ppu->bg_fifo))
                 {
                     //TODO select pixel if obj fifo not empty
                     //TODO insert time x pixel rendered (1 dot = 1 pixel pop)
+                    if (time == 0)
+                        time = 1;
                     for (int i = 0; i < time; i++)
                     {
                         struct pixel p = select_pixel(ppu);
+                        if (ppu->lx > 7) //Don't draw prefetch
+                            draw_pixel(ppu->cpu, p);
                         ppu->lx++;
-                        draw_pixel(ppu->cpu, p);
                     }
                 }
                 else

@@ -5,10 +5,10 @@
 
 struct pixel
 {
-    int color;
-    int palette;
-    int priority;
-    int obj;
+    uint8_t color;
+    uint8_t palette;
+    uint8_t priority;
+    uint8_t obj;
 };
 
 struct obj

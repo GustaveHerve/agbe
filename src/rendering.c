@@ -43,6 +43,18 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
             b = 32;
             break;
     }
+    SDL_LockSurface(rend->surface);
     sdlPixel = SDL_MapRGB(rend->surface->format, r, g, b);
-    pixels[*cpu->ppu->ly * 160 + cpu->ppu->lx] = sdlPixel;
+    pixels[*cpu->ppu->ly * 160 + (cpu->ppu->lx - 8)] = sdlPixel;
+
+    if (*cpu->ppu->ly == 143 && cpu->ppu->lx == 159)
+    {
+        SDL_UnlockSurface(rend->surface);
+        SDL_UpdateTexture(rend->texture, NULL, pixels, 160 * sizeof(Uint32));
+        SDL_RenderClear(rend->renderer);
+        SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
+        SDL_RenderPresent(rend->renderer);
+        SDL_PumpEvents();
+        SDL_LockSurface(rend->surface);
+    }
 }

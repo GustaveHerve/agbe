@@ -19,9 +19,9 @@ int jr_e8(struct cpu *cpu)
 int jr_cc_e8(struct cpu *cpu, int cc)
 {
     int8_t e = read_mem(cpu, cpu->regist->pc);
+    cpu->regist->pc++;
     if (cc)
     {
-        cpu->regist->pc++;
         tick_m(cpu);
         cpu->regist->pc += e;
         return 3;
@@ -94,6 +94,7 @@ int jp_cc_nn(struct cpu *cpu, int cc)
     uint8_t lo = read_mem(cpu, cpu->regist->pc);
     cpu->regist->pc++;
     uint8_t hi = read_mem(cpu, cpu->regist->pc);
+    cpu->regist->pc++;
     uint16_t address = convert_8to16(&hi, &lo);
     if (cc)
     {
@@ -126,9 +127,9 @@ int call_cc_nn(struct cpu *cpu, int cc)
     cpu->regist->pc++;
     uint8_t hi = read_mem(cpu, cpu->regist->pc);
     uint16_t nn = convert_8to16(&hi, &lo);
+    cpu->regist->pc++;
     if (cc)
     {
-        cpu->regist->pc++;
         tick_m(cpu);
         cpu->regist->sp--;
         write_mem(cpu, cpu->regist->sp, regist_hi(&cpu->regist->pc));

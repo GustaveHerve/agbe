@@ -16,6 +16,7 @@ void main_loop(struct cpu *cpu)
 
     init_cpu(cpu, 0x0a);
     init_hardware(cpu);
+
     while (1)
     {
         tick_m(cpu); // OPCode fetch
@@ -115,6 +116,7 @@ void tick_m(struct cpu *cpu)
     {
         cpu->div16 += 1;
         *cpu->div = (cpu->div16 >> 6) & 0xFF;
+        cpu->acc_timer += 1;
     }
     uint8_t previous = *cpu->tima;
     if (*cpu->tac >> 2 & 0x01)

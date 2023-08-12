@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <err.h>
 #include "queue.h"
+#include "ppu.h"
 #include "ppu.h"
 
 queue *queue_init()
@@ -38,11 +40,12 @@ void queue_push(queue *q, struct pixel data)
 
 struct pixel queue_pop(queue *q)
 {
-    //TODO empty handling
-    //if (queue_isempty(q))
+    if (queue_isempty(q))
+        errx(1, "queue_pop: popping empty queue");
     struct pixel res = q->front->data;
-    free(q->front);
+    queue_node *todelete = q->front;
     q->front = q->front->next;
+    free(todelete);
     if (q->front == NULL)
         q->rear = NULL;
     q->count--;
@@ -54,8 +57,9 @@ void queue_clear(queue *q)
     queue_node *p = q->front;
     while (p != NULL)
     {
-        free(p);
+        queue_node *temp = p;
         p = p->next;
+        free(temp);
     }
     q->front = NULL;
     q->rear = NULL;
