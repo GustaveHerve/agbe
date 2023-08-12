@@ -48,7 +48,7 @@ int next_op(struct cpu *cpu)
             mcycles = add_hl_rr(cpu, &cpu->regist->b, &cpu->regist->c);
             break;
         case 0x0A:
-            mcycles = ld_rr_nn(cpu, &cpu->regist->b, &cpu->regist->c);
+            mcycles = ld_a_rr(cpu, &cpu->regist->b, &cpu->regist->c);
             break;
         case 0x0B:
             mcycles = dec_rr(cpu, &cpu->regist->b, &cpu->regist->c);
@@ -87,7 +87,7 @@ int next_op(struct cpu *cpu)
             mcycles = ld_r_u8(cpu, &cpu->regist->d);
             break;
         case 0x17:
-            mcycles = rlca(cpu);
+            mcycles = rla(cpu);
             break;
         case 0x18:
             mcycles = jr_e8(cpu);
@@ -123,7 +123,7 @@ int next_op(struct cpu *cpu)
             mcycles = ldi_hl_a(cpu);
             break;
         case 0x23:
-            mcycles = inc_hl(cpu);
+            mcycles = inc_rr(cpu, &cpu->regist->h, &cpu->regist->l);
             break;
         case 0x24:
             mcycles = inc_r(cpu, &cpu->regist->h);
@@ -147,7 +147,7 @@ int next_op(struct cpu *cpu)
             mcycles = ldi_a_hl(cpu);
             break;
         case 0x2B:
-            mcycles = dec_hl(cpu);
+            mcycles = dec_rr(cpu, &cpu->regist->h, &cpu->regist->l);
             break;
         case 0x2C:
             mcycles = inc_r(cpu, &cpu->regist->l);
@@ -204,7 +204,7 @@ int next_op(struct cpu *cpu)
             mcycles = dec_r(cpu, &cpu->regist->a);
             break;
         case 0x3E:
-            mcycles = ldh_a_n(cpu);
+            mcycles = ld_r_u8(cpu, &cpu->regist->a);
             break;
         case 0x3F:
             mcycles = ccf(cpu);
@@ -327,7 +327,7 @@ int next_op(struct cpu *cpu)
             mcycles = ld_r_hl(cpu, &cpu->regist->h);
             break;
         case 0x67:
-            mcycles = ld_r_r(cpu, &cpu->regist->l, &cpu->regist->a);
+            mcycles = ld_r_r(cpu, &cpu->regist->h, &cpu->regist->a);
             break;
         case 0x68:
             mcycles = ld_r_r(cpu, &cpu->regist->l, &cpu->regist->b);
@@ -516,7 +516,7 @@ int next_op(struct cpu *cpu)
             mcycles = and_a_r(cpu, &cpu->regist->l);
             break;
         case 0xA6:
-            mcycles = add_a_hl(cpu);
+            mcycles = and_a_hl(cpu);
             break;
         case 0xA7:
             mcycles = and_a_r(cpu, &cpu->regist->a);
@@ -537,7 +537,7 @@ int next_op(struct cpu *cpu)
             mcycles = xor_a_r(cpu, &cpu->regist->h);
             break;
         case 0xAD:
-            mcycles = xor_a_r(cpu, &cpu->regist->d);
+            mcycles = xor_a_r(cpu, &cpu->regist->l);
             break;
         case 0xAE:
             mcycles = xor_a_hl(cpu);
