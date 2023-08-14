@@ -69,7 +69,7 @@ int next_op(struct cpu *cpu)
             mcycles = stop(cpu);
             break;
         case 0x11:
-            mcycles = ld_rr_nn(cpu, &cpu->regist->b, &cpu->regist->c);
+            mcycles = ld_rr_nn(cpu, &cpu->regist->d, &cpu->regist->e);
             break;
         case 0x12:
             mcycles = ld_rr_a(cpu, &cpu->regist->d, &cpu->regist->e);

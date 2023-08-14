@@ -88,7 +88,6 @@ void ppu_tick_m(struct ppu *ppu)
                     queue_clear(ppu->obj_fifo);
                 }
                 //End of line, go to HBlank
-                //TODO adapt lx for prefetch and max 167
                 else if (ppu->lx > 167)
                 {
                     ppu->current_mode = 0;
@@ -104,7 +103,7 @@ void ppu_tick_m(struct ppu *ppu)
                     in_object(ppu, ppu->obj_fetcher->obj_index);
 
                 //Check if in Window and WIN Enable
-                if (get_lcdc(ppu, 0) && get_lcdc(ppu, 5) && in_window(ppu)) //Win mode -> clear + reset BG FIFO
+                if (!ppu->win_mode && get_lcdc(ppu, 0) && get_lcdc(ppu, 5) && in_window(ppu)) //Win mode -> clear + reset BG FIFO
                 {
                     ppu->win_mode = 1;
                     queue_clear(ppu->bg_fifo);
@@ -272,6 +271,7 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
     uint8_t tileid = 0;
     if (obj_index == -1)
     {
+        /*
         //Decide if BG or Window Mode
         if (!get_lcdc(ppu, 0))
         {
@@ -280,7 +280,6 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
         }
         else if (!get_lcdc(ppu, 5))
             ppu->win_mode = 0;
-        /*
         else
         {
             if (in_window(ppu))

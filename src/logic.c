@@ -459,7 +459,7 @@ int cp_a_r(struct cpu *cpu, uint8_t *src)
     set_n(cpu->regist, 1);
     cflag_sub_set(cpu->regist, cpu->regist->a, *src);
     hflag_sub_set(cpu->regist, cpu->regist->a, *src);
-    set_z(cpu->regist, cpu->regist->a == 0);
+    set_z(cpu->regist, cpu->regist->a == *src);
     return 1;
 }
 
@@ -472,7 +472,7 @@ int cp_a_hl(struct cpu *cpu)
     uint8_t val = read_mem(cpu, address);
     cflag_sub_check(cpu->regist->a, val);
     hflag_sub_check(cpu->regist->a, val);
-    set_z(cpu->regist, cpu->regist->a == 0);
+    set_z(cpu->regist, cpu->regist->a == val);
     return 2;
 }
 
@@ -481,11 +481,11 @@ int cp_a_hl(struct cpu *cpu)
 int cp_a_n(struct cpu *cpu)
 {
     uint8_t n = read_mem(cpu, cpu->regist->pc);
+    cpu->regist->pc++;
     set_n(cpu->regist, 1);
     cflag_sub_set(cpu->regist, cpu->regist->a, n);
     hflag_sub_set(cpu->regist, cpu->regist->a, n);
-    set_z(cpu->regist, cpu->regist->a == 0);
-    cpu->regist->pc++;
+    set_z(cpu->regist, cpu->regist->a == n);
     return 2;
 }
 

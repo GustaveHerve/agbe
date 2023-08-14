@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <SDL2/SDL.h>
 #include <err.h>
 #include "cpu.h"
@@ -10,18 +11,25 @@
 void main_loop(struct cpu *cpu)
 {
     FILE *fptr;
+    fptr = fopen("testroms/boot.gb", "rb");
+    fread(cpu->membus, 1, 256, fptr);
+    fclose(fptr);
     fptr = fopen("testroms/tetris.gb", "rb");
-    fread(cpu->membus, sizeof(uint8_t), 32768, fptr);
+    fseek(fptr, 0x0100, SEEK_SET);
+    fread(cpu->membus + 0x100, 1, 80, fptr);
     fclose(fptr);
 
-    init_cpu(cpu, 0x0a);
-    init_hardware(cpu);
-    init_vram(cpu->ppu);
+    //init_cpu(cpu, 0x0a);
+    //init_hardware(cpu);
+    //init_vram(cpu->ppu);
 
+    //First OPCode Fetch
+    lcd_off(cpu);
+    tick_m(cpu);
     while (1)
     {
-        tick_m(cpu); // OPCode fetch
         next_op(cpu); //Remaining MCycles are ticked in instructions
+        tick_m(cpu); // OPCode fetch
         check_interrupt(cpu);
     }
 }
@@ -89,7 +97,7 @@ void init_hardware(struct cpu *cpu)
     cpu->membus[0xFF44] = 0x00;
     cpu->membus[0xFF45] = 0x00;
     cpu->membus[0xFF46] = 0xFF;
-    cpu->membus[0xFF47] = 0xFC;
+    cpu->membus[0xFF47] = 0xFC; //TODO check this
     cpu->membus[0xFF48] = 0xFF; // ?
     cpu->membus[0xFF49] = 0xFF; // ?
     cpu->membus[0xFF4A] = 0x00;
@@ -150,7 +158,8 @@ void tick_m(struct cpu *cpu)
         set_if(cpu, 2);
     }
 
-    ppu_tick_m(cpu->ppu);
+    if (get_lcdc(cpu->ppu, 7))
+        ppu_tick_m(cpu->ppu);
 }
 
 uint8_t read_mem(struct cpu *cpu, uint16_t address)
@@ -178,6 +187,9 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
 {
     //TODO Verify that address is valid
     int write = 1;
+    if (address >= 0x0000 && address <= 0x7FFF)
+        write = 0;
+
     if (address >= 0x8000 && address <= 0x9FFF)
     {
         if (cpu->ppu->vram_locked)

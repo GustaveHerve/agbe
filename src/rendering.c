@@ -46,39 +46,63 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
     SDL_LockSurface(rend->surface);
     sdlPixel = SDL_MapRGB(rend->surface->format, r, g, b);
     pixels[*cpu->ppu->ly * 160 + (cpu->ppu->lx - 8)] = sdlPixel;
+    SDL_UnlockSurface(rend->surface);
 
     if (*cpu->ppu->ly == 143 && cpu->ppu->lx == 167)
     {
-        SDL_UnlockSurface(rend->surface);
         SDL_UpdateTexture(rend->texture, NULL, pixels, 160 * sizeof(Uint32));
         SDL_RenderClear(rend->renderer);
         SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
         SDL_RenderPresent(rend->renderer);
         SDL_PumpEvents();
-        SDL_LockSurface(rend->surface);
+        //SDL_Delay(1000);
     }
 }
 
 void init_vram(struct ppu *ppu)
 {
-    ppu->cpu->membus[0x8010] = 0xF0;
-    ppu->cpu->membus[0x8011] = 0x00;
-    ppu->cpu->membus[0x8012] = 0xF0;
-    ppu->cpu->membus[0x8013] = 0x00;
-    ppu->cpu->membus[0x8014] = 0xFC;
-    ppu->cpu->membus[0x8015] = 0x00;
-    ppu->cpu->membus[0x8016] = 0xFC;
-    ppu->cpu->membus[0x8017] = 0x00;
-    ppu->cpu->membus[0x8018] = 0xFC;
-    ppu->cpu->membus[0x8019] = 0x00;
-    ppu->cpu->membus[0x8020] = 0xFC;
-    ppu->cpu->membus[0x8021] = 0x00;
-    ppu->cpu->membus[0x8022] = 0xF3;
-    ppu->cpu->membus[0x8023] = 0x00;
-    ppu->cpu->membus[0x8024] = 0xF3;
-    ppu->cpu->membus[0x8025] = 0x00;
+    for (int i = 0x8000; i < 0x9800; i++)
+        ppu->cpu->membus[i] = 0;
 
+    ppu->cpu->membus[0x9010] = 0xFF;
+    ppu->cpu->membus[0x9011] = 0xFF;
+    ppu->cpu->membus[0x9012] = 0xFF;
+    ppu->cpu->membus[0x9013] = 0xFF;
+    ppu->cpu->membus[0x9014] = 0xFF;
+    ppu->cpu->membus[0x9015] = 0xFF;
+    ppu->cpu->membus[0x9016] = 0xFF;
+    ppu->cpu->membus[0x9017] = 0xFF;
+    ppu->cpu->membus[0x9018] = 0xFF;
+    ppu->cpu->membus[0x9019] = 0xFF;
+    ppu->cpu->membus[0x901A] = 0xFF;
+    ppu->cpu->membus[0x901B] = 0xFF;
+    ppu->cpu->membus[0x901C] = 0xFF;
+    ppu->cpu->membus[0x901D] = 0xFF;
+    ppu->cpu->membus[0x901E] = 0xFF;
+    ppu->cpu->membus[0x901F] = 0xFF;
+    //ppu->cpu->membus[0x9000] = 0xFF;
+    //ppu->cpu->membus[0x9001] = 0xFF;
 
-    ppu->cpu->membus[0x9904] = 0x01;
-    ppu->cpu->membus[0x9905] = 0x02;
+    ppu->cpu->membus[0x9800] = 0x01;
+    ppu->cpu->membus[0x99E0] = 0x01;
+    ppu->cpu->membus[0x9A30] = 0x01;
+}
+
+void lcd_off(struct cpu *cpu)
+{
+    struct renderer *rend = cpu->ppu->renderer;
+    Uint32 *pixels = (Uint32 *)rend->surface->pixels;
+    Uint32 sdlPixel;
+    SDL_LockSurface(rend->surface);
+    sdlPixel = SDL_MapRGB(rend->surface->format, 224, 248, 208);
+    int total = 160 * 144;
+    for (int i = 0; i < total; i++)
+        pixels[i] = sdlPixel;
+
+    SDL_UnlockSurface(rend->surface);
+    SDL_UpdateTexture(rend->texture, NULL, pixels, 160 * sizeof(Uint32));
+    SDL_RenderClear(rend->renderer);
+    SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
+    SDL_RenderPresent(rend->renderer);
+    SDL_PumpEvents();
 }
