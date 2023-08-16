@@ -261,8 +261,8 @@ int sub_a_hl(struct cpu *cpu)
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     set_n(cpu->regist, 1);
     uint8_t val = read_mem(cpu, address);
-    cflag_sub_check(cpu->regist->a, val);
-    hflag_sub_check(cpu->regist->a, val);
+    cflag_sub_set(cpu->regist, cpu->regist->a, val);
+    hflag_sub_set(cpu->regist, cpu->regist->a, val);
     cpu->regist->a -= val;
     set_z(cpu->regist, cpu->regist->a == 0);
     return 2;
@@ -470,8 +470,8 @@ int cp_a_hl(struct cpu *cpu)
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     set_n(cpu->regist, 1);
     uint8_t val = read_mem(cpu, address);
-    cflag_sub_check(cpu->regist->a, val);
-    hflag_sub_check(cpu->regist->a, val);
+    cflag_sub_set(cpu->regist, cpu->regist->a, val);
+    hflag_sub_set(cpu->regist, cpu->regist->a, val);
     set_z(cpu->regist, cpu->regist->a == val);
     return 2;
 }

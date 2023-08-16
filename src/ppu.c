@@ -392,6 +392,9 @@ int push_slice(struct ppu *ppu, queue *q, uint8_t hi, uint8_t lo, int obj_i)
     for (int i = 0; i < 8; i++)
     {
         struct pixel p = make_pixel(hi, lo, i, attributes);
+        //TODO verify this
+        if (!get_lcdc(ppu, 0))
+            p.color = 0;
         push_pixel(q, p);
     }
     return 2;

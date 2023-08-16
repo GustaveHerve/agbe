@@ -21,17 +21,32 @@ void main_loop(struct cpu *cpu)
 
     //init_cpu(cpu, 0x0a);
     //init_hardware(cpu);
-    //init_vram(cpu->ppu);
 
     //First OPCode Fetch
     lcd_off(cpu);
     tick_m(cpu);
+    while (cpu->regist->pc != 0x0150)
+    {
+        next_op(cpu); //Remaining MCycles are ticked in instructions
+        tick_m(cpu); // OPCode fetch
+        check_interrupt(cpu);
+    }
+
+    /*
+    fptr = fopen("testroms/tetris.gb", "rb");
+    fread(cpu->membus, 1, 32768, fptr);
+    fclose(fptr);
+
+    init_cpu(cpu, 0x0a);
+    init_hardware(cpu);
+
     while (1)
     {
         next_op(cpu); //Remaining MCycles are ticked in instructions
         tick_m(cpu); // OPCode fetch
         check_interrupt(cpu);
     }
+    */
 }
 
 void init_cpu(struct cpu *cpu, int checksum)
