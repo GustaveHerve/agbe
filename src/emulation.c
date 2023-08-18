@@ -11,6 +11,7 @@
 void main_loop(struct cpu *cpu)
 {
     FILE *fptr;
+    /*
     fptr = fopen("testroms/boot.gb", "rb");
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
@@ -31,22 +32,23 @@ void main_loop(struct cpu *cpu)
         tick_m(cpu); // OPCode fetch
         check_interrupt(cpu);
     }
-
-    /*
+    */
     fptr = fopen("testroms/tetris.gb", "rb");
     fread(cpu->membus, 1, 32768, fptr);
     fclose(fptr);
 
     init_cpu(cpu, 0x0a);
     init_hardware(cpu);
+    cpu->membus[0xFF00] = 0xCF;
 
+    lcd_off(cpu);
+    tick_m(cpu);
     while (1)
     {
         next_op(cpu); //Remaining MCycles are ticked in instructions
         tick_m(cpu); // OPCode fetch
         check_interrupt(cpu);
     }
-    */
 }
 
 void init_cpu(struct cpu *cpu, int checksum)
@@ -132,6 +134,9 @@ void init_hardware(struct cpu *cpu)
     cpu->membus[0xFF70] = 0xFF;
     cpu->membus[0xFFFF] = 0x00;
 
+    cpu->ppu->current_mode = 1;
+    cpu->ppu->line_dot_count = 400;
+    cpu->ppu->mode1_153th = 1;
 }
 
 void tick_m(struct cpu *cpu)
@@ -175,6 +180,11 @@ void tick_m(struct cpu *cpu)
 
     if (get_lcdc(cpu->ppu, 7))
         ppu_tick_m(cpu->ppu);
+    else
+    {
+        cpu->ppu->oam_locked = 0;
+        cpu->ppu->vram_locked = 0;
+    }
 }
 
 uint8_t read_mem(struct cpu *cpu, uint16_t address)

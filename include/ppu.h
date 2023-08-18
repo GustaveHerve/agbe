@@ -53,8 +53,8 @@ struct ppu
     uint8_t vram_locked;
     uint8_t dma_oam_locked;
 
-    int frame_dot_count;//Dot count for current frame
     int line_dot_count; //Dot count for current scanline
+    uint8_t mode1_153th;
     uint8_t current_mode;
 
     uint8_t win_mode;

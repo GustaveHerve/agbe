@@ -13,7 +13,7 @@
 void cpu_init(struct cpu *cpu, struct renderer *rend)
 {
 	cpu->regist = malloc(sizeof(struct cpu_register));
-	cpu->membus = malloc(sizeof(uint8_t) * MEMBUS_SIZE);
+	cpu->membus = calloc(MEMBUS_SIZE, sizeof(uint8_t));
     cpu->ppu = malloc(sizeof(struct ppu));
     ppu_init(cpu->ppu, cpu, rend);
     cpu->ime = 0;
@@ -26,12 +26,29 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
     cpu->halt = 0;
     cpu->stop = 0;
 
-    *cpu->_if = 0;
 
     cpu->acc_timer = 0;
+
+    //Values BEFORE bootrom
+    cpu->regist->a = 0x00;
+    cpu->regist->f = 0x00;
+    cpu->regist->b = 0x00;
+    cpu->regist->c = 0x00;
+    cpu->regist->h = 0x00;
+    cpu->regist->l = 0x00;
+    cpu->regist->pc = 0x00;
+    cpu->regist->sp = 0x00;
+
+    *cpu->ie = 0x00;
+    *cpu->_if = 0xE1;
+    *cpu->div = 0x00;
+    cpu->div16 = 0x00;
+    *cpu->tima = 0x00;
+    *cpu->tma = 0x00;
+    *cpu->tac = 0x00;
 }
 
-//Set registers' default values
+//Set registers' default values AFTER boot rom
 void cpu_init_regist(struct cpu *cpu)
 {
     cpu->regist->a = 0x01;

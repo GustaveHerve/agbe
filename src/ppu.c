@@ -41,14 +41,29 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
 
     ppu->renderer = renderer;
 
-    ppu->current_mode = 1;
+    ppu->current_mode = 0;
     ppu->oam_locked = 0;
     ppu->vram_locked = 0;
     ppu->dma_oam_locked = 0;
-    ppu->frame_dot_count = 0;
+
     ppu->line_dot_count = 0;
+    ppu->mode1_153th = 0;
+
     ppu->win_mode = 0;
     ppu->pop_pause = 0;
+
+    *ppu->lcdc = 0x00;
+    *ppu->stat = 0x84;
+    *ppu->scy = 0x00;
+    *ppu->scx = 0x00;
+    *ppu->ly = 0x00;
+    *ppu->lyc = 0x00;
+    //*ppu->dma = 0xFF
+    *ppu->bgp = 0xFC;
+    *ppu->obp0 = 0xFF;
+    *ppu->obp1 = 0xFF;
+    *ppu->wx = 0x00;
+    *ppu->wy = 0x00;
 }
 
 void ppu_free(struct ppu *ppu)
@@ -99,7 +114,7 @@ void ppu_tick_m(struct ppu *ppu)
                 }
 
                 int obj = -1;
-                if (!get_lcdc(ppu, 1))
+                if (get_lcdc(ppu, 1))
                     in_object(ppu, ppu->obj_fetcher->obj_index);
 
                 //Check if in Window and WIN Enable
@@ -147,7 +162,6 @@ void ppu_tick_m(struct ppu *ppu)
                 }
 
                 dots -= time;
-                ppu->frame_dot_count += time;
                 ppu->line_dot_count += time;
                 break;
             }
@@ -159,7 +173,6 @@ void ppu_tick_m(struct ppu *ppu)
                 if (ppu->line_dot_count < 456)
                 {
                     ppu->line_dot_count++;
-                    ppu->frame_dot_count++;
                     dots--;
                 }
                 else
@@ -183,6 +196,7 @@ void ppu_tick_m(struct ppu *ppu)
                         if (get_stat(ppu, 4) && !get_stat(ppu, 3))
                             set_if(ppu->cpu, 1);
                         ppu->current_mode = 1;
+                        ppu->mode1_153th = 0;
                     }
                 }
                 break;
@@ -191,11 +205,16 @@ void ppu_tick_m(struct ppu *ppu)
             {
                 if (ppu->line_dot_count < 456)
                 {
+                    //LY = 153, special case with LY = 0 after 1 MCycle
+                    if (*ppu->ly == 153 && ppu->line_dot_count == 4)
+                    {
+                        *ppu->ly = 0;
+                        ppu->mode1_153th = 1;
+                    }
                     ppu->line_dot_count++;
-                    ppu->frame_dot_count++;
                     dots--;
                 }
-                else if (*ppu->ly < 153)    //Go to next VBlank line
+                else if (!ppu->mode1_153th && *ppu->ly < 153)    //Go to next VBlank line
                 {
                     *ppu->ly += 1;
                     if (*ppu->ly == *ppu->lyc)
@@ -207,9 +226,10 @@ void ppu_tick_m(struct ppu *ppu)
                 else    //Exit VBlank, enter OAM Scan
                 {
                     ppu->line_dot_count = 0;
-                    ppu->frame_dot_count = 0;
+                    ppu->mode1_153th = 0;
                     ppu->current_mode = 2;
                     *ppu->ly = 0;
+                    //TODO move this to more accurate check place
                     if (*ppu->ly == *ppu->lyc)
                     {
                         set_stat(ppu, 2);
@@ -246,7 +266,6 @@ int oam_scan(struct ppu *ppu)
         }
     }
 
-    ppu->frame_dot_count += 2;
     ppu->line_dot_count += 2;
     if (ppu->line_dot_count >= 80)
     {
@@ -271,24 +290,6 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
     uint8_t tileid = 0;
     if (obj_index == -1)
     {
-        /*
-        //Decide if BG or Window Mode
-        if (!get_lcdc(ppu, 0))
-        {
-            //TODO BG and Window disabled -> blank pixels
-            return 0;
-        }
-        else if (!get_lcdc(ppu, 5))
-            ppu->win_mode = 0;
-        else
-        {
-            if (in_window(ppu))
-                ppu->win_mode = 1;
-            else
-                ppu->win_mode = 0;
-        }
-        */
-
         uint8_t x_part = 0;
         uint8_t y_part = 0;
         int bit = 0;
@@ -324,11 +325,22 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
 
 uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
 {
-    //TODO flip
     uint8_t y_part = 0;
     int bit_12 = 0;
     if (obj_index != -1)
+    {
         y_part = (*ppu->ly - ppu->obj_slots[obj_index].y) % 8;
+        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 2);
+        //Y flip
+        if ((attributes >> 6) & 0x01)
+        {
+            uint8_t temp = 0x00;
+            temp = temp | (((y_part >> 1) & 0x01) << 3);
+            temp = temp | (((y_part >> 2) & 0x01) << 2);
+            temp = temp | (((y_part >> 3) & 0x01) << 1);
+            y_part = temp;
+        }
+    }
     else if (ppu->win_mode)
     {
         y_part = *ppu->wy % 8;
@@ -339,21 +351,45 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
         y_part = (uint8_t)(((*ppu->ly + *ppu->scy)) % 8);
         bit_12 = !(get_lcdc(ppu, 4) | (tileid & 0x80));
     }
+
 
     uint16_t address_low = (0x4 << 13) | (bit_12 << 12) |
         (tileid << 4) | (y_part << 1) | 0;
 
     uint8_t slice_low = ppu->cpu->membus[address_low];
 
+    if (obj_index != 1)
+    {
+        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 2);
+        //X flip
+        if ((attributes >> 5) & 0x01)
+        {
+            slice_low = slice_xflip(slice_low);
+        }
+    }
+
     return slice_low;
 }
 
+//TODO optimize this ? (address is same as low + 1)
 uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
 {
     uint8_t y_part = 0;
     int bit_12 = 0;
     if (obj_index != -1)
+    {
         y_part = (*ppu->ly - ppu->obj_slots[obj_index].y) % 8;
+        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 2);
+        //Y flip
+        if ((attributes >> 6) & 0x01)
+        {
+            uint8_t temp = 0x00;
+            temp = temp | (((y_part >> 1) & 0x01) << 3);
+            temp = temp | (((y_part >> 2) & 0x01) << 2);
+            temp = temp | (((y_part >> 3) & 0x01) << 1);
+            y_part = temp;
+        }
+    }
     else if (ppu->win_mode)
     {
         y_part = *ppu->wy % 8;
@@ -365,15 +401,20 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
         bit_12 = !(get_lcdc(ppu, 4) | (tileid & 0x80));
     }
 
-    if (obj_index != -1)
-    {
-        //TODO flip Y
-    }
-
     uint16_t address_high = (0x4 << 13) | (bit_12 << 12) |
         (tileid << 4) | (y_part << 1) | 1;
 
     uint8_t slice_high = ppu->cpu->membus[address_high];
+
+    if (obj_index != 1)
+    {
+        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 2);
+        //X flip
+        if ((attributes >> 5) & 0x01)
+        {
+            slice_high = slice_xflip(slice_high);
+        }
+    }
 
     return slice_high;
 }

@@ -19,6 +19,6 @@ struct obj
 };
 
 struct pixel make_pixel(uint8_t hi, uint8_t lo, int i, uint8_t *attributes);
-
+uint8_t slice_xflip(uint8_t slice);
 
 #endif

@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include "cpu.h"
 #include "emulation.h"
+#include "ppu_utils.h"
 
 int main()
 {
-
     if (SDL_Init(SDL_INIT_EVERYTHING))
         return EXIT_FAILURE;
 
