@@ -33,7 +33,7 @@ void main_loop(struct cpu *cpu)
         check_interrupt(cpu);
     }
     */
-    fptr = fopen("testroms/ld.gb", "rb");
+    fptr = fopen("testroms/tetris.gb", "rb");
     fread(cpu->membus, 1, 32768, fptr);
     fclose(fptr);
 
@@ -141,6 +141,9 @@ void init_hardware(struct cpu *cpu)
 
 void tick_m(struct cpu *cpu)
 {
+    if (cpu->ime == 2)
+        cpu->ime = 1;
+
     if (!cpu->stop)
     {
         cpu->div16 += 1;
@@ -227,10 +230,33 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         if (cpu->ppu->oam_locked)
             write = 0;
     }
+    //JOYP
+    else if (address == 0xFF00)
+    {
+        write = 0;
+        uint8_t temp = (cpu->membus[address] & 0xC0);
+        temp |= (val & 0x30);
+        temp |= (cpu->membus[address] & 0x0F);
+        cpu->membus[address] = temp;
+    }
     else if (address == 0xFF04)
     {
         *cpu->div = 0;
         cpu->div16 = 0;
+    }
+    else if (address == 0xFF0F)
+    {
+        write = 0;
+        uint8_t temp = (cpu->membus[address] & 0xE0);
+        temp |= (val & 0x1F);
+        cpu->membus[address] = temp;
+    }
+    else if (address == 0xFFFF)
+    {
+        write = 0;
+        uint8_t temp = (cpu->membus[address] & 0xE0);
+        temp |= (val & 0x1F);
+        cpu->membus[address] = temp;
     }
     tick_m(cpu);
     if (write)

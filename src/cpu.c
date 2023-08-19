@@ -74,7 +74,7 @@ void cpu_free(struct cpu *todelete)
 //Interrupt handling
 int check_interrupt(struct cpu *cpu)
 {
-    if (!cpu->ime)
+    if (cpu->ime == 0)
         return 0;
 
     for (int i = 0; i < 5; i++)
@@ -103,18 +103,23 @@ int handle_interrupt(struct cpu *cpu, int bit)
         //VBlank
         case 0:
             handler = 0x40;
+            break;
         //LCD STAT
         case 1:
             handler = 0x48;
+            break;
         //Timer
         case 2:
             handler = 0x50;
+            break;
         //Serial
         case 3:
             handler = 0x58;
+            break;
         //Joypad
         case 4:
             handler = 0x60;
+            break;
 
     }
     cpu->regist->pc = handler;
