@@ -16,7 +16,7 @@ struct queue
     int count;
 } typedef queue;
 
-queue *queue_init();
+queue *queue_init(void);
 int queue_isempty(queue *q);
 void queue_push(queue *q, struct pixel data);
 struct pixel queue_pop(queue *q);

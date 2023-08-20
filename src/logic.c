@@ -72,7 +72,7 @@ int dec_hl(struct cpu *cpu)
 	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
 	uint8_t value = read_mem(cpu, address);
     hflag_sub_set(cpu->regist, value, 1);
-    value++;
+    value--;
     write_mem(cpu, address, value);
 	set_z(cpu->regist, value == 0);
 	return 3;

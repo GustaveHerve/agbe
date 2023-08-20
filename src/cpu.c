@@ -27,7 +27,8 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
     cpu->stop = 0;
 
 
-    cpu->acc_timer = 0;
+    cpu->div_timer = 0;
+    cpu->tima_timer = 0;
 
     //Values BEFORE bootrom
     cpu->regist->a = 0x00;
@@ -42,7 +43,6 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
     *cpu->ie = 0x00;
     *cpu->_if = 0xE1;
     *cpu->div = 0x00;
-    cpu->div16 = 0x00;
     *cpu->tima = 0x00;
     *cpu->tma = 0x00;
     *cpu->tac = 0x00;

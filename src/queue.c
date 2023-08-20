@@ -5,7 +5,7 @@
 #include "ppu.h"
 #include "ppu.h"
 
-queue *queue_init()
+queue *queue_init(void)
 {
     queue *q = malloc(sizeof(queue));
     q->front = NULL;

@@ -10,8 +10,8 @@
 
 void main_loop(struct cpu *cpu)
 {
+    cpu->running = 1;
     FILE *fptr;
-    /*
     fptr = fopen("testroms/boot.gb", "rb");
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
@@ -23,8 +23,8 @@ void main_loop(struct cpu *cpu)
     //init_cpu(cpu, 0x0a);
     //init_hardware(cpu);
 
-    //First OPCode Fetch
     lcd_off(cpu);
+    //First OPCode Fetch
     tick_m(cpu);
     while (cpu->regist->pc != 0x0150)
     {
@@ -32,22 +32,25 @@ void main_loop(struct cpu *cpu)
         tick_m(cpu); // OPCode fetch
         check_interrupt(cpu);
     }
-    */
-    fptr = fopen("testroms/mario.gb", "rb");
+
+    fptr = fopen("testroms/tetris.gb", "rb");
     fread(cpu->membus, 1, 32768, fptr);
     fclose(fptr);
 
     init_cpu(cpu, 0x0a);
     init_hardware(cpu);
     cpu->membus[0xFF00] = 0xCF;
+    cpu->div_timer = 52;
 
-    lcd_off(cpu);
-    tick_m(cpu);
-    while (1)
+    //lcd_off(cpu);
+    //int cycle_count = 0;
+    while (cpu->running)
     {
-        next_op(cpu); //Remaining MCycles are ticked in instructions
-        tick_m(cpu); // OPCode fetch
+        //cycle_count += next_op(cpu); //Remaining MCycles are ticked in instructions
+        next_op(cpu);
+        tick_m(cpu); // Previous instruction tick + next OPCode fetch
         check_interrupt(cpu);
+        //if (cycle_count >= 4192373)
     }
 }
 
@@ -134,9 +137,7 @@ void init_hardware(struct cpu *cpu)
     cpu->membus[0xFF70] = 0xFF;
     cpu->membus[0xFFFF] = 0x00;
 
-    cpu->ppu->current_mode = 1;
-    cpu->ppu->line_dot_count = 400;
-    cpu->ppu->mode1_153th = 1;
+    ppu_reset(cpu->ppu);
 }
 
 void tick_m(struct cpu *cpu)
@@ -145,16 +146,20 @@ void tick_m(struct cpu *cpu)
         cpu->ime = 1;
 
     if (!cpu->stop)
+        cpu->div_timer++;
+
+    if (cpu->div_timer >= 64)
     {
-        cpu->div16 += 1;
-        *cpu->div = (cpu->div16 >> 6) & 0xFF;
-        cpu->acc_timer += 1;
+        *cpu->div += 1;
+        cpu->div_timer = 0;
     }
+
     uint8_t previous = *cpu->tima;
     if (*cpu->tac >> 2 & 0x01)
     {
         int temp = 0;
-        switch ((*cpu->tac | 0x03))
+        uint8_t clock = *cpu->tac & 0x03;
+        switch (clock)
         {
             case 0:
                 temp = 256;
@@ -170,8 +175,12 @@ void tick_m(struct cpu *cpu)
                 break;
         }
 
-        if (cpu->acc_timer >= temp)
+
+        if (cpu->tima_timer >= temp)
+        {
             *cpu->tima += 1;
+            cpu->tima_timer = 0;
+        }
     }
 
     //Overflow
@@ -187,6 +196,7 @@ void tick_m(struct cpu *cpu)
     {
         cpu->ppu->oam_locked = 0;
         cpu->ppu->vram_locked = 0;
+        ppu_reset(cpu->ppu);
     }
 }
 
@@ -239,11 +249,10 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         temp |= (cpu->membus[address] & 0x0F);
         cpu->membus[address] = temp;
     }
+
     else if (address == 0xFF04)
-    {
         *cpu->div = 0;
-        cpu->div16 = 0;
-    }
+
     else if (address == 0xFF0F)
     {
         write = 0;

@@ -75,6 +75,14 @@ void ppu_free(struct ppu *ppu)
     free(ppu);
 }
 
+//Sets back PPU to default state when turned off
+void ppu_reset(struct ppu *ppu)
+{
+    ppu->current_mode = 1;
+    ppu->line_dot_count = 400;
+    ppu->mode1_153th = 1;
+}
+
 //Tick 4 dots
 void ppu_tick_m(struct ppu *ppu)
 {

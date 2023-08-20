@@ -3,7 +3,7 @@
 
 struct cpu;
 
-int nop();
+int nop(void);
 int stop(struct cpu *cpu);
 int halt(struct cpu *cpu);
 int ccf(struct cpu *cpu);

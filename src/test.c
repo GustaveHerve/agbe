@@ -5,14 +5,15 @@
 #include "emulation.h"
 #include "ppu_utils.h"
 
-int main()
+int main(void)
 {
     if (SDL_Init(SDL_INIT_EVERYTHING))
         return EXIT_FAILURE;
 
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
-    SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &window, &renderer);
+    window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 720, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_RenderSetLogicalSize(renderer, 160, 144);
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
 
@@ -20,25 +21,6 @@ int main()
             SDL_TEXTUREACCESS_STREAMING, 160, 144);
 
     SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, 160, 144, 32, SDL_PIXELFORMAT_RGB888);
-    /*
-
-    SDL_LockSurface(surface);
-    Uint32 *pixels = (Uint32 *)surface->pixels;
-    for (int i = 0; i < 160 * 144; i++)
-        pixels[i] = SDL_MapRGB(surface->format, 224, 248, 208);
-    SDL_UnlockSurface(surface);
-
-    SDL_UpdateTexture(texture, NULL, surface->pixels, 160 * sizeof(Uint32));
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
-    SDL_RenderPresent(renderer);
-
-    SDL_PumpEvents();
-    SDL_Delay(5000);
-
-    SDL_DestroyWindow(window);
-    SDL_DestroyRenderer(renderer);
-    */
 
     struct renderer *rend = malloc(sizeof(struct renderer));;
     rend->renderer = renderer;
@@ -51,14 +33,9 @@ int main()
 
     main_loop(cpu);
 
-	cpu_free(cpu);
+    free_renderer(cpu->ppu->renderer);
+    cpu_free(cpu);
 
-    SDL_DestroyWindow(window);
-    SDL_DestroyRenderer(renderer);
-    SDL_FreeSurface(surface);
     SDL_Quit();
-
-    free(rend);
-
 	return 0;
 }

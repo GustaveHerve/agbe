@@ -50,42 +50,26 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
 
     if (*cpu->ppu->ly == 143 && cpu->ppu->lx == 167)
     {
+        //TODO cleaner handler...
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            //SDL_WaitEvent(&event);
+            switch (event.type)
+            {
+                case SDL_QUIT:
+                    cpu->running = 0;
+                    return;
+            }
+
+        }
         SDL_UpdateTexture(rend->texture, NULL, pixels, 160 * sizeof(Uint32));
         SDL_RenderClear(rend->renderer);
         SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
         SDL_RenderPresent(rend->renderer);
-        SDL_PumpEvents();
-        //SDL_Delay(17);
+        //SDL_PumpEvents();
+        //SDL_Delay(16);
     }
-}
-
-void init_vram(struct ppu *ppu)
-{
-    for (int i = 0x8000; i < 0x9800; i++)
-        ppu->cpu->membus[i] = 0;
-
-    ppu->cpu->membus[0x9010] = 0xFF;
-    ppu->cpu->membus[0x9011] = 0xFF;
-    ppu->cpu->membus[0x9012] = 0xFF;
-    ppu->cpu->membus[0x9013] = 0xFF;
-    ppu->cpu->membus[0x9014] = 0xFF;
-    ppu->cpu->membus[0x9015] = 0xFF;
-    ppu->cpu->membus[0x9016] = 0xFF;
-    ppu->cpu->membus[0x9017] = 0xFF;
-    ppu->cpu->membus[0x9018] = 0xFF;
-    ppu->cpu->membus[0x9019] = 0xFF;
-    ppu->cpu->membus[0x901A] = 0xFF;
-    ppu->cpu->membus[0x901B] = 0xFF;
-    ppu->cpu->membus[0x901C] = 0xFF;
-    ppu->cpu->membus[0x901D] = 0xFF;
-    ppu->cpu->membus[0x901E] = 0xFF;
-    ppu->cpu->membus[0x901F] = 0xFF;
-    //ppu->cpu->membus[0x9000] = 0xFF;
-    //ppu->cpu->membus[0x9001] = 0xFF;
-
-    ppu->cpu->membus[0x9800] = 0x01;
-    ppu->cpu->membus[0x99E0] = 0x01;
-    ppu->cpu->membus[0x9A30] = 0x01;
 }
 
 void lcd_off(struct cpu *cpu)
@@ -105,5 +89,14 @@ void lcd_off(struct cpu *cpu)
     SDL_RenderClear(rend->renderer);
     SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
     SDL_RenderPresent(rend->renderer);
-    SDL_PumpEvents();
+    //SDL_PumpEvents();
+}
+
+void free_renderer(struct renderer *rend)
+{
+    SDL_DestroyWindow(rend->window);
+    SDL_DestroyRenderer(rend->renderer);
+    SDL_DestroyTexture(rend->texture);
+    SDL_FreeSurface(rend->surface);
+    free(rend);
 }

@@ -22,6 +22,7 @@ struct cpu_register
 
 struct cpu
 {
+    int running;
     struct ppu *ppu;
 	struct cpu_register *regist;
 	uint8_t *membus; //16-bit address bus that stores ROM RAM I/O
@@ -31,7 +32,6 @@ struct cpu
     uint8_t *_if;
 
     uint8_t *div;
-    uint16_t div16;
     uint8_t *tima;
     uint8_t *tma;
     uint8_t *tac;
@@ -39,7 +39,8 @@ struct cpu
     int halt;
     int stop;
 
-    int acc_timer;
+    int div_timer;
+    int tima_timer;
 };
 
 void cpu_init(struct cpu *new_cpu, struct renderer *rend);

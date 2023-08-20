@@ -16,7 +16,7 @@ struct renderer
 };
 
 void draw_pixel(struct cpu *cpu, struct pixel p);
-void init_vram(struct ppu *ppu);
 void lcd_off(struct cpu *cpu);
+void free_renderer(struct renderer *rend);
 
 #endif

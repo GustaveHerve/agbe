@@ -65,6 +65,7 @@ struct ppu
 
 void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer);
 void ppu_free(struct ppu *ppu);
+void ppu_reset(struct ppu *ppu);
 
 void ppu_tick_m(struct ppu *ppu);
 

@@ -5,7 +5,7 @@
 
 //nop
 //x00	1 MCycle
-int nop()
+int nop(void)
 {
 	return 1;
 }
@@ -17,7 +17,6 @@ int stop(struct cpu *cpu)
     cpu->stop = 1;
     //Reset DIV Timer
     *cpu->div = 0;
-    cpu->div16 = 0;
 	return 1;
 }
 
