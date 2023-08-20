@@ -2,6 +2,8 @@
 #define LOAD_H
 
 #include <stdlib.h>
+#include <stdint.h>
+
 struct cpu;
 
 int ld_rr_a(struct cpu *cpu, uint8_t *hi, uint8_t *lo);

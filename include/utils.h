@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <stdlib.h>
+#include <stdint.h>
 #include "cpu.h"
 
 int get_z(struct cpu_register *regist);

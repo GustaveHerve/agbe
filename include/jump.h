@@ -2,6 +2,7 @@
 #define JUMP_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 struct cpu;
 

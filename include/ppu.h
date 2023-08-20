@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "queue.h"
 #include "rendering.h"
 
@@ -42,6 +43,7 @@ struct ppu
 
     struct obj obj_slots[10];
     int8_t obj_count;
+    uint8_t has_pushed;
 
     queue *bg_fifo;
     queue *obj_fifo;
@@ -51,7 +53,10 @@ struct ppu
 
     uint8_t oam_locked;
     uint8_t vram_locked;
-    uint8_t dma_oam_locked;
+
+    uint8_t dma;
+    uint8_t dma_acc;
+    uint8_t dma_source;
 
     int line_dot_count; //Dot count for current scanline
     uint8_t mode1_153th;

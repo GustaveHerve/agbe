@@ -260,6 +260,13 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         temp |= (val & 0x1F);
         cpu->membus[address] = temp;
     }
+    else if (address == 0xFF46)
+    {
+        write = 0;
+        cpu->ppu->dma = 2;
+        cpu->ppu->dma_acc = 0;
+        cpu->ppu->dma_source = val;
+    }
     else if (address == 0xFFFF)
     {
         write = 0;

@@ -29,6 +29,7 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
     ppu->obp1 = cpu->membus + 0xFF49;
 
     ppu->obj_count = 0;
+    ppu->has_pushed = 0;
 
     ppu->bg_fifo = queue_init();
     ppu->obj_fifo = queue_init();
@@ -44,7 +45,9 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
     ppu->current_mode = 0;
     ppu->oam_locked = 0;
     ppu->vram_locked = 0;
-    ppu->dma_oam_locked = 0;
+
+    ppu->dma = 0;
+    ppu->dma_acc = 0;
 
     ppu->line_dot_count = 0;
     ppu->mode1_153th = 0;
@@ -123,7 +126,7 @@ void ppu_tick_m(struct ppu *ppu)
 
                 int obj = -1;
                 if (get_lcdc(ppu, 1))
-                    in_object(ppu, ppu->obj_fetcher->obj_index);
+                    obj = in_object(ppu, ppu->obj_fetcher->obj_index);
 
                 //Check if in Window and WIN Enable
                 if (!ppu->win_mode && get_lcdc(ppu, 0) && get_lcdc(ppu, 5) && in_window(ppu)) //Win mode -> clear + reset BG FIFO
@@ -159,12 +162,13 @@ void ppu_tick_m(struct ppu *ppu)
                 else if (ppu->pop_pause)
                 {
                     //If hasn't pushed gone at step push yet
-                    if (ppu->bg_fetcher->current_step < 3)
+                    if (!ppu->has_pushed && ppu->bg_fetcher->current_step < 3)
                         time = bg_fetcher_step(ppu);
                     //try to push in case BG FIFO is empty
                     else
                     {
                         bg_fetcher_step(ppu);
+                        ppu->has_pushed = 1;
                         time = obj_fetcher_step(ppu);
                     }
                 }
@@ -175,6 +179,7 @@ void ppu_tick_m(struct ppu *ppu)
             }
             case 0: //Mode 0 - HBlank
             {
+                ppu->obj_fetcher->obj_index = -1;
                 ppu->oam_locked = 0;
                 ppu->vram_locked = 0;
                 //TODO verify dma lock
@@ -185,7 +190,7 @@ void ppu_tick_m(struct ppu *ppu)
                 }
                 else
                 {
-                    //Exit HBlank{
+                    //Exit HBlank
                     ppu->lx = 0;
                     *ppu->ly += 1;
                     ppu->line_dot_count = 0;
@@ -252,6 +257,18 @@ void ppu_tick_m(struct ppu *ppu)
                 break;
             }
         }
+    }
+    //DMA handling
+    //DMA first setup MCycle
+    if (ppu->dma == 2)
+        ppu->dma = 1;
+    else if (ppu->dma == 1)
+    {
+        ppu->cpu->membus[0xFE00 + ppu->dma_acc] =
+            ppu->cpu->membus[(ppu->dma_source << 8) + ppu->dma_acc];
+        ppu->dma_acc++;
+        if (ppu->dma_acc >= 160)
+            ppu->dma = 0;
     }
 }
 
@@ -322,10 +339,10 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index)
 
     else
     {
-        if (ppu->dma_oam_locked)
+        if (ppu->dma)
             tileid = 0xFF;
         else
-            tileid = *ppu->obj_slots[obj_index].oam_address;
+            tileid = *(ppu->obj_slots[obj_index].oam_address + 2);
     }
 
     return tileid;
@@ -337,8 +354,8 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
     int bit_12 = 0;
     if (obj_index != -1)
     {
-        y_part = (*ppu->ly - ppu->obj_slots[obj_index].y) % 8;
-        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 2);
+        y_part = (*ppu->ly - (ppu->obj_slots[obj_index].y - 16)) % 8;
+        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
         //Y flip
         if ((attributes >> 6) & 0x01)
         {
@@ -386,8 +403,8 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
     int bit_12 = 0;
     if (obj_index != -1)
     {
-        y_part = (*ppu->ly - ppu->obj_slots[obj_index].y) % 8;
-        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 2);
+        y_part = (*ppu->ly - (ppu->obj_slots[obj_index].y - 16)) % 8;
+        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
         //Y flip
         if ((attributes >> 6) & 0x01)
         {
@@ -496,10 +513,13 @@ int in_object(struct ppu *ppu, int obj_index)
     //TODO handle 8x16 object mode
     for (int i = obj_index + 1; i < ppu->obj_count; i++)
     {
-        if (ppu->obj_slots[i].x == ppu->lx + 8 &&
+        if (ppu->obj_slots[i].x == ppu->lx &&
             *ppu->ly + 16 >= ppu->obj_slots[i].y &&
             *ppu->ly + 16 < ppu->obj_slots[i].y + 8)
+        {
+            ppu->obj_fetcher->obj_index = i;
             return i;
+        }
     }
     return -1;
 }
@@ -572,6 +592,7 @@ int obj_fetcher_step(struct ppu *ppu)
                 else
                     merge_obj(ppu, f->hi, f->lo, f->obj_index);
                 ppu->pop_pause = 0;
+                ppu->has_pushed = 0;
                 f->current_step = 0;
                 return 0;
             }

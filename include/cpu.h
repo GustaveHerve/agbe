@@ -2,6 +2,7 @@
 #define CPU_H
 
 #include <stdlib.h>
+#include <stdint.h>
 #include "ppu.h"
 struct ppu;
 

@@ -1,6 +1,7 @@
 #ifndef LOGIC_H
 #define LOGIC_H
 
+#include <stdint.h>
 #include "cpu.h"
 
 int inc_r(struct cpu *cpu, uint8_t *dest);
