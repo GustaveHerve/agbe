@@ -112,7 +112,7 @@ int rr_hl(struct cpu *cpu)
 //x2(0-7)   2 MCycle
 int sla(struct cpu *cpu, uint8_t *dest)
 {
-    set_c(cpu->regist, *dest & 0x80);
+    set_c(cpu->regist, (*dest & 0x80) == 0x80);
     *dest = *dest << 1;
     set_z(cpu->regist, *dest == 0);
     set_n(cpu->regist, 0);
@@ -126,11 +126,12 @@ int sla_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     uint8_t val = read_mem(cpu, address);
-    set_c(cpu->regist, val & 0x80);
+    set_c(cpu->regist, (val & 0x80) == 0x80);
     val = val << 1;
     write_mem(cpu, address, val);
     set_z(cpu->regist, val == 0);
     set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
     return 4;
 }
 
@@ -161,6 +162,7 @@ int sra_hl(struct cpu *cpu)
     write_mem(cpu, address, val);
     set_z(cpu->regist, val == 0);
     set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
     return 4;
 }
 
@@ -210,11 +212,12 @@ int srl_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     uint8_t val = read_mem(cpu, address);
-    set_c(cpu->regist, val & 0x01);
+    set_c(cpu->regist, (val & 0x01) == 0x01);
     val = val >> 1;
     write_mem(cpu, address, val);
     set_z(cpu->regist, val == 0);
     set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
     return 4;
 }
 
@@ -246,7 +249,8 @@ int bit_hl(struct cpu *cpu, int n)
 //x
 int res(uint8_t *dest, int n)
 {
-    *dest ^= (0x01 << n);
+
+    *dest &= ~(0x01 << n);
     return 2;
 }
 
@@ -256,7 +260,7 @@ int res_hl(struct cpu *cpu, int n)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     uint8_t val = read_mem(cpu, address);
-    val ^= (0x01 << n);
+    val &= ~(0x01 << n);
     write_mem(cpu, address, val);
     return 4;
 }
