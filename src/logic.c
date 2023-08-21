@@ -49,7 +49,6 @@ int inc_sp(struct cpu *cpu)
     //During fetch of the opcode probably writes to lo
 	cpu->regist->sp += 1;
     tick_m(cpu);
-    //TODO add tick 1 MCycle (nothing)
 	return 2;
 }
 
@@ -221,7 +220,7 @@ int add_hl_sp(struct cpu *cpu)
     uint16_t hl = convert_8to16(&cpu->regist->h, &cpu->regist->l);
 	hflag16_add_set(cpu->regist, hl, cpu->regist->sp);
     cflag16_add_set(cpu->regist, hl, cpu->regist->sp);
-	uint16_t sum = cpu->regist->sp + hl;
+	uint16_t sum = hl + cpu->regist->sp;
 	cpu->regist->h = regist_hi(&sum);
 	cpu->regist->l = regist_lo(&sum);
     tick_m(cpu);
@@ -230,14 +229,14 @@ int add_hl_sp(struct cpu *cpu)
 
 int add_sp_e8(struct cpu *cpu)
 {
-    uint8_t offset = read_mem(cpu, cpu->regist->pc);
-    uint8_t p = regist_lo(&cpu->regist->sp);
-    hflag_add_set(cpu->regist, p, offset);
-    cflag_add_set(cpu->regist, p, offset);
+    int8_t offset = read_mem(cpu, cpu->regist->pc);
+    uint8_t lo = regist_lo(&cpu->regist->sp);
+    tick_m(cpu);
+    cflag_add_set(cpu->regist, lo, offset);
+    hflag_add_set(cpu->regist, lo, offset);
     set_z(cpu->regist, 0);
     set_n(cpu->regist, 0);
     cpu->regist->sp += offset;
-    tick_m(cpu);
     tick_m(cpu);
     cpu->regist->pc++;
     return 4;
@@ -493,28 +492,29 @@ int cp_a_n(struct cpu *cpu)
 //x27	1 MCycle
 int daa(struct cpu *cpu)
 {
-	uint8_t *a = &cpu->regist->a;
-	if (!get_n(cpu->regist))	//Additioncase
+	if (!get_n(cpu->regist))	//Addition case
 	{
-		if (get_c(cpu->regist) || *a > 0x99) //check high nibble
+		if (get_c(cpu->regist) || cpu->regist->a > 0x99) //check high nibble
 		{
-			*a += 0x60;
+			cpu->regist->a += 0x60;
 			set_c(cpu->regist, 1);
 		}
 
-		if (get_h(cpu->regist)|| (*a & 0x0F) > 0x09)	//check low nibble
+		if (get_h(cpu->regist) || (cpu->regist->a & 0x0F) > 0x09)	//check low nibble
 		{
-			*a += 0x06;
+			cpu->regist->a += 0x6;
 		}
 	}
 
 	else	//Subtraction case
 	{
 		if (get_c(cpu->regist))
-			*a -= 0x60;
+			cpu->regist->a -= 0x60;
 		if (get_h(cpu->regist))
-			*a -= 0x06;
+			cpu->regist->a -= 0x6;
 	}
+    set_z(cpu->regist, cpu->regist->a == 0x00);
+    set_h(cpu->regist, 0);
 
 	return 1;
 }

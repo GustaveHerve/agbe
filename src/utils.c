@@ -113,14 +113,9 @@ void hflag_sub_set(struct cpu_register *regist, uint8_t a, uint8_t b)
 	set_h(regist, hflag_sub_check(a, b));
 }
 
-int hflag16_check(uint16_t result)
-{
-	return (result & 0x1000) == 0x1000;
-}
-
 int hflag16_add_check(uint16_t a, uint16_t b)
 {
-	return hflag16_check(a & 0xFFF + b & 0xFFF);
+	return (((a & 0xFFF) + (b & 0xFFF)) & 0x1000) == 0x1000;
 }
 
 void hflag16_add_set(struct cpu_register *regist, uint16_t a, uint16_t b)

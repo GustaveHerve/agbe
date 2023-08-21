@@ -42,6 +42,8 @@ struct cpu
 
     int div_timer;
     int tima_timer;
+
+    int mbc;
 };
 
 void cpu_init(struct cpu *new_cpu, struct renderer *rend);

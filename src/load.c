@@ -193,10 +193,10 @@ int ld_nn_sp(struct cpu *cpu)
 //xF8   3 MCycle
 int ld_hl_spe8(struct cpu *cpu)
 {
-    uint8_t offset = read_mem(cpu, cpu->regist->pc);
-    uint8_t p = regist_lo(&cpu->regist->sp);
-    hflag_add_set(cpu->regist, p, offset);
-    cflag_add_set(cpu->regist, p, offset);
+    int8_t offset = read_mem(cpu, cpu->regist->pc);
+    uint8_t lo = regist_lo(&cpu->regist->sp);
+    hflag_add_set(cpu->regist, lo, offset);
+    cflag_add_set(cpu->regist, lo, offset);
     set_z(cpu->regist, 0);
     set_n(cpu->regist, 0);
     uint16_t res = cpu->regist->sp + offset;

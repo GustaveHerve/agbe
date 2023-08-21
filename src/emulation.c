@@ -33,7 +33,7 @@ void main_loop(struct cpu *cpu)
         check_interrupt(cpu);
     }
 
-    fptr = fopen("testroms/tetris.gb", "rb");
+    fptr = fopen("testroms/sp,hl.gb", "rb");
     fread(cpu->membus, 1, 32768, fptr);
     fclose(fptr);
 

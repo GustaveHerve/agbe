@@ -30,6 +30,8 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
     cpu->div_timer = 0;
     cpu->tima_timer = 0;
 
+    cpu->mbc = 0;
+
     //Values BEFORE bootrom
     cpu->regist->a = 0x00;
     cpu->regist->f = 0x00;
