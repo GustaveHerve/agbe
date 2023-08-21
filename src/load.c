@@ -246,15 +246,6 @@ int ldh_c_a(struct cpu *cpu)
 
 int pop_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
-    /*
-    uint8_t lo_a = read_mem(cpu, cpu->regist->sp);
-    cpu->regist->sp++;
-    uint8_t hi_a = read_mem(cpu, cpu->regist->sp);
-    cpu->regist->sp++;
-    uint16_t address = convert_8to16(&hi_a, &lo_a);
-    *lo = cpu->membus[address];
-    *hi = cpu->membus[address + 1];
-    */
     uint8_t _lo = read_mem(cpu, cpu->regist->sp);
     cpu->regist->sp++;
     uint8_t _hi = read_mem(cpu, cpu->regist->sp);
@@ -266,28 +257,16 @@ int pop_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 
 int pop_af(struct cpu *cpu)
 {
-    /*
-    uint8_t lo_a = read_mem(cpu, cpu->regist->sp);
-    cpu->regist->sp++;
-    uint8_t hi_a = read_mem(cpu, cpu->regist->sp);
-    cpu->regist->sp++;
-    uint16_t address = convert_8to16(&hi_a, &lo_a);
-    cpu->regist->f = cpu->membus[address];
-    cpu->regist->a = cpu->membus[address + 1];
-    */
     uint8_t _lo = read_mem(cpu, cpu->regist->sp);
+    set_z(cpu->regist, _lo >> 7 & 0x1);
+    set_n(cpu->regist, _lo >> 6 & 0x1);
+    set_h(cpu->regist, _lo >> 5 & 0x1);
+    set_c(cpu->regist, _lo >> 4 & 0x1);
     cpu->regist->sp++;
     uint8_t _hi = read_mem(cpu, cpu->regist->sp);
-    cpu->regist->sp++;
-    cpu->regist->f = _lo;
     cpu->regist->a = _hi;
+    cpu->regist->sp++;
 
-    /*
-    set_z(cpu->regist, lo_a >> 7 & 0x1);
-    set_n(cpu->regist, lo_a >> 6 & 0x1);
-    set_h(cpu->regist, lo_a >> 5 & 0x1);
-    set_c(cpu->regist, lo_a >> 4 & 0x1);
-    */
     return 3;
 }
 
