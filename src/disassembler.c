@@ -1285,7 +1285,7 @@ int prefix_op(struct cpu *cpu)
             mcycles = res(&cpu->regist->e, 5);
             break;
         case 0xAC:
-            mcycles = res(&cpu->regist->b, 5);
+            mcycles = res(&cpu->regist->h, 5);
             break;
         case 0xAD:
             mcycles = res(&cpu->regist->l, 5);

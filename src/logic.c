@@ -144,19 +144,20 @@ int add_a_n(struct cpu *cpu)
 //x     1 MCycle
 int adc_a_r(struct cpu *cpu, uint8_t *src)
 {
-    uint8_t val = *src;
-    if (get_c(cpu->regist))
-        val++;
+    uint8_t a_copy = cpu->regist->a;
     set_n(cpu->regist, 0);
-    hflag_add_set(cpu->regist, cpu->regist->a, val);
-    cflag_add_set(cpu->regist, cpu->regist->a, val);
+    uint8_t val = *src;
+    int temp = cpu->regist->a + val;
     cpu->regist->a += val;
-    /*
-    if (!get_h(cpu->regist))
-        hflag_add_set(cpu->regist, cpu->regist->a, 1);
-    if (!get_c(cpu->regist))
-        cflag_add_set(cpu->regist, cpu->regist->a, 1);
-    */
+    if (get_c(cpu->regist))
+    {
+        temp++;
+        cpu->regist->a++;
+        set_h(cpu->regist, (((a_copy & 0xF) + (val & 0xF) + (1 & 0xF)) & 0x10) == 0x10);
+    }
+    else
+        set_h(cpu->regist, (((a_copy & 0xF) + (val & 0xF)) & 0x10) == 0x10);
+    set_c(cpu->regist, temp > 0xFF);
     set_z(cpu->regist, cpu->regist->a == 0);
     return 1;
 }
@@ -165,20 +166,21 @@ int adc_a_r(struct cpu *cpu, uint8_t *src)
 //x8E   2 MCycle
 int adc_a_hl(struct cpu *cpu)
 {
+    uint8_t a_copy = cpu->regist->a;
     set_n(cpu->regist, 0);
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     uint8_t val = read_mem(cpu, address);
-    if (get_c(cpu->regist))
-        val++;
-    hflag_add_set(cpu->regist, cpu->regist->a, val);
-    cflag_add_set(cpu->regist, cpu->regist->a, val);
+    int temp = cpu->regist->a + val;
     cpu->regist->a += val;
-    /*
-    if (!get_h(cpu->regist))
-        hflag_add_set(cpu->regist, cpu->regist->a, 1);
-    if (!get_c(cpu->regist))
-        cflag_add_set(cpu->regist, cpu->regist->a, 1);
-    */
+    if (get_c(cpu->regist))
+    {
+        temp++;
+        cpu->regist->a++;
+        set_h(cpu->regist, (((a_copy & 0xF) + (val & 0xF) + (1 & 0xF)) & 0x10) == 0x10);
+    }
+    else
+        set_h(cpu->regist, (((a_copy & 0xF) + (val & 0xF)) & 0x10) == 0x10);
+    set_c(cpu->regist, temp > 0xFF);
     set_z(cpu->regist, cpu->regist->a == 0);
     return 2;
 }
@@ -187,17 +189,22 @@ int adc_a_hl(struct cpu *cpu)
 //xCE   2 MCycle
 int adc_a_n(struct cpu *cpu)
 {
-    uint8_t n = read_mem(cpu, cpu->regist->pc);
+    uint8_t a_copy = cpu->regist->a;
+    uint8_t val = read_mem(cpu, cpu->regist->pc);
     set_n(cpu->regist, 0);
-    hflag_add_set(cpu->regist, cpu->regist->a, n);
-    cflag_add_set(cpu->regist, cpu->regist->a, n);
-    cpu->regist->a += n;
-    if (!get_h(cpu->regist))
-        hflag_add_set(cpu->regist, cpu->regist->a, 1);
-    if (!get_c(cpu->regist))
-        cflag_add_set(cpu->regist, cpu->regist->a, 1);
-    cpu->regist->a++;
+    int temp = cpu->regist->a + val;
+    cpu->regist->a += val;
+    if (get_c(cpu->regist))
+    {
+        temp++;
+        cpu->regist->a++;
+        set_h(cpu->regist, (((a_copy & 0xF) + (val & 0xF) + (1 & 0xF)) & 0x10) == 0x10);
+    }
+    else
+        set_h(cpu->regist, (((a_copy & 0xF) + (val & 0xF)) & 0x10) == 0x10);
+    set_c(cpu->regist, temp > 0xFF);
     set_z(cpu->regist, cpu->regist->a == 0);
+    cpu->regist->pc++;
     return 2;
 }
 
@@ -290,34 +297,38 @@ int sub_a_n(struct cpu *cpu)
 //x9(8-F)   1 MCycle
 int sbc_a_r(struct cpu *cpu, uint8_t *src)
 {
+    uint8_t a_copy = cpu->regist->a;
     set_n(cpu->regist, 1);
-    hflag_sub_set(cpu->regist, cpu->regist->a, *src);
-    cflag_sub_set(cpu->regist, cpu->regist->a, *src);
     cpu->regist->a -= *src;
-    if (!get_h(cpu->regist))
-        hflag_sub_set(cpu->regist, cpu->regist->a, 1);
-    if (!get_c(cpu->regist))
-        cflag_sub_set(cpu->regist, cpu->regist->a, 1);
-    cpu->regist->a--;
+    if (get_c(cpu->regist))
+    {
+        cpu->regist->a--;
+        set_h(cpu->regist, (((a_copy & 0xF) - (*src& 0xF) - (1 & 0xF)) & 0x10) == 0x10);
+    }
+    else
+        set_h(cpu->regist, (((a_copy & 0xF) - (*src& 0xF)) & 0x10) == 0x10);
+    set_c(cpu->regist, *src+ get_c(cpu->regist) > a_copy);
     set_z(cpu->regist, cpu->regist->a == 0);
     return 1;
 }
 
 //sbc A,(HL)
-//x8E   2 MCycle
+//x9E   2 MCycle
 int sbc_a_hl(struct cpu *cpu)
 {
+    uint8_t a_copy = cpu->regist->a;
     set_n(cpu->regist, 1);
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     uint8_t val = read_mem(cpu, address);
-    hflag_sub_set(cpu->regist, cpu->regist->a, val);
-    cflag_sub_set(cpu->regist, cpu->regist->a, val);
     cpu->regist->a -= val;
-    if (!get_h(cpu->regist))
-        hflag_sub_set(cpu->regist, cpu->regist->a, 1);
-    if (!get_c(cpu->regist))
-        cflag_sub_set(cpu->regist, cpu->regist->a, 1);
-    cpu->regist->a--;
+    if (get_c(cpu->regist))
+    {
+        cpu->regist->a--;
+        set_h(cpu->regist, (((a_copy & 0xF) - (val & 0xF) - (1 & 0xF)) & 0x10) == 0x10);
+    }
+    else
+        set_h(cpu->regist, (((a_copy & 0xF) - (val & 0xF)) & 0x10) == 0x10);
+    set_c(cpu->regist, val + get_c(cpu->regist) > a_copy);
     set_z(cpu->regist, cpu->regist->a == 0);
     return 2;
 }
@@ -326,16 +337,18 @@ int sbc_a_hl(struct cpu *cpu)
 //xDE   2 MCycle
 int sbc_a_n(struct cpu *cpu)
 {
-    uint8_t n = read_mem(cpu, cpu->regist->pc);
+    uint8_t a_copy = cpu->regist->a;
     set_n(cpu->regist, 1);
-    hflag_sub_set(cpu->regist, cpu->regist->a, n);
-    cflag_sub_set(cpu->regist, cpu->regist->a, n);
-    cpu->regist->a -= n;
-    if (!get_h(cpu->regist))
-        hflag_sub_set(cpu->regist, cpu->regist->a, 1);
-    if (!get_c(cpu->regist))
-        cflag_sub_set(cpu->regist, cpu->regist->a, 1);
-    cpu->regist->a--;
+    uint8_t val = read_mem(cpu, cpu->regist->pc);
+    cpu->regist->a -= val;
+    if (get_c(cpu->regist))
+    {
+        cpu->regist->a--;
+        set_h(cpu->regist, (((a_copy & 0xF) - (val & 0xF) - (1 & 0xF)) & 0x10) == 0x10);
+    }
+    else
+        set_h(cpu->regist, (((a_copy & 0xF) - (val & 0xF)) & 0x10) == 0x10);
+    set_c(cpu->regist, val + get_c(cpu->regist) > a_copy);
     set_z(cpu->regist, cpu->regist->a == 0);
     cpu->regist->pc++;
     return 2;
@@ -451,7 +464,7 @@ int or_a_n(struct cpu *cpu)
     uint8_t n = read_mem(cpu, cpu->regist->pc);
     cpu->regist->a = cpu->regist->a | n;
     set_n(cpu->regist, 0);
-    set_h(cpu->regist, 1);
+    set_h(cpu->regist, 0);
     set_c(cpu->regist, 0);
     set_z(cpu->regist, cpu->regist->a == 0);
     cpu->regist->pc++;
