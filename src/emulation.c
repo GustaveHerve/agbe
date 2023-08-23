@@ -26,7 +26,7 @@ void main_loop(struct cpu *cpu)
     lcd_off(cpu);
     //First OPCode Fetch
     tick_m(cpu);
-    while (cpu->regist->pc != 0x0150)
+    while (cpu->running && cpu->regist->pc != 0x0150)
     {
         next_op(cpu); //Remaining MCycles are ticked in instructions
         tick_m(cpu); // OPCode fetch
@@ -212,6 +212,11 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
         if (cpu->ppu->vram_locked)
             return 0xFF;
     }
+        uint8_t low_nibble = 0x00;
+        if (((cpu->membus[0xFF00] >> 4) & 0x01) == 0x00)
+            low_nibble = cpu->joyp_d;
+        if (((cpu->membus[0xFF00] >> 5) & 0x01) == 0x00)
+            low_nibble = cpu->joyp_a;
 
     //OAM read
     else if (address >= 0xFE00 && address <= 0xFEFF)
@@ -249,9 +254,14 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
     {
         write = 0;
         val &= 0x30; // don't write in bit 3-0 and keep only bit 6-5
-        uint8_t new = cpu->membus[address] & 0x0F;
+        uint8_t low_nibble = 0x00;
+        if (((val >> 4) & 0x01) == 0x00)
+            low_nibble = cpu->joyp_d;
+        if (((val >> 5) & 0x01) == 0x00)
+            low_nibble = cpu->joyp_a;
+        uint8_t new = low_nibble & 0x0F;
         new |= val;
-        new |= (cpu->membus[address] & 0xC0);
+        new |= (cpu->membus[address] & 0xC0); //keep the 7-6 bit
         cpu->membus[address] = new;
     }
 

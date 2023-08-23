@@ -32,6 +32,10 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
 
     cpu->mbc = 0;
 
+    //Joypad
+    cpu->joyp_a = 0xFF;
+    cpu->joyp_d = 0xFF;
+
     //Values BEFORE bootrom
     cpu->regist->a = 0x00;
     cpu->regist->f = 0x00;

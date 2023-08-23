@@ -62,20 +62,31 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
                         switch (event.key.keysym.sym)
                         {
                             case SDLK_RIGHT:
-                                cpu->membus[0xFF00] &= ~(0x01);
+                                cpu->joyp_d &= ~(0x01);
                                 break;
-
                             case SDLK_LEFT:
-                                cpu->membus[0xFF00] &= ~(0x02);
+                                cpu->joyp_d &= ~(0x02);
                                 break;
-
                             case SDLK_UP:
-                                cpu->membus[0xFF00] &= ~(0x04);
+                                cpu->joyp_d &= ~(0x04);
+                                break;
+                            case SDLK_DOWN:
+                                cpu->joyp_d &= ~(0x08);
                                 break;
 
-                            case SDLK_DOWN:
-                                cpu->membus[0xFF00] &= ~(0x08);
+                            case SDLK_z:
+                                cpu->joyp_a &= ~(0x01);
                                 break;
+                            case SDLK_x:
+                                cpu->joyp_a &= ~(0x02);
+                                break;
+                            case SDLK_SPACE:
+                                cpu->joyp_a &= ~(0x04);
+                                break;
+                            case SDLK_RETURN:
+                                cpu->joyp_a &= ~(0x09);
+                                break;
+
                         }
                         break;
                     }
@@ -84,19 +95,29 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
                         switch (event.key.keysym.sym)
                         {
                             case SDLK_RIGHT:
-                                cpu->membus[0xFF00] |= 0x01;
+                                cpu->joyp_d |= 0x01;
                                 break;
-
                             case SDLK_LEFT:
-                                cpu->membus[0xFF00] |= 0x02;
+                                cpu->joyp_d |= 0x02;
                                 break;
-
                             case SDLK_UP:
-                                cpu->membus[0xFF00] |= 0x04;
+                                cpu->joyp_d |= 0x04;
+                                break;
+                            case SDLK_DOWN:
+                                cpu->joyp_d |= 0x08;
                                 break;
 
-                            case SDLK_DOWN:
-                                cpu->membus[0xFF00] |= 0x08;
+                            case SDLK_z:
+                                cpu->joyp_a |= 0x01;
+                                break;
+                            case SDLK_x:
+                                cpu->joyp_a |= 0x02;
+                                break;
+                            case SDLK_SPACE:
+                                cpu->joyp_a |= 0x04;
+                                break;
+                            case SDLK_RETURN:
+                                cpu->joyp_a |= 0x08;
                                 break;
                         }
                     }

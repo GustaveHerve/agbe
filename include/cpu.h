@@ -43,6 +43,9 @@ struct cpu
     int tima_timer;
 
     int mbc;
+
+    uint8_t joyp_a;
+    uint8_t joyp_d;
 };
 
 void cpu_init(struct cpu *new_cpu, struct renderer *rend);
