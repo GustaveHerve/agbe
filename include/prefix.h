@@ -1,7 +1,6 @@
 #ifndef PREFIX_H
 #define PREFIX_H
 
-#include <stdlib.h>
 #include <stdint.h>
 
 struct cpu;

@@ -1,7 +1,6 @@
 #ifndef LOAD_H
 #define LOAD_H
 
-#include <stdlib.h>
 #include <stdint.h>
 
 struct cpu;

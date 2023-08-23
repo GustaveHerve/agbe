@@ -1,7 +1,7 @@
 #ifndef EMULATION_H
 #define EMULATION_H
 
-#include <stdlib.h>
+#include <stdint.h>
 
 struct cpu;
 struct ppu;

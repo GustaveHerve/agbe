@@ -76,8 +76,23 @@ void cpu_free(struct cpu *todelete)
 //Interrupt handling
 int check_interrupt(struct cpu *cpu)
 {
-    if (cpu->ime == 0)
+    if (!cpu->ime)
         return 0;
+
+    //Joypad check
+    if (((cpu->membus[0xFF00] >> 5 & 0x01) == 0x00) ||
+        (cpu->membus[0xFF00] >> 4 & 0x01) == 0x00)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (((cpu->membus[0xFF00] >> 5 & 0x01) == 0x00) ||
+                (cpu->membus[0xFF00] >> 4 & 0x01) == 0x00)
+            {
+                if (((cpu->membus[0xFF00] >> i) & 0x01) == 0x00)
+                    set_if(cpu, 4);
+            }
+        }
+    }
 
     for (int i = 0; i < 5; i++)
     {

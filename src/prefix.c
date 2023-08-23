@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include <err.h>
 #include "cpu.h"
 #include "utils.h"

@@ -1,7 +1,6 @@
 #ifndef PPU_UTILS_H
 #define PPU_UTILS_H
 
-#include <stdlib.h>
 #include <stdint.h>
 
 struct pixel

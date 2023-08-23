@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "ppu_utils.h"
 
 struct pixel make_pixel(uint8_t hi, uint8_t lo, int i, uint8_t *attributes)

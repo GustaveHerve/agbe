@@ -2,7 +2,6 @@
 #define PPU_H
 
 #include <SDL2/SDL.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include "queue.h"
 #include "rendering.h"

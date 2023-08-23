@@ -57,6 +57,50 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
             //SDL_WaitEvent(&event);
             switch (event.type)
             {
+                case SDL_KEYDOWN:
+                    {
+                        switch (event.key.keysym.sym)
+                        {
+                            case SDLK_RIGHT:
+                                cpu->membus[0xFF00] &= ~(0x01);
+                                break;
+
+                            case SDLK_LEFT:
+                                cpu->membus[0xFF00] &= ~(0x02);
+                                break;
+
+                            case SDLK_UP:
+                                cpu->membus[0xFF00] &= ~(0x04);
+                                break;
+
+                            case SDLK_DOWN:
+                                cpu->membus[0xFF00] &= ~(0x08);
+                                break;
+                        }
+                        break;
+                    }
+                case SDL_KEYUP:
+                    {
+                        switch (event.key.keysym.sym)
+                        {
+                            case SDLK_RIGHT:
+                                cpu->membus[0xFF00] |= 0x01;
+                                break;
+
+                            case SDLK_LEFT:
+                                cpu->membus[0xFF00] |= 0x02;
+                                break;
+
+                            case SDLK_UP:
+                                cpu->membus[0xFF00] |= 0x04;
+                                break;
+
+                            case SDLK_DOWN:
+                                cpu->membus[0xFF00] |= 0x08;
+                                break;
+                        }
+                    }
+                    break;
                 case SDL_QUIT:
                     cpu->running = 0;
                     return;

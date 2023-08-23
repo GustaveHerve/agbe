@@ -39,7 +39,6 @@ void main_loop(struct cpu *cpu)
 
     init_cpu(cpu, 0x0a);
     init_hardware(cpu);
-    cpu->membus[0xFF00] = 0xCF;
     cpu->div_timer = 52;
 
     //lcd_off(cpu);
@@ -202,7 +201,11 @@ void tick_m(struct cpu *cpu)
 
 uint8_t read_mem(struct cpu *cpu, uint16_t address)
 {
-    //TODO Verify that address is valid
+    if (cpu->ppu->dma)
+    {
+        //TODO
+    }
+
     //VRAM read
     if (address >= 0x8000 && address <= 0x9FFF)
     {
@@ -228,7 +231,7 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
     if (address >= 0x0000 && address <= 0x7FFF)
         write = 0;
 
-    if (address >= 0x8000 && address <= 0x9FFF)
+    else if (address >= 0x8000 && address <= 0x9FFF)
     {
         if (cpu->ppu->vram_locked)
             write = 0;
@@ -240,14 +243,16 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         if (cpu->ppu->oam_locked)
             write = 0;
     }
+
     //JOYP
     else if (address == 0xFF00)
     {
         write = 0;
-        uint8_t temp = (cpu->membus[address] & 0xC0);
-        temp |= (val & 0x30);
-        temp |= (cpu->membus[address] & 0x0F);
-        cpu->membus[address] = temp;
+        val &= 0x30; // don't write in bit 3-0 and keep only bit 6-5
+        uint8_t new = cpu->membus[address] & 0x0F;
+        new |= val;
+        new |= (cpu->membus[address] & 0xC0);
+        cpu->membus[address] = new;
     }
 
     else if (address == 0xFF04)
