@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 #include "ppu.h"
-struct ppu;
+
+struct mbc;
 
 struct cpu_register
 {
@@ -26,7 +27,8 @@ struct cpu
     struct ppu *ppu;
 	struct cpu_register *regist;
 	uint8_t *membus; //16-bit address bus that stores ROM RAM I/O
-                     //
+    uint8_t *rom;
+
     int ime;
     uint8_t *ie;
     uint8_t *_if;
@@ -42,7 +44,7 @@ struct cpu
     int div_timer;
     int tima_timer;
 
-    int mbc;
+    struct mbc *mbc;
 
     uint8_t joyp_a;
     uint8_t joyp_d;

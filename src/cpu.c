@@ -7,6 +7,7 @@
 #include "rotshift.h"
 #include "utils.h"
 #include "emulation.h"
+#include "mbc.h"
 
 #define MEMBUS_SIZE 65536 //In bytes
 
@@ -14,6 +15,7 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
 {
 	cpu->regist = malloc(sizeof(struct cpu_register));
 	cpu->membus = calloc(MEMBUS_SIZE, sizeof(uint8_t));
+    cpu->rom = NULL;
     cpu->ppu = malloc(sizeof(struct ppu));
     ppu_init(cpu->ppu, cpu, rend);
     cpu->ime = 0;
@@ -30,7 +32,7 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
     cpu->div_timer = 0;
     cpu->tima_timer = 0;
 
-    cpu->mbc = 0;
+    cpu->mbc = malloc(sizeof(struct mbc));
 
     //Joypad
     cpu->joyp_a = 0xFF;
@@ -73,7 +75,10 @@ void cpu_free(struct cpu *todelete)
 {
     ppu_free(todelete->ppu);
 	free(todelete->membus);
+    if (todelete->rom != NULL)
+        free(todelete->rom);
     free(todelete->regist);
+    free(todelete->mbc);
 	free(todelete);
 }
 

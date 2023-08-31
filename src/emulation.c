@@ -7,18 +7,21 @@
 #include "utils.h"
 #include "disassembler.h"
 #include "emulation.h"
+#include "mbc.h"
 
 void main_loop(struct cpu *cpu)
 {
     cpu->running = 1;
-    FILE *fptr;
-    fptr = fopen("testroms/boot.gb", "rb");
+    FILE *fptr = fopen("testroms/boot.gb", "rb");
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
-    fptr = fopen("testroms/tetris.gb", "rb");
+    fptr = fopen("testroms/mario.gb", "rb");
     fseek(fptr, 0x0100, SEEK_SET);
     fread(cpu->membus + 0x100, 1, 80, fptr);
     fclose(fptr);
+
+    //Init MBC / cartridge info and fill rom in buffer
+    set_mbc(cpu);
 
     //init_cpu(cpu, 0x0a);
     //init_hardware(cpu);
@@ -28,13 +31,16 @@ void main_loop(struct cpu *cpu)
     tick_m(cpu);
     while (cpu->running && cpu->regist->pc != 0x0150)
     {
+        //TODO handle halt state
         next_op(cpu); //Remaining MCycles are ticked in instructions
         tick_m(cpu); // OPCode fetch
         check_interrupt(cpu);
     }
 
-    fptr = fopen("testroms/tetris.gb", "rb");
+    fptr = fopen("testroms/mario.gb", "rb");
     fread(cpu->membus, 1, 32768, fptr);
+    fseek(fptr, 0, SEEK_SET);
+    fread(cpu->rom, 1, cpu->mbc->rom_bank_count * 16384, fptr);
     fclose(fptr);
 
     init_cpu(cpu, 0x0a);
@@ -212,11 +218,6 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
         if (cpu->ppu->vram_locked)
             return 0xFF;
     }
-        uint8_t low_nibble = 0x00;
-        if (((cpu->membus[0xFF00] >> 4) & 0x01) == 0x00)
-            low_nibble = cpu->joyp_d;
-        if (((cpu->membus[0xFF00] >> 5) & 0x01) == 0x00)
-            low_nibble = cpu->joyp_a;
 
     //OAM read
     else if (address >= 0xFE00 && address <= 0xFEFF)
@@ -231,10 +232,12 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
 
 void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
 {
-    //TODO Verify that address is valid
     int write = 1;
     if (address >= 0x0000 && address <= 0x7FFF)
+    {
         write = 0;
+        write_mbc(cpu, address, val);
+    }
 
     else if (address >= 0x8000 && address <= 0x9FFF)
     {
