@@ -84,7 +84,7 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
                                 cpu->joyp_a &= ~(0x04);
                                 break;
                             case SDLK_RETURN:
-                                cpu->joyp_a &= ~(0x09);
+                                cpu->joyp_a &= ~(0x08);
                                 break;
 
                         }
