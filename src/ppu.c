@@ -383,7 +383,7 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
 
     uint8_t slice_low = ppu->cpu->membus[address_low];
 
-    if (obj_index != 1)
+    if (obj_index != -1)
     {
         uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 2);
         //X flip
@@ -431,7 +431,7 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
 
     uint8_t slice_high = ppu->cpu->membus[address_high];
 
-    if (obj_index != 1)
+    if (obj_index != -1)
     {
         uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 2);
         //X flip

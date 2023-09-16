@@ -106,7 +106,10 @@ int check_interrupt(struct cpu *cpu)
     for (int i = 0; i < 5; i++)
     {
         if (get_if(cpu, i) && get_ie(cpu, i))
+        {
+            cpu->halt = 0;
             handle_interrupt(cpu, i);
+        }
     }
     return 1;
 }

@@ -49,7 +49,7 @@ int scf(struct cpu *cpu)
 
 int di(struct cpu *cpu)
 {
-    *cpu->ie = 0;
+    cpu->ime = 0;
     return 1;
 }
 

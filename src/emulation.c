@@ -15,7 +15,7 @@ void main_loop(struct cpu *cpu)
     FILE *fptr = fopen("testroms/boot.gb", "rb");
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
-    fptr = fopen("testroms/tetris.gb", "rb");
+    fptr = fopen("testroms/mario.gb", "rb");
     fseek(fptr, 0x0100, SEEK_SET);
     fread(cpu->membus + 0x100, 1, 80, fptr);
     fclose(fptr);
@@ -37,7 +37,7 @@ void main_loop(struct cpu *cpu)
         check_interrupt(cpu);
     }
 
-    fptr = fopen("testroms/tetris.gb", "rb");
+    fptr = fopen("testroms/mario.gb", "rb");
     fread(cpu->membus, 1, 32768, fptr);
     fseek(fptr, 0, SEEK_SET);
     fread(cpu->rom, 1, cpu->mbc->rom_bank_count * 16384, fptr);
@@ -52,7 +52,8 @@ void main_loop(struct cpu *cpu)
     while (cpu->running)
     {
         //cycle_count += next_op(cpu); //Remaining MCycles are ticked in instructions
-        next_op(cpu);
+        if (!cpu->halt)
+            next_op(cpu);
         tick_m(cpu); // Previous instruction tick + next OPCode fetch
         check_interrupt(cpu);
         //if (cycle_count >= 4192373)
@@ -122,9 +123,9 @@ void init_hardware(struct cpu *cpu)
     cpu->membus[0xFF44] = 0x00;
     cpu->membus[0xFF45] = 0x00;
     cpu->membus[0xFF46] = 0xFF;
-    cpu->membus[0xFF47] = 0xFC; //TODO check this
-    cpu->membus[0xFF48] = 0xFF; // ?
-    cpu->membus[0xFF49] = 0xFF; // ?
+    cpu->membus[0xFF47] = 0xFC;
+    cpu->membus[0xFF48] = 0xFF;
+    cpu->membus[0xFF49] = 0xFF;
     cpu->membus[0xFF4A] = 0x00;
     cpu->membus[0xFF4B] = 0x00;
     cpu->membus[0xFF4D] = 0xFF;
