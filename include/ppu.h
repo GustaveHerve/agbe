@@ -75,7 +75,6 @@ void ppu_tick_m(struct ppu *ppu);
 
 //Mode 2
 int oam_scan(struct ppu *ppu);
-int oam_scan_m(struct ppu *ppu);
 
 //Mode 3 functions
 uint8_t get_tileid(struct ppu *ppu, int obj_index);

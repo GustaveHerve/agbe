@@ -63,6 +63,7 @@ void queue_clear(queue *q)
     }
     q->front = NULL;
     q->rear = NULL;
+    q->count = 0;
 }
 
 void queue_free(queue *q)

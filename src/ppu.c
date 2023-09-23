@@ -124,7 +124,7 @@ void ppu_tick_m(struct ppu *ppu)
                     break;
                 }
 
-                int obj = -1;
+                int obj = -1; //TODO Don't if already obj in fetcher ?
                 if (get_lcdc(ppu, 1))
                     obj = in_object(ppu, ppu->obj_fetcher->obj_index);
 
@@ -302,13 +302,6 @@ int oam_scan(struct ppu *ppu)
     return 2;
 }
 
-int oam_scan_m(struct ppu *ppu)
-{
-    oam_scan(ppu);
-    oam_scan(ppu);
-    return 4;
-}
-
 //obj_index == -1 means BG/Win Mode
 uint8_t get_tileid(struct ppu *ppu, int obj_index)
 {
@@ -385,7 +378,7 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
 
     if (obj_index != -1)
     {
-        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 2);
+        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
         //X flip
         if ((attributes >> 5) & 0x01)
         {
@@ -433,7 +426,7 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
 
     if (obj_index != -1)
     {
-        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 2);
+        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
         //X flip
         if ((attributes >> 5) & 0x01)
         {
@@ -452,9 +445,9 @@ int push_pixel(queue *target, struct pixel p)
 
 int push_slice(struct ppu *ppu, queue *q, uint8_t hi, uint8_t lo, int obj_i)
 {
-    uint8_t *attributes = NULL;
+    uint8_t* attributes = NULL;
     if (obj_i != -1)
-        attributes = ppu->obj_slots[obj_i].oam_address + 2;
+        attributes = ppu->obj_slots[obj_i].oam_address + 3;
     for (int i = 0; i < 8; i++)
     {
         struct pixel p = make_pixel(hi, lo, i, attributes);
@@ -469,7 +462,7 @@ int push_slice(struct ppu *ppu, queue *q, uint8_t hi, uint8_t lo, int obj_i)
 //OBJ Merge version of push_slice in case it is not empty, overwrite transparent pixels OBJ FIFO
 int merge_obj(struct ppu *ppu, uint8_t hi, uint8_t lo, int obj_i)
 {
-    uint8_t *attributes = ppu->obj_slots[obj_i].oam_address + 2;
+    uint8_t *attributes = ppu->obj_slots[obj_i].oam_address + 3;
     queue_node *q = ppu->obj_fifo->front;
     int i = 0;
     while (q != NULL && i < 8)
