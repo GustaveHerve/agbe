@@ -83,5 +83,7 @@ void write_mbc(struct cpu *cpu, uint16_t address, uint8_t val)
 //Emulates bank switching in membus range 0x4000-0x7FFF
 void rom_bank(struct cpu *cpu, uint8_t bank)
 {
-    memcpy(cpu->membus + 0x4000, cpu->rom + 0x4000 * bank, 16384);
+    //for (int i = 0; i < 0x4000; i++)
+    //    cpu->membus[0x4000 + i] = cpu->rom[0x4000*bank + i];
+    memcpy(cpu->membus + 0x4000, cpu->rom + (0x4000 * bank), sizeof(uint8_t) * 0x4000);
 }

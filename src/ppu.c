@@ -23,6 +23,7 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
     ppu->wy = cpu->membus + 0xFF4A;
     ppu->wx = cpu->membus + 0xFF4B;
     ppu->stat = cpu->membus + 0xFF41;
+    //TODO set bit 7 of stat to 1 (unused bit)
 
     ppu->bgp = cpu->membus + 0xFF47;
     ppu->obp0 = cpu->membus + 0xFF48;
@@ -96,6 +97,14 @@ void ppu_tick_m(struct ppu *ppu)
         {
             case 2: //Mode 2 - OAM scan
             {
+                if (*ppu->ly == *ppu->lyc)
+                {
+                    set_stat(ppu, 2);
+                    if (get_stat(ppu, 6)) //&& !get_if(ppu->cpu, 1))
+                        set_if(ppu->cpu, 1);
+                }
+                else
+                    clear_stat(ppu, 2);
                 oam_scan(ppu);
                 dots -= 2;
                 break;
@@ -231,7 +240,11 @@ void ppu_tick_m(struct ppu *ppu)
                 {
                     *ppu->ly += 1;
                     if (*ppu->ly == *ppu->lyc)
+                    {
                         set_stat(ppu, 2);
+                        if (get_stat(ppu, 6)) //&& !get_if(ppu->cpu, 1))
+                            set_if(ppu->cpu, 1);
+                    }
                     else
                         clear_stat(ppu, 2);
                     ppu->line_dot_count = 0;
