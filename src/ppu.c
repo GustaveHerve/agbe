@@ -52,6 +52,7 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
 
     ppu->line_dot_count = 0;
     ppu->mode1_153th = 0;
+    ppu->first_tile = 1;
 
     ppu->win_mode = 0;
     ppu->pop_pause = 0;
@@ -105,6 +106,7 @@ void ppu_tick_m(struct ppu *ppu)
                 }
                 else
                     clear_stat(ppu, 2);
+                ppu->first_tile = 1;
                 oam_scan(ppu);
                 dots -= 2;
                 break;
@@ -156,16 +158,30 @@ void ppu_tick_m(struct ppu *ppu)
                 //FIFOs popping is paused if OBJ was detected
                 if (!ppu->pop_pause && !queue_isempty(ppu->bg_fifo))
                 {
-                    //TODO select pixel if obj fifo not empty
-                    //TODO insert time x pixel rendered (1 dot = 1 pixel pop)
                     if (time == 0)
                         time = 1;
                     for (int i = 0; i < time; i++)
                     {
                         struct pixel p = select_pixel(ppu);
-                        if (ppu->lx > 7) //Don't draw prefetch
+                        //Don't draw prefetch + shift SCX for first tile
+                        if (ppu->first_tile && ppu->lx > 7)
+                        {
+                            int discard = *ppu->scx % 8;
+                            if (ppu->bg_fifo->count < 8 - discard)
+                            {
+                                draw_pixel(ppu->cpu, p);
+                                ppu->lx++;
+                            }
+                            if (queue_isempty(ppu->bg_fifo))
+                                ppu->first_tile = 0;
+                        }
+                        else if (ppu->lx > 7 && ppu->lx <= 167)
+                        {
                             draw_pixel(ppu->cpu, p);
-                        ppu->lx++;
+                            ppu->lx++;
+                        }
+                        else
+                            ppu->lx++;
                     }
                 }
                 else if (ppu->pop_pause)

@@ -59,6 +59,7 @@ struct ppu
 
     int line_dot_count; //Dot count for current scanline
     uint8_t mode1_153th;
+    uint8_t first_tile;
     uint8_t current_mode;
 
     uint8_t win_mode;
