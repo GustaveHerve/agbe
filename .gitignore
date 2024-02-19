@@ -17,5 +17,8 @@
 a.out
 testroms
 
-#YCM config file
-.ycm_extra_conf.py
+#LSP config file
+*.json
+.cache
+
+agbe

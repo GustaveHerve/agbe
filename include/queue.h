@@ -3,18 +3,18 @@
 
 #include "ppu_utils.h"
 
-struct queue_node
+typedef struct queue_node
 {
     struct queue_node *next;
     struct pixel data;
-} typedef queue_node;
+} queue_node;
 
-struct queue
+typedef struct queue
 {
     struct queue_node *front;
     struct queue_node *rear;
     int count;
-} typedef queue;
+} queue;
 
 queue *queue_init(void);
 int queue_isempty(queue *q);

@@ -47,7 +47,7 @@ void set_mbc(struct cpu *cpu)
 void write_mbc(struct cpu *cpu, uint16_t address, uint8_t val)
 {
     //RAM Enable
-    if (address >= 0x0000 && address <= 0x1FFF)
+    if (address <= 0x1FFF)
     {
         if (cpu->mbc->type >= 0x01 && cpu->mbc->type <= 0x03)
         {

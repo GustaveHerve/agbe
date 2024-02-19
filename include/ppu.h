@@ -6,7 +6,7 @@
 #include "queue.h"
 #include "rendering.h"
 
-struct fetcher
+typedef struct fetcher
 {
     uint8_t tileid; //Variables to Save state between dots
     uint8_t lo;
@@ -17,7 +17,7 @@ struct fetcher
                           //2 = get_tile_hi
                           //3 = push_pixels
     int obj_index;    //Used if PPU in OBJ mode
-} typedef fetcher;
+} fetcher;
 
 
 struct ppu

@@ -2,7 +2,7 @@ CC = gcc #clang
 CFLAGS = -Wall -Wextra -Wvla -pedantic -g -I include/ -I /opt/homebrew/include
 LDLIBS = -lSDL2 -lm
 
-BIN = test
+BIN = agbe
 OBJ = src/control.o src/cpu.o src/disassembler.o src/emulation.o \
 	  src/input.o src/jump.o src/load.o src/logic.o src/mbc.o src/ppu.o \
 	  src/ppu_utils.o src/prefix.o src/queue.o src/rendering.o src/rotshift.o \

@@ -234,7 +234,7 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
 void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
 {
     int write = 1;
-    if (address >= 0x0000 && address <= 0x7FFF)
+    if (address <= 0x7FFF)
     {
         write = 0;
         write_mbc(cpu, address, val);
