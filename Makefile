@@ -1,6 +1,6 @@
-CC = clang
+CC = gcc #clang
 CFLAGS = -Wall -Wextra -Wvla -pedantic -g -I include/ -I /opt/homebrew/include
-LDLIBS = -lSDL2
+LDLIBS = -lSDL2 -lm
 
 BIN = test
 OBJ = src/control.o src/cpu.o src/disassembler.o src/emulation.o \

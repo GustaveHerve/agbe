@@ -5,15 +5,18 @@
 #include "emulation.h"
 #include "ppu_utils.h"
 
-int main(void)
+int main(int argc, char **argv)
 {
+    if (argc != 2)
+        return -1;
+
     if (SDL_Init(SDL_INIT_EVERYTHING))
         return EXIT_FAILURE;
 
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
-    window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 720, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1120, 1008, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_RenderSetLogicalSize(renderer, 160, 144);
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
 
@@ -31,7 +34,7 @@ int main(void)
 	struct cpu *cpu = malloc(sizeof(struct cpu));
 	cpu_init(cpu, rend);
 
-    main_loop(cpu);
+    main_loop(cpu, argv[1]);
 
     free_renderer(cpu->ppu->renderer);
     cpu_free(cpu);

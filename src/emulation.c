@@ -9,13 +9,13 @@
 #include "emulation.h"
 #include "mbc.h"
 
-void main_loop(struct cpu *cpu)
+void main_loop(struct cpu *cpu, char *rom_path)
 {
     cpu->running = 1;
     FILE *fptr = fopen("testroms/boot.gb", "rb");
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
-    fptr = fopen("testroms/mario.gb", "rb");
+    fptr = fopen(rom_path, "rb");
     fseek(fptr, 0x0100, SEEK_SET);
     fread(cpu->membus + 0x100, 1, 80, fptr);
     fclose(fptr);
@@ -37,7 +37,7 @@ void main_loop(struct cpu *cpu)
         check_interrupt(cpu);
     }
 
-    fptr = fopen("testroms/mario.gb", "rb");
+    fptr = fopen(rom_path, "rb");
     fread(cpu->membus, 1, 32768, fptr);
     fseek(fptr, 0, SEEK_SET);
     fread(cpu->rom, 1, cpu->mbc->rom_bank_count * 16384, fptr);
