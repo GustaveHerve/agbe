@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <math.h>
 #include <err.h>
 #include "cpu.h"
 #include "ppu.h"
@@ -8,6 +9,8 @@
 #include "disassembler.h"
 #include "emulation.h"
 #include "mbc.h"
+
+#define FRAMERATE 60
 
 void main_loop(struct cpu *cpu, char *rom_path)
 {
@@ -22,17 +25,25 @@ void main_loop(struct cpu *cpu, char *rom_path)
 
     //Init MBC / cartridge info and fill rom in buffer
     set_mbc(cpu);
-
-    //init_cpu(cpu, 0x0a);
-    //init_hardware(cpu);
-
     lcd_off(cpu);
+
     //First OPCode Fetch
     tick_m(cpu);
+
+    size_t cycle_threshold = 1048576 / FRAMERATE;
+    size_t cycle_count = 0;
+    Uint64 last_ticks = SDL_GetTicks64();
     while (cpu->running && cpu->regist->pc != 0x0150)
     {
+        if (cycle_count >= cycle_threshold)
+        {
+            if (SDL_GetTicks64() - last_ticks < 1000 / FRAMERATE)
+                continue;
+            cycle_count = 0;
+            last_ticks = SDL_GetTicks64();
+        }
         //TODO handle halt state
-        next_op(cpu); //Remaining MCycles are ticked in instructions
+        cycle_count += next_op(cpu); //Remaining MCycles are ticked in instructions
         tick_m(cpu); // OPCode fetch
         check_interrupt(cpu);
     }
@@ -47,16 +58,22 @@ void main_loop(struct cpu *cpu, char *rom_path)
     init_hardware(cpu);
     cpu->div_timer = 52;
 
-    //lcd_off(cpu);
-    //int cycle_count = 0;
     while (cpu->running)
     {
-        //cycle_count += next_op(cpu); //Remaining MCycles are ticked in instructions
+        if (cycle_count >= cycle_threshold)
+        {
+            if (SDL_GetTicks64() - last_ticks < 1000 / FRAMERATE)
+                continue;
+            cycle_count = 0;
+            last_ticks = SDL_GetTicks64();
+        }
+
         if (!cpu->halt)
-            next_op(cpu);
+            cycle_count += next_op(cpu) - 1;
+
         tick_m(cpu); // Previous instruction tick + next OPCode fetch
+        cycle_count += 1;
         check_interrupt(cpu);
-        //if (cycle_count >= 4192373)
     }
 }
 

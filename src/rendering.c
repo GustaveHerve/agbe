@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <math.h>
 #include "cpu.h"
 #include "ppu_utils.h"
 
@@ -54,7 +55,6 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            //SDL_WaitEvent(&event);
             switch (event.type)
             {
                 case SDL_KEYDOWN:
@@ -132,7 +132,6 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
         SDL_RenderClear(rend->renderer);
         SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
         SDL_RenderPresent(rend->renderer);
-        //SDL_PumpEvents();
         //SDL_Delay(16);
     }
 }

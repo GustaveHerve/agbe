@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
-    window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1120, 1008, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+    window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 960, 864, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_RenderSetLogicalSize(renderer, 160, 144);
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);

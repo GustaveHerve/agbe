@@ -22,3 +22,5 @@ testroms
 .cache
 
 agbe
+
+.gdb_history
