@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "cpu.h"
 #include "mbc.h"
 
@@ -60,7 +62,7 @@ void write_mbc(struct cpu *cpu, uint16_t address, uint8_t val)
     else if (address >= 0x2000 && address <= 0x3FFF)
     {
         uint8_t bank = val & 0x1F;
-        //Prevent bank 0x00 duplication... (only if uses 5 bits)
+        // Prevent bank 0x00 duplication... (only if uses 5 bits)
         if (bank == 0x00)
             cpu->mbc->bank_selected = 0x01;
         else
@@ -72,18 +74,18 @@ void write_mbc(struct cpu *cpu, uint16_t address, uint8_t val)
     }
     else if (address >= 0x4000 && address <= 0x5FFF)
     {
-        //TODO
+        // TODO
     }
     else if (address >= 0x6000 && address <= 0x7FFF)
     {
-        //TODO
+        // TODO
     }
 }
 
-//Emulates bank switching in membus range 0x4000-0x7FFF
+// Emulates bank switching in membus range 0x4000-0x7FFF
 void rom_bank(struct cpu *cpu, uint8_t bank)
 {
-    //for (int i = 0; i < 0x4000; i++)
+    //for (int i = 0; i < 0x4000; ++i)
     //    cpu->membus[0x4000 + i] = cpu->rom[0x4000*bank + i];
     memcpy(cpu->membus + 0x4000, cpu->rom + (0x4000 * bank), sizeof(uint8_t) * 0x4000);
 }

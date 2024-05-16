@@ -2,8 +2,9 @@
 #define CPU_H
 
 #include <stdint.h>
-#include "ppu.h"
 
+struct ppu;
+struct renderer;
 struct mbc;
 
 struct cpu_register
@@ -51,7 +52,6 @@ struct cpu
 };
 
 void cpu_init(struct cpu *new_cpu, struct renderer *rend);
-void cpu_init_regist(struct cpu *cpu);
 void cpu_start(struct cpu *cpu);
 void cpu_free(struct cpu *todelete);
 
@@ -62,9 +62,5 @@ int handle_interrupt(struct cpu *cpu, int bit);
 int get_if(struct cpu *cpu, int bit);
 void set_if(struct cpu *cpu, int bit);
 void clear_if(struct cpu *cpu, int bit);
-
-int get_ie(struct cpu *cpu, int bit);
-void set_ie(struct cpu *cpu, int bit);
-void clear_ie(struct cpu *cpu, int bit);
 
 #endif

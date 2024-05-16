@@ -1,12 +1,11 @@
-#include <stdlib.h>
 #include <stdint.h>
 #include <err.h>
 #include "cpu.h"
 #include "utils.h"
 #include "emulation.h"
 
-//rlc
-//x0(0-7)   2 MCycle
+// rlc
+// x0(0-7)   2 MCycle
 int rlc(struct cpu *cpu, uint8_t *dest)
 {
 	rotl(dest);
@@ -17,8 +16,8 @@ int rlc(struct cpu *cpu, uint8_t *dest)
     return 2;
 }
 
-//rlc (HL)
-//x06   4 MCycle
+// rlc (HL)
+// x06   4 MCycle
 int rlc_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -32,8 +31,8 @@ int rlc_hl(struct cpu *cpu)
     return 4;
 }
 
-//rrc
-//x0(8-F)   2 MCycle
+// rrc
+// x0(8-F)   2 MCycle
 int rrc(struct cpu *cpu, uint8_t *dest)
 {
     rotr(dest);
@@ -44,8 +43,8 @@ int rrc(struct cpu *cpu, uint8_t *dest)
     return 2;
 }
 
-//rrc (HL)
-//x0E   4 MCycle
+// rrc (HL)
+// x0E   4 MCycle
 int rrc_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -59,8 +58,8 @@ int rrc_hl(struct cpu *cpu)
     return 4;
 }
 
-//rl
-//x1(0-7)   2 MCycle
+// rl
+// x1(0-7)   2 MCycle
 int rl(struct cpu *cpu, uint8_t *dest)
 {
     rotl_carry(cpu->regist, dest);
@@ -70,8 +69,8 @@ int rl(struct cpu *cpu, uint8_t *dest)
     return 2;
 }
 
-//rl (HL)
-//x16   4 MCycle
+// rl (HL)
+// x16   4 MCycle
 int rl_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -84,8 +83,8 @@ int rl_hl(struct cpu *cpu)
     return 4;
 }
 
-//rr
-//x1(8-F)   2 MCycle
+// rr
+// x1(8-F)   2 MCycle
 int rr(struct cpu *cpu, uint8_t *dest)
 {
     rotr_carry(cpu->regist, dest);
@@ -95,8 +94,8 @@ int rr(struct cpu *cpu, uint8_t *dest)
     return 2;
 }
 
-//rr (HL)
-//x1E   4 MCycle
+// rr (HL)
+// x1E   4 MCycle
 int rr_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -109,8 +108,8 @@ int rr_hl(struct cpu *cpu)
     return 4;
 }
 
-//sla
-//x2(0-7)   2 MCycle
+// sla
+// x2(0-7)   2 MCycle
 int sla(struct cpu *cpu, uint8_t *dest)
 {
     set_c(cpu->regist, (*dest & 0x80) == 0x80);
@@ -121,8 +120,8 @@ int sla(struct cpu *cpu, uint8_t *dest)
     return 2;
 }
 
-//sla (HL)
-//x26   4 MCycle
+// sla (HL)
+// x26   4 MCycle
 int sla_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -136,8 +135,8 @@ int sla_hl(struct cpu *cpu)
     return 4;
 }
 
-//sra
-//x2(8-F)   2 MCycle
+// sra
+// x2(8-F)   2 MCycle
 int sra(struct cpu *cpu, uint8_t *dest)
 {
     set_c(cpu->regist, *dest & 0x01);
@@ -150,8 +149,8 @@ int sra(struct cpu *cpu, uint8_t *dest)
     return 2;
 }
 
-//sra (HL)
-//x2E   4 MCycle
+// sra (HL)
+// x2E   4 MCycle
 int sra_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -180,8 +179,8 @@ int swap(struct cpu *cpu, uint8_t *dest)
     return 2;
 }
 
-//swap (HL)
-//0x36  4 MCycle
+// swap (HL)
+// 0x36  4 MCycle
 int swap_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -195,8 +194,8 @@ int swap_hl(struct cpu *cpu)
     return 4;
 }
 
-//srl
-//x3(8-F)   2 MCycle
+// srl
+// x3(8-F)   2 MCycle
 int srl(struct cpu *cpu, uint8_t *dest)
 {
     set_c(cpu->regist, *dest & 0x01);
@@ -207,8 +206,8 @@ int srl(struct cpu *cpu, uint8_t *dest)
     return 2;
 }
 
-//srl (HL)
-//x3E   4 MCycle
+// srl (HL)
+// x3E   4 MCycle
 int srl_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -222,8 +221,8 @@ int srl_hl(struct cpu *cpu)
     return 4;
 }
 
-//bit
-//x
+// bit
+// x
 int bit(struct cpu *cpu, uint8_t *dest, int n)
 {
     uint8_t bit = (*dest >> n) & 0x01;
@@ -233,8 +232,8 @@ int bit(struct cpu *cpu, uint8_t *dest, int n)
     return 2;
 }
 
-//bit (HL)
-//x
+// bit (HL)
+// x
 int bit_hl(struct cpu *cpu, int n)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -246,8 +245,8 @@ int bit_hl(struct cpu *cpu, int n)
     return 3;
 }
 
-//res
-//x
+// res
+// x
 int res(uint8_t *dest, int n)
 {
 
@@ -255,8 +254,8 @@ int res(uint8_t *dest, int n)
     return 2;
 }
 
-//res (HL)
-//x
+// res (HL)
+// x
 int res_hl(struct cpu *cpu, int n)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -266,16 +265,16 @@ int res_hl(struct cpu *cpu, int n)
     return 4;
 }
 
-//set
-//x
+// set
+// x
 int set(uint8_t *dest, int n)
 {
     *dest |= (0x01 << n);
     return 2;
 }
 
-//set (HL)
-//x
+// set (HL)
+// x
 int set_hl(struct cpu *cpu, int n)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);

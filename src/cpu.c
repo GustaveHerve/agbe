@@ -1,15 +1,16 @@
 #include <stdlib.h>
 #include "cpu.h"
-#include "logic.h"
+#include "ppu.h"
 #include "control.h"
 #include "jump.h"
 #include "load.h"
-#include "rotshift.h"
 #include "utils.h"
 #include "emulation.h"
 #include "mbc.h"
 
-#define MEMBUS_SIZE 65536 //In bytes
+#define MEMBUS_SIZE 65536 // In bytes
+
+int get_ie(struct cpu *cpu, int bit);
 
 void cpu_init(struct cpu *cpu, struct renderer *rend)
 {
@@ -92,7 +93,7 @@ int check_interrupt(struct cpu *cpu)
     if (((cpu->membus[0xFF00] >> 5 & 0x01) == 0x00) ||
         (cpu->membus[0xFF00] >> 4 & 0x01) == 0x00)
     {
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; ++i)
         {
             if (((cpu->membus[0xFF00] >> 5 & 0x01) == 0x00) ||
                 (cpu->membus[0xFF00] >> 4 & 0x01) == 0x00)
@@ -103,7 +104,7 @@ int check_interrupt(struct cpu *cpu)
         }
     }
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 5; ++i)
     {
         if (get_if(cpu, i) && get_ie(cpu, i))
         {
@@ -122,30 +123,30 @@ int handle_interrupt(struct cpu *cpu, int bit)
     tick_m(cpu);
     uint8_t lo = regist_lo(&cpu->regist->pc);
     uint8_t hi = regist_hi(&cpu->regist->pc);
-    cpu->regist->sp--;
+    --cpu->regist->sp;
     write_mem(cpu, cpu->regist->sp, hi);
-    cpu->regist->sp--;
+    --cpu->regist->sp;
     write_mem(cpu, cpu->regist->sp, lo);
     uint16_t handler = 0;
     switch (bit)
     {
-        //VBlank
+        // VBlank
         case 0:
             handler = 0x40;
             break;
-        //LCD STAT
+        // LCD STAT
         case 1:
             handler = 0x48;
             break;
-        //Timer
+        // Timer
         case 2:
             handler = 0x50;
             break;
-        //Serial
+        // Serial
         case 3:
             handler = 0x58;
             break;
-        //Joypad
+        // Joypad
         case 4:
             handler = 0x60;
             break;
@@ -172,7 +173,6 @@ void clear_if(struct cpu *cpu, int bit)
 {
     *cpu->_if = *cpu->_if & ~(0x01 << bit);
 }
-
 
 int get_ie(struct cpu *cpu, int bit)
 {

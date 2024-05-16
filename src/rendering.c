@@ -1,6 +1,6 @@
 #include <SDL2/SDL.h>
-#include <math.h>
 #include "cpu.h"
+#include "ppu.h"
 #include "ppu_utils.h"
 
 void draw_pixel(struct cpu *cpu, struct pixel p)

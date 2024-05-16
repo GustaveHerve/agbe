@@ -2,7 +2,8 @@
 #define LOGIC_H
 
 #include <stdint.h>
-#include "cpu.h"
+
+struct cpu;
 
 int inc_r(struct cpu *cpu, uint8_t *dest);
 int inc_hl(struct cpu *cpu);

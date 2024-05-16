@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "cpu.h"
 #include "emulation.h"
-#include "ppu_utils.h"
+#include "ppu.h"
 
 int main(int argc, char **argv)
 {

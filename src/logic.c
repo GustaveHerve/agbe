@@ -1,11 +1,10 @@
-#include <stdlib.h>
 #include <err.h>
 #include "cpu.h"
 #include "utils.h"
 #include "emulation.h"
 
-//inc r (8 bit)
-//x(0-3)(4 or C)	1 MCycle
+// inc r (8 bit)
+// x(0-3)(4 or C)	1 MCycle
 int inc_r(struct cpu *cpu, uint8_t *dest)
 {
 	set_n(cpu->regist, 0);
@@ -15,45 +14,45 @@ int inc_r(struct cpu *cpu, uint8_t *dest)
 	return 1;
 }
 
-//inc (HL) (8 bit)
-//x34	3 MCycle
+// inc (HL) (8 bit)
+// x34	3 MCycle
 int inc_hl(struct cpu *cpu)
 {
 	set_n(cpu->regist, 0);
 	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
 	uint8_t value = read_mem(cpu, address);
 	hflag_add_set(cpu->regist, value, 1);
-    value++;
+    ++value;
     write_mem(cpu, address, value);
 	set_z(cpu->regist, value == 0);
 	return 3;
 }
 
-////inc rr
-//x(0-3)3	2 MCycle
+// inc rr
+// x(0-3)3	2 MCycle
 int inc_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
     //During fetch of the opcode probably writes to lo
 	uint16_t convert = convert_8to16(hi, lo);
-	convert += 1;
+	++convert;
     tick_m(cpu);
 	*lo = regist_lo(&convert);
 	*hi = regist_hi(&convert);
 	return 2;
 }
 
-//inc SP
-//x33	2 MCycle
+// inc SP
+// x33	2 MCycle
 int inc_sp(struct cpu *cpu)
 {
     //During fetch of the opcode probably writes to lo
-	cpu->regist->sp += 1;
+	++cpu->regist->sp;
     tick_m(cpu);
 	return 2;
 }
 
-//dec r (8 bit)
-//x(0-3)(5 or D)	1 MCycle
+// dec r (8 bit)
+// x(0-3)(5 or D)	1 MCycle
 int dec_r(struct cpu *cpu, uint8_t *dest)
 {
 	set_n(cpu->regist, 1);
@@ -63,45 +62,45 @@ int dec_r(struct cpu *cpu, uint8_t *dest)
 	return 1;
 }
 
-//dec (HL) (8 bit)
-//x35	3 MCycle
+// dec (HL) (8 bit)
+// x35	3 MCycle
 int dec_hl(struct cpu *cpu)
 {
 	set_n(cpu->regist, 1);
 	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
 	uint8_t value = read_mem(cpu, address);
     hflag_sub_set(cpu->regist, value, 1);
-    value--;
+    --value;
     write_mem(cpu, address, value);
 	set_z(cpu->regist, value == 0);
 	return 3;
 }
 
-//dec rr
-//x(0-2)B	2MCycle
+// dec rr
+// x(0-2)B	2MCycle
 int dec_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
     //During fetch of the opcode probably writes to lo
 	uint16_t temp = convert_8to16(hi, lo);
-	temp--;
+	--temp;
     tick_m(cpu);
 	*lo = regist_lo(&temp);
 	*hi = regist_hi(&temp);
 	return 2;
 }
 
-//dec sp
-//x3B	2 MCycle
+// dec sp
+// x3B	2 MCycle
 int dec_sp(struct cpu *cpu)
 {
     //During fetch of the opcode probably writes to lo
-	cpu->regist->sp -= 1;
+	--cpu->regist->sp;
     tick_m(cpu);
 	return 2;
 }
 
-//add A,r
-//x8(0-7)   1 MCycle
+// add A,r
+// x8(0-7)   1 MCycle
 int add_a_r(struct cpu *cpu, uint8_t *src)
 {
     set_n(cpu->regist, 0);
@@ -112,8 +111,8 @@ int add_a_r(struct cpu *cpu, uint8_t *src)
     return 1;
 }
 
-//add A,(HL)
-//x86   2 MCycle
+// add A,(HL)
+// x86   2 MCycle
 int add_a_hl(struct cpu *cpu)
 {
     set_n(cpu->regist, 0);
@@ -126,8 +125,8 @@ int add_a_hl(struct cpu *cpu)
     return 2;
 }
 
-//add A,n
-//xC6   2 MCycle
+// add A,n
+// xC6   2 MCycle
 int add_a_n(struct cpu *cpu)
 {
     uint8_t n = read_mem(cpu, cpu->regist->pc);
@@ -140,8 +139,8 @@ int add_a_n(struct cpu *cpu)
     return 2;
 }
 
-//adc A,r
-//x     1 MCycle
+// adc A,r
+// x     1 MCycle
 int adc_a_r(struct cpu *cpu, uint8_t *src)
 {
     uint8_t a_copy = cpu->regist->a;
@@ -151,8 +150,8 @@ int adc_a_r(struct cpu *cpu, uint8_t *src)
     cpu->regist->a += val;
     if (get_c(cpu->regist))
     {
-        temp++;
-        cpu->regist->a++;
+        ++temp;
+        ++cpu->regist->a;
         set_h(cpu->regist, (((a_copy & 0xF) + (val & 0xF) + (1 & 0xF)) & 0x10) == 0x10);
     }
     else
@@ -162,8 +161,8 @@ int adc_a_r(struct cpu *cpu, uint8_t *src)
     return 1;
 }
 
-//adc A,(HL)
-//x8E   2 MCycle
+// adc A,(HL)
+// x8E   2 MCycle
 int adc_a_hl(struct cpu *cpu)
 {
     uint8_t a_copy = cpu->regist->a;
@@ -174,8 +173,8 @@ int adc_a_hl(struct cpu *cpu)
     cpu->regist->a += val;
     if (get_c(cpu->regist))
     {
-        temp++;
-        cpu->regist->a++;
+        ++temp;
+        ++cpu->regist->a;
         set_h(cpu->regist, (((a_copy & 0xF) + (val & 0xF) + (1 & 0xF)) & 0x10) == 0x10);
     }
     else
@@ -185,8 +184,8 @@ int adc_a_hl(struct cpu *cpu)
     return 2;
 }
 
-//adc A,n
-//xCE   2 MCycle
+// adc A,n
+// xCE   2 MCycle
 int adc_a_n(struct cpu *cpu)
 {
     uint8_t a_copy = cpu->regist->a;
@@ -196,15 +195,15 @@ int adc_a_n(struct cpu *cpu)
     cpu->regist->a += val;
     if (get_c(cpu->regist))
     {
-        temp++;
-        cpu->regist->a++;
+        ++temp;
+        ++cpu->regist->a;
         set_h(cpu->regist, (((a_copy & 0xF) + (val & 0xF) + (1 & 0xF)) & 0x10) == 0x10);
     }
     else
         set_h(cpu->regist, (((a_copy & 0xF) + (val & 0xF)) & 0x10) == 0x10);
     set_c(cpu->regist, temp > 0xFF);
     set_z(cpu->regist, cpu->regist->a == 0);
-    cpu->regist->pc++;
+    ++cpu->regist->pc;
     return 2;
 }
 
@@ -252,11 +251,11 @@ int add_sp_e8(struct cpu *cpu)
     set_n(cpu->regist, 0);
     cpu->regist->sp += offset;
     tick_m(cpu);
-    cpu->regist->pc++;
+    ++cpu->regist->pc;
     return 4;
 }
-//sub A,r
-//x(0-7)9   1 MCycle
+// sub A,r
+// x(0-7)9   1 MCycle
 int sub_a_r(struct cpu *cpu, uint8_t *src)
 {
     set_n(cpu->regist, 1);
@@ -267,8 +266,8 @@ int sub_a_r(struct cpu *cpu, uint8_t *src)
     return 1;
 }
 
-//sub A,(HL)
-//x69   2 MCycle
+// sub A,(HL)
+// x69   2 MCycle
 int sub_a_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -293,8 +292,8 @@ int sub_a_n(struct cpu *cpu)
     return 2;
 }
 
-//sbc A,r
-//x9(8-F)   1 MCycle
+// sbc A,r
+// x9(8-F)   1 MCycle
 int sbc_a_r(struct cpu *cpu, uint8_t *src)
 {
     uint8_t a_copy = cpu->regist->a;
@@ -302,7 +301,7 @@ int sbc_a_r(struct cpu *cpu, uint8_t *src)
     cpu->regist->a -= *src;
     if (get_c(cpu->regist))
     {
-        cpu->regist->a--;
+        --cpu->regist->a;
         set_h(cpu->regist, (((a_copy & 0xF) - (*src& 0xF) - (1 & 0xF)) & 0x10) == 0x10);
     }
     else
@@ -312,8 +311,8 @@ int sbc_a_r(struct cpu *cpu, uint8_t *src)
     return 1;
 }
 
-//sbc A,(HL)
-//x9E   2 MCycle
+// sbc A,(HL)
+// x9E   2 MCycle
 int sbc_a_hl(struct cpu *cpu)
 {
     uint8_t a_copy = cpu->regist->a;
@@ -323,7 +322,7 @@ int sbc_a_hl(struct cpu *cpu)
     cpu->regist->a -= val;
     if (get_c(cpu->regist))
     {
-        cpu->regist->a--;
+        --cpu->regist->a;
         set_h(cpu->regist, (((a_copy & 0xF) - (val & 0xF) - (1 & 0xF)) & 0x10) == 0x10);
     }
     else
@@ -333,8 +332,8 @@ int sbc_a_hl(struct cpu *cpu)
     return 2;
 }
 
-//sbc A,n
-//xDE   2 MCycle
+// sbc A,n
+// xDE   2 MCycle
 int sbc_a_n(struct cpu *cpu)
 {
     uint8_t a_copy = cpu->regist->a;
@@ -343,7 +342,7 @@ int sbc_a_n(struct cpu *cpu)
     cpu->regist->a -= val;
     if (get_c(cpu->regist))
     {
-        cpu->regist->a--;
+        --cpu->regist->a;
         set_h(cpu->regist, (((a_copy & 0xF) - (val & 0xF) - (1 & 0xF)) & 0x10) == 0x10);
     }
     else
@@ -354,8 +353,8 @@ int sbc_a_n(struct cpu *cpu)
     return 2;
 }
 
-//and a,r
-//xA(0-7)   1 MCycle
+// and a,r
+// xA(0-7)   1 MCycle
 int and_a_r(struct cpu *cpu, uint8_t *src)
 {
     cpu->regist->a = cpu->regist->a & *src;
@@ -366,8 +365,8 @@ int and_a_r(struct cpu *cpu, uint8_t *src)
     return 1;
 }
 
-//and a,(HL)
-//x6A   2 MCycle
+// and a,(HL)
+// x6A   2 MCycle
 int and_a_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -379,8 +378,8 @@ int and_a_hl(struct cpu *cpu)
     return 2;
 }
 
-//and A,n
-//xE6   2 MCycle
+// and A,n
+// xE6   2 MCycle
 int and_a_n(struct cpu *cpu)
 {
     uint8_t n = read_mem(cpu, cpu->regist->pc);
@@ -389,12 +388,12 @@ int and_a_n(struct cpu *cpu)
     set_h(cpu->regist, 1);
     set_c(cpu->regist, 0);
     set_z(cpu->regist, cpu->regist->a == 0);
-    cpu->regist->pc++;
+    ++cpu->regist->pc;
     return 2;
 }
 
-//xor A,r
-//xA(8-F)   1 MCycle
+// xor A,r
+// xA(8-F)   1 MCycle
 int xor_a_r(struct cpu *cpu, uint8_t *src)
 {
     cpu->regist->a = cpu->regist->a ^ *src;
@@ -405,8 +404,8 @@ int xor_a_r(struct cpu *cpu, uint8_t *src)
     return 1;
 }
 
-//xor A,(HL)
-//xAE   2 MCycle
+// xor A,(HL)
+// xAE   2 MCycle
 int xor_a_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -418,8 +417,8 @@ int xor_a_hl(struct cpu *cpu)
     return 2;
 }
 
-//xor A,n
-//xEE   2 MCycle
+// xor A,n
+// xEE   2 MCycle
 int xor_a_n(struct cpu *cpu)
 {
     uint8_t n = read_mem(cpu, cpu->regist->pc);
@@ -428,12 +427,12 @@ int xor_a_n(struct cpu *cpu)
     set_h(cpu->regist, 0);
     set_c(cpu->regist, 0);
     set_z(cpu->regist, cpu->regist->a == 0);
-    cpu->regist->pc++;
+    ++cpu->regist->pc;
     return 2;
 }
 
-//or A,r
-//xB(0-7)   1 MCycle
+// or A,r
+// xB(0-7)   1 MCycle
 int or_a_r(struct cpu *cpu, uint8_t *src)
 {
     cpu->regist->a = cpu->regist->a | *src;
@@ -444,8 +443,8 @@ int or_a_r(struct cpu *cpu, uint8_t *src)
     return 1;
 }
 
-//or A,(HL)
-//xB6   2 MCycle
+// or A,(HL)
+// xB6   2 MCycle
 int or_a_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -457,8 +456,8 @@ int or_a_hl(struct cpu *cpu)
     return 2;
 }
 
-//or A,n
-//xF6   2 MCycle
+// or A,n
+// xF6   2 MCycle
 int or_a_n(struct cpu *cpu)
 {
     uint8_t n = read_mem(cpu, cpu->regist->pc);
@@ -467,12 +466,12 @@ int or_a_n(struct cpu *cpu)
     set_h(cpu->regist, 0);
     set_c(cpu->regist, 0);
     set_z(cpu->regist, cpu->regist->a == 0);
-    cpu->regist->pc++;
+    ++cpu->regist->pc;
     return 2;
 }
 
-//cp A,r
-//xB(8-F)   1 MCycle
+// cp A,r
+// xB(8-F)   1 MCycle
 int cp_a_r(struct cpu *cpu, uint8_t *src)
 {
     set_n(cpu->regist, 1);
@@ -482,8 +481,8 @@ int cp_a_r(struct cpu *cpu, uint8_t *src)
     return 1;
 }
 
-//cp A,(HL)
-//xBE   2 MCycle
+// cp A,(HL)
+// xBE   2 MCycle
 int cp_a_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
@@ -495,12 +494,12 @@ int cp_a_hl(struct cpu *cpu)
     return 2;
 }
 
-//cp A,n
-//xFE   2 MCycle
+// cp A,n
+// xFE   2 MCycle
 int cp_a_n(struct cpu *cpu)
 {
     uint8_t n = read_mem(cpu, cpu->regist->pc);
-    cpu->regist->pc++;
+    ++cpu->regist->pc;
     set_n(cpu->regist, 1);
     cflag_sub_set(cpu->regist, cpu->regist->a, n);
     hflag_sub_set(cpu->regist, cpu->regist->a, n);
@@ -508,8 +507,8 @@ int cp_a_n(struct cpu *cpu)
     return 2;
 }
 
-//daa A
-//x27	1 MCycle
+// daa A
+// x27	1 MCycle
 int daa(struct cpu *cpu)
 {
 	if (!get_n(cpu->regist))	//Addition case
@@ -539,8 +538,8 @@ int daa(struct cpu *cpu)
 	return 1;
 }
 
-//cpl
-//x2F	1 MCycle
+// cpl
+// x2F	1 MCycle
 int cpl(struct cpu *cpu)
 {
 	cpu->regist->a = ~cpu->regist->a;

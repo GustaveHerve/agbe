@@ -6,7 +6,7 @@
 #include "queue.h"
 #include "rendering.h"
 
-typedef struct fetcher
+struct fetcher
 {
     uint8_t tileid; //Variables to Save state between dots
     uint8_t lo;
@@ -17,8 +17,7 @@ typedef struct fetcher
                           //2 = get_tile_hi
                           //3 = push_pixels
     int obj_index;    //Used if PPU in OBJ mode
-} fetcher;
-
+};
 
 struct ppu
 {
@@ -44,11 +43,11 @@ struct ppu
     int8_t obj_count;
     uint8_t has_pushed;
 
-    queue *bg_fifo;
-    queue *obj_fifo;
+    struct queue *bg_fifo;
+    struct queue *obj_fifo;
 
-    fetcher *bg_fetcher;
-    fetcher *obj_fetcher;
+    struct fetcher *bg_fetcher;
+    struct fetcher *obj_fetcher;
 
     uint8_t oam_locked;
     uint8_t vram_locked;
@@ -74,32 +73,6 @@ void ppu_reset(struct ppu *ppu);
 
 void ppu_tick_m(struct ppu *ppu);
 
-//Mode 2
-int oam_scan(struct ppu *ppu);
-
-//Mode 3 functions
-uint8_t get_tileid(struct ppu *ppu, int obj_index);
-uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index);
-uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index);
-int push_pixel(queue *target, struct pixel p);
-int push_slice(struct ppu *ppu, queue *q, uint8_t hi, uint8_t lo, int obj_i);
-struct pixel pop_pixel(struct ppu *ppu, int obj);
-int merge_obj(struct ppu *ppu, uint8_t hi, uint8_t lo, int obj);
-
 int get_lcdc(struct ppu *ppu, int bit);
-int in_window(struct ppu *ppu);
-int in_object(struct ppu *ppu, int obj_index);
 
-//STAT
-void set_stat(struct ppu *ppu, int bit);
-void clear_stat(struct ppu *ppu, int bit);
-int get_stat(struct ppu *ppu, int bit);
-void stat_request(struct ppu *ppu, int bit);
-
-//Fetcher functions
-void fetcher_init(fetcher *f);
-int bg_fetcher_step(struct ppu *ppu);
-int obj_fetcher_step(struct ppu *ppu);
-
-struct pixel select_pixel(struct ppu *ppu);
 #endif

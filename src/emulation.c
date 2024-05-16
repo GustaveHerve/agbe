@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
-#include <math.h>
 #include <err.h>
 #include "cpu.h"
 #include "ppu.h"
@@ -11,71 +10,6 @@
 #include "mbc.h"
 
 #define FRAMERATE 60
-
-void main_loop(struct cpu *cpu, char *rom_path)
-{
-    cpu->running = 1;
-    FILE *fptr = fopen("testroms/boot.gb", "rb");
-    fread(cpu->membus, 1, 256, fptr);
-    fclose(fptr);
-    fptr = fopen(rom_path, "rb");
-    fseek(fptr, 0x0100, SEEK_SET);
-    fread(cpu->membus + 0x100, 1, 80, fptr);
-    fclose(fptr);
-
-    //Init MBC / cartridge info and fill rom in buffer
-    set_mbc(cpu);
-    lcd_off(cpu);
-
-    //First OPCode Fetch
-    tick_m(cpu);
-
-    size_t cycle_threshold = 1048576 / FRAMERATE;
-    size_t cycle_count = 0;
-    Uint64 last_ticks = SDL_GetTicks64();
-    while (cpu->running && cpu->regist->pc != 0x0150)
-    {
-        if (cycle_count >= cycle_threshold)
-        {
-            if (SDL_GetTicks64() - last_ticks < 1000 / FRAMERATE)
-                continue;
-            cycle_count = 0;
-            last_ticks = SDL_GetTicks64();
-        }
-        //TODO handle halt state
-        cycle_count += next_op(cpu); //Remaining MCycles are ticked in instructions
-        tick_m(cpu); // OPCode fetch
-        check_interrupt(cpu);
-    }
-
-    fptr = fopen(rom_path, "rb");
-    fread(cpu->membus, 1, 32768, fptr);
-    fseek(fptr, 0, SEEK_SET);
-    fread(cpu->rom, 1, cpu->mbc->rom_bank_count * 16384, fptr);
-    fclose(fptr);
-
-    init_cpu(cpu, 0x0a);
-    init_hardware(cpu);
-    cpu->div_timer = 52;
-
-    while (cpu->running)
-    {
-        if (cycle_count >= cycle_threshold)
-        {
-            if (SDL_GetTicks64() - last_ticks < 1000 / FRAMERATE)
-                continue;
-            cycle_count = 0;
-            last_ticks = SDL_GetTicks64();
-        }
-
-        if (!cpu->halt)
-            cycle_count += next_op(cpu) - 1;
-
-        tick_m(cpu); // Previous instruction tick + next OPCode fetch
-        cycle_count += 1;
-        check_interrupt(cpu);
-    }
-}
 
 void init_cpu(struct cpu *cpu, int checksum)
 {
@@ -163,13 +97,78 @@ void init_hardware(struct cpu *cpu)
     ppu_reset(cpu->ppu);
 }
 
+void main_loop(struct cpu *cpu, char *rom_path)
+{
+    cpu->running = 1;
+    FILE *fptr = fopen("testroms/boot.gb", "rb");
+    fread(cpu->membus, 1, 256, fptr);
+    fclose(fptr);
+    fptr = fopen(rom_path, "rb");
+    fseek(fptr, 0x0100, SEEK_SET);
+    fread(cpu->membus + 0x100, 1, 80, fptr);
+    fclose(fptr);
+
+    //Init MBC / cartridge info and fill rom in buffer
+    set_mbc(cpu);
+    lcd_off(cpu);
+
+    //First OPCode Fetch
+    tick_m(cpu);
+
+    size_t cycle_threshold = 1048576 / FRAMERATE;
+    size_t cycle_count = 0;
+    Uint64 last_ticks = SDL_GetTicks64();
+    while (cpu->running && cpu->regist->pc != 0x0150)
+    {
+        if (cycle_count >= cycle_threshold)
+        {
+            if (SDL_GetTicks64() - last_ticks < 1000 / FRAMERATE)
+                continue;
+            cycle_count = 0;
+            last_ticks = SDL_GetTicks64();
+        }
+        //TODO handle halt state
+        cycle_count += next_op(cpu); //Remaining MCycles are ticked in instructions
+        tick_m(cpu); // OPCode fetch
+        check_interrupt(cpu);
+    }
+
+    fptr = fopen(rom_path, "rb");
+    fread(cpu->membus, 1, 32768, fptr);
+    fseek(fptr, 0, SEEK_SET);
+    fread(cpu->rom, 1, cpu->mbc->rom_bank_count * 16384, fptr);
+    fclose(fptr);
+
+    init_cpu(cpu, 0x0a);
+    init_hardware(cpu);
+    cpu->div_timer = 52;
+
+    while (cpu->running)
+    {
+        if (cycle_count >= cycle_threshold)
+        {
+            if (SDL_GetTicks64() - last_ticks < 1000 / FRAMERATE)
+                continue;
+            cycle_count = 0;
+            last_ticks = SDL_GetTicks64();
+        }
+
+        if (!cpu->halt)
+            cycle_count += next_op(cpu) - 1;
+
+        tick_m(cpu); // Previous instruction tick + next OPCode fetch
+        cycle_count += 1;
+        check_interrupt(cpu);
+    }
+}
+
 void tick_m(struct cpu *cpu)
 {
     if (cpu->ime == 2)
         cpu->ime = 1;
 
     if (!cpu->stop)
-        cpu->div_timer++;
+        ++cpu->div_timer;
 
     if (cpu->div_timer >= 64)
     {

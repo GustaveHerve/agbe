@@ -1,10 +1,9 @@
-#include <stdlib.h>
 #include <err.h>
 #include "cpu.h"
 #include "utils.h"
 
-//rlca A
-//x07	1 MCycle
+// rlca A
+// x07	1 MCycle
 int rlca(struct cpu *cpu)
 {
 	rotl(&cpu->regist->a);
@@ -15,8 +14,8 @@ int rlca(struct cpu *cpu)
 	return 1;
 }
 
-//rla A
-//x17	1 MCycle
+// rla A
+// x17	1 MCycle
 int rla(struct cpu *cpu)
 {
 	rotl_carry(cpu->regist, &cpu->regist->a);
@@ -26,8 +25,8 @@ int rla(struct cpu *cpu)
 	return 1;
 }
 
-//rrca A
-//x0F	1 MCycle
+// rrca A
+// x0F	1 MCycle
 int rrca(struct cpu *cpu)
 {
 	rotr(&cpu->regist->a);
@@ -38,8 +37,8 @@ int rrca(struct cpu *cpu)
 	return 1;
 }
 
-//rra A
-//x1F	1 MCycle
+// rra A
+// x1F	1 MCycle
 int rra(struct cpu *cpu)
 {
 	rotr_carry(cpu->regist, &cpu->regist->a);

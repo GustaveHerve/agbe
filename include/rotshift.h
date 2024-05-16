@@ -1,7 +1,7 @@
 #ifndef ROTSHIFT_H
 #define ROTSHIFT_H
 
-#include "cpu.h"
+struct cpu;
 
 int rlca(struct cpu *cpu);
 int rla(struct cpu *cpu);

@@ -1,7 +1,6 @@
-#include <stdlib.h>
 #include "cpu.h"
 
-//8 bit and 16 bit manipulations
+// 8 bit and 16 bit manipulations
 uint8_t regist_hi(uint16_t *rr)
 {
 	uint8_t res = (*rr >> 8) & 0xFF;
@@ -32,9 +31,9 @@ uint16_t convert_8to16(uint8_t *hi, uint8_t *lo)
 	return res;
 }
 
-///////////////
-//Flags methods
-///////////////
+////////////////
+// Flags methods
+////////////////
 
 int get_z(struct cpu_register *regist)
 {
