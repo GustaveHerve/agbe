@@ -68,7 +68,7 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
     {
         y_part = (*ppu->ly - (ppu->obj_slots[obj_index].y - 16)) % 8;
         uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
-        //Y flip
+        // Y flip
         if ((attributes >> 6) & 0x01)
         {
             uint8_t temp = 0x00;
@@ -98,7 +98,7 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
     if (obj_index != -1)
     {
         uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
-        //X flip
+        // X flip
         if ((attributes >> 5) & 0x01)
         {
             slice_low = slice_xflip(slice_low);
@@ -160,6 +160,7 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
 void fetcher_init(struct fetcher *f)
 {
     f->current_step = 0;
+    f->bottom_part = 0;
     f->hi = 0;
     f->lo = 0;
     f->tileid = 0;
@@ -221,6 +222,8 @@ int obj_fetcher_step(struct ppu *ppu)
     if (!f->tick && f->current_step != 3)
     {
         f->tick = 1;
+        // Save the state of lx during first wait dot
+        f->lx_save = ppu->lx;
         return 1;
     }
 
@@ -490,6 +493,7 @@ uint8_t mode3_handler(struct ppu *ppu)
         if (obj > -1)
         {
             ppu->obj_fetcher->obj_index = obj;
+            ppu->obj_fetcher->bottom_part = bottom_part;
         }
     }
 
@@ -570,7 +574,7 @@ uint8_t mode0_handler(struct ppu *ppu)
 
 uint8_t mode1_handler(struct ppu *ppu)
 {
-    if (ppu->line_dot_count == 0)
+    if (*ppu->ly == 144 && ppu->line_dot_count == 0)
     {
         clear_stat(ppu, 1);
         set_stat(ppu, 0);
