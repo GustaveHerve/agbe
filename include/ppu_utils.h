@@ -34,8 +34,6 @@ int on_object(struct ppu *ppu, int *bottom_part);
 
 int push_pixel(struct queue *target, struct pixel p);
 
-struct pixel pop_pixel(struct ppu *ppu, int obj);
-
 struct pixel select_pixel(struct ppu *ppu);
 
 int push_slice(struct ppu *ppu, struct queue *q, uint8_t hi, uint8_t lo, int obj_i);

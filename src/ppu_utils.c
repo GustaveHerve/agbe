@@ -79,16 +79,6 @@ int push_pixel(struct queue *target, struct pixel p)
     return 1;
 }
 
-struct pixel pop_pixel(struct ppu *ppu, int obj)
-{
-    struct pixel p;
-    if (obj)
-        p = queue_pop(ppu->obj_fifo);
-    else
-        p = queue_pop(ppu->bg_fifo);
-    return p;
-}
-
 struct pixel select_pixel(struct ppu *ppu)
 {
     struct pixel bg_p = queue_pop(ppu->bg_fifo);

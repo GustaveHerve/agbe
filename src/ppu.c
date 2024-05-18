@@ -24,8 +24,8 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
         int bit = 0;
         if (ppu->win_mode)
         {
-            x_part = (ppu->bg_fetcher->lx_save) / 8;
-            y_part = (*ppu->wy + ppu->win_ly) / 8;
+            x_part = (ppu->bg_fetcher->lx_save - *ppu->wx) / 8;
+            y_part = ppu->win_ly / 8;
             bit = 6;
         }
         else
@@ -80,7 +80,7 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
     }
     else if (ppu->win_mode)
     {
-        y_part = (*ppu->wy + ppu->win_ly) % 8;
+        y_part = ppu->win_ly % 8;
         bit_12 = !(get_lcdc(ppu, 4) | (tileid & 0x80));
     }
     else
@@ -129,7 +129,7 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
     }
     else if (ppu->win_mode)
     {
-        y_part = (*ppu->wy + ppu->win_ly) % 8;
+        y_part = ppu->win_ly % 8;
         bit_12 = !(get_lcdc(ppu, 4) | (tileid & 0x80));
     }
     else
@@ -173,6 +173,16 @@ int bg_fetcher_step(struct ppu *ppu)
 {
     struct fetcher *f = ppu->bg_fetcher;
     // BG/Win fetcher
+
+    // Each step must take 2 dots
+    if (!f->tick && f->current_step != 3)
+    {
+        f->tick = 1;
+        // Save the state of lx during first wait dot
+        f->lx_save = ppu->lx;
+        return 1;
+    }
+
     switch (f->current_step)
     {
         case 0:
@@ -195,15 +205,25 @@ int bg_fetcher_step(struct ppu *ppu)
                     push_slice(ppu, ppu->bg_fifo, f->hi, f->lo, -1);
                     f->current_step = 0;
                 }
+                f->tick = 0;
                 return 0;
             }
     }
+
+    f->tick = 0;
     return 2;
 }
 
 int obj_fetcher_step(struct ppu *ppu)
 {
     struct fetcher *f = ppu->obj_fetcher;
+
+    if (!f->tick && f->current_step != 3)
+    {
+        f->tick = 1;
+        return 1;
+    }
+
     switch (f->current_step)
     {
         case 0:
@@ -224,13 +244,18 @@ int obj_fetcher_step(struct ppu *ppu)
                     push_slice(ppu, ppu->obj_fifo, f->hi, f->lo, f->obj_index);
                 else
                     merge_obj(ppu, f->hi, f->lo, f->obj_index);
-                // Object has been pushed, we can reset the index
+
+                // Fetch is done, we can reset the index
+                // so that we can detect other (overlapped or not) objects
                 f->obj_index = -1;
+                ppu->obj_mode = 0;
                 f->current_step = 0;
+                f->tick = 0;
                 return 0;
             }
     }
 
+    f->tick = 0;
     return 2;
 }
 
@@ -282,6 +307,8 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
     ppu->win_mode = 0;
     ppu->win_ly = 0;
     ppu->wy_trigger = 0;
+    
+    ppu->obj_mode = 1;
 
     *ppu->lcdc = 0x00;
     *ppu->stat = 0x84;
@@ -369,50 +396,29 @@ uint8_t mode2_handler(struct ppu *ppu)
 // Do one iteration of both fetchers step (2 dots)
 uint8_t fetchers_step(struct ppu *ppu)
 {
-    // There is an object to render
+    // There is a new object to render
     if (ppu->obj_fetcher->obj_index != -1)
     {
-        // BG FIFO must not be empty and BG fetcher must have a slice ready to be pushed
-        if (!queue_isempty(ppu->bg_fifo) && ppu->bg_fetcher->current_step == 3)
+
+        // If OBJ mode is already enabled, it means either we are fetching the
+        // obj_index, or a new object came up overlapping the currently rendering one
+        if (!ppu->obj_mode)
         {
-            if (ppu->obj_fetcher->current_step != 3)
+            // BG FIFO must not be empty and BG fetcher must have a slice ready to be pushed
+            if (!queue_isempty(ppu->bg_fifo) && ppu->bg_fetcher->current_step == 3)
             {
-                if (ppu->obj_fetcher->tick)
-                {
-                    obj_fetcher_step(ppu);
-                    ppu->obj_fetcher->tick = 0;
-                    return 1;
-                }
-                else 
-                    ppu->obj_fetcher->tick = 1;
-            }
-            else
-            {
-                obj_fetcher_step(ppu);
-                return 0;
+                // Once we enter OBJ mode, we have at least 8+ BG pixels fetched
+                ppu->obj_mode = 1;
             }
         }
     }
 
-    if (ppu->bg_fetcher->current_step != 3)
+    if (ppu->obj_mode)
     {
-        if (ppu->bg_fetcher->tick)
-        {
-            bg_fetcher_step(ppu);
-            ppu->bg_fetcher->tick = 0;
-            return 1;
-        }
-        else
-        {
-            ppu->bg_fetcher->tick = 1;
-            ppu->bg_fetcher->lx_save = ppu->lx;
-        }
+        obj_fetcher_step(ppu);
     }
     else
-    {
         bg_fetcher_step(ppu);
-        return 0;
-    }
 
     return 1;
 }
@@ -444,11 +450,14 @@ uint8_t send_pixel(struct ppu *ppu)
     return 1;
 }
 
-uint8_t mode3_handler_v2(struct ppu *ppu)
+uint8_t mode3_handler(struct ppu *ppu)
 {
     // End of mode 3, go to HBlank (mode 0)
     if (ppu->lx > 167)
     {
+        // Update WIN internal LY
+        if (ppu->win_mode)
+            ++ppu->win_ly;
         ppu->current_mode = 0;
         return 0;
     }
@@ -486,17 +495,8 @@ uint8_t mode3_handler_v2(struct ppu *ppu)
 
     fetchers_step(ppu);
 
-    // If at least one object is being rendered
-    // in this case if OBJ FIFO is empty, we need to wait
-    if (ppu->obj_fetcher->obj_index != -1)
-    {
-        if (!queue_isempty(ppu->obj_fifo))
-        {
-            send_pixel(ppu);
-            ++ppu->lx;
-        }
-    }
-    else
+    // If we are in OBJ mode, we are fetching an object (FIFOs stall)
+    if (ppu->obj_fetcher->obj_index == -1 && !ppu->obj_mode)
     {
         // Prefetch pixels must be discarded
         // wait for the BG FIFO to be filled before popping
@@ -504,12 +504,14 @@ uint8_t mode3_handler_v2(struct ppu *ppu)
         {
             if (!queue_isempty(ppu->bg_fifo))
             {
+                // Pop current pixel and do nothing with it
+                select_pixel(ppu);
                 ++ppu->lx;
-                queue_pop(ppu->bg_fifo);
             }
         }
         else
         {
+            // Draw current pixel on the LCD
             send_pixel(ppu);
             ++ppu->lx;
         }
@@ -518,129 +520,6 @@ uint8_t mode3_handler_v2(struct ppu *ppu)
     ++ppu->line_dot_count;
     return 1;
 }
-
-/*
-// Mode 3
-uint8_t mode3_handler(struct ppu *ppu)
-{
-    if (ppu->line_dot_count == 80)
-    {
-        set_stat(ppu, 1);
-        set_stat(ppu, 0);
-
-        // Lock OAM and VRAM read (return FF)
-        ppu->oam_locked = 1;
-        ppu->vram_locked = 1;
-    }
-
-    int time = 0;
-
-    //End of line, go to HBlank
-    if (ppu->lx > 167)
-    {
-        ppu->current_mode = 0;
-        return 0;
-    }
-
-    int obj = -1;
-    int bottom_part = 0;
-    if (get_lcdc(ppu, 1))
-    {
-        obj = on_object(ppu,  &bottom_part);
-    }
-
-    //Check if in Window and WIN Enable
-    if (!ppu->win_mode && get_lcdc(ppu, 0) && get_lcdc(ppu, 5) && in_window(ppu)) // Win mode -> clear + reset BG FIFO
-    {
-        ppu->win_mode = 1;
-        queue_clear(ppu->bg_fifo);
-        ppu->bg_fetcher->current_step = 0;
-    }
-    //Check if there is an OBJ on current LX
-    else if (obj != -1)
-    {
-        ppu->obj_fetcher->bottom_part = bottom_part;
-    }
-    else
-        time = bg_fetcher_step(ppu);
-
-
-    //FIFOs popping is paused if OBJ was detected
-    if (!ppu->pop_pause && !queue_isempty(ppu->bg_fifo))
-    {
-        if (time == 0)
-            time = 1;
-        for (int i = 0; i < time; ++i)
-        {
-            struct pixel p = select_pixel(ppu);
-            //Don't draw prefetch + shift SCX for first tile
-            if (ppu->first_tile && ppu->lx > 7)
-            {
-                int discard = *ppu->scx % 8;
-                if (ppu->bg_fifo->count < 8 - discard)
-                {
-                    draw_pixel(ppu->cpu, p);
-                    ++ppu->lx;
-                }
-                if (queue_isempty(ppu->bg_fifo))
-                    ppu->first_tile = 0;
-            }
-            else if (ppu->lx > 7 && ppu->lx <= 167)
-            {
-                draw_pixel(ppu->cpu, p);
-                ++ppu->lx;
-            }
-            else
-                ++ppu->lx;
-        }
-    }
-    else if (ppu->pop_pause)
-    {
-        // TODO rewrite this part, it is ugly
-        //If hasn't pushed gone at step push yet
-        if (!ppu->has_pushed && ppu->bg_fetcher->current_step < 3)
-            time = bg_fetcher_step(ppu);
-        //try to push in case BG FIFO is empty
-        else
-        {
-            bg_fetcher_step(ppu);
-            ppu->has_pushed = 1;
-            time = obj_fetcher_step(ppu);
-        }
-        if (!queue_isempty(ppu->obj_fifo))
-        {
-            if (time == 0)
-                time = 1;
-            for (int i = 0; i < time; ++i)
-            {
-                struct pixel p = select_pixel(ppu);
-                //Don't draw prefetch + shift SCX for first tile
-                if (ppu->first_tile && ppu->lx > 7)
-                {
-                    int discard = *ppu->scx % 8;
-                    if (ppu->bg_fifo->count < 8 - discard)
-                    {
-                        draw_pixel(ppu->cpu, p);
-                        ++ppu->lx;
-                    }
-                    if (queue_isempty(ppu->bg_fifo))
-                        ppu->first_tile = 0;
-                }
-                else if (ppu->lx > 7 && ppu->lx <= 167)
-                {
-                    draw_pixel(ppu->cpu, p);
-                    ++ppu->lx;
-                }
-                else
-                    ++ppu->lx;
-            }
-        }
-    }
-
-    ppu->line_dot_count += time;
-    return time;
-}
-*/
 
 // Mode 0
 uint8_t mode0_handler(struct ppu *ppu)
@@ -667,11 +546,7 @@ uint8_t mode0_handler(struct ppu *ppu)
     ppu->lx = 0;
     *ppu->ly += 1;
 
-    if (ppu->win_mode)
-        ++ppu->win_ly;
-
     ppu->win_mode = 0;
-    ppu->wy_trigger = 0;
 
     ppu->line_dot_count = 0;
     ppu->current_mode = 2;
@@ -685,6 +560,7 @@ uint8_t mode0_handler(struct ppu *ppu)
     //Start VBlank
     if (*ppu->ly > 143)
     {
+        ppu->wy_trigger = 0;
         ppu->current_mode = 1;
         ppu->mode1_153th = 0;
     }
@@ -744,7 +620,7 @@ void ppu_tick_m(struct ppu *ppu)
                 dots += mode2_handler(ppu);
                 break;
             case 3:
-                dots += mode3_handler_v2(ppu);
+                dots += mode3_handler(ppu);
                 break;
             case 0:
                 dots += mode0_handler(ppu);
