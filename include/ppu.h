@@ -17,6 +17,11 @@ struct fetcher
                           //2 = get_tile_hi
                           //3 = push_pixels
     int obj_index;    //Used if PPU in OBJ mode
+    int bottom_part;
+
+    uint8_t tick;
+
+    uint8_t lx_save;
 };
 
 struct ppu
@@ -41,7 +46,6 @@ struct ppu
 
     struct obj obj_slots[10];
     int8_t obj_count;
-    uint8_t has_pushed;
 
     struct queue *bg_fifo;
     struct queue *obj_fifo;
@@ -56,13 +60,14 @@ struct ppu
     uint8_t dma_acc;
     uint8_t dma_source;
 
-    int line_dot_count; //Dot count for current scanline
+    int line_dot_count; // Dot count for current scanline
     uint8_t mode1_153th;
     uint8_t first_tile;
     uint8_t current_mode;
 
     uint8_t win_mode;
-    uint8_t pop_pause;
+    uint8_t win_ly; // Internal ly specific for the window which tells which allow us to "remember" which line of the window we were rendering
+    uint8_t wy_trigger;
 
     struct renderer *renderer;
 };

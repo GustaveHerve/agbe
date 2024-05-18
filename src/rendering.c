@@ -145,7 +145,7 @@ void lcd_off(struct cpu *cpu)
     sdlPixel = SDL_MapRGB(rend->surface->format, 224, 248, 208);
     int total = 160 * 144;
     //memset(pixels, sdlPixel, total);
-    for (int i = 0; i < total; i++)
+    for (int i = 0; i < total; ++i)
         pixels[i] = sdlPixel;
 
     SDL_UnlockSurface(rend->surface);

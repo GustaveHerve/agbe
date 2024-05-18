@@ -18,6 +18,7 @@ int ld_rr_a(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 //		1 MCycle
 int ld_r_r(struct cpu *cpu, uint8_t *dest, uint8_t *src)
 {
+    (void)cpu;
 	*dest = *src;
 	return 1;
 }

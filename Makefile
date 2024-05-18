@@ -1,5 +1,5 @@
 CC = gcc #clang
-CFLAGS = -Wall -Wextra -Wvla -pedantic -g -I include/ -I /opt/homebrew/include
+CFLAGS = -Wall -Wextra -Wvla -pedantic -g -I include/ #-I /opt/homebrew/include
 LDLIBS = -lSDL2 -lm
 
 BIN = agbe

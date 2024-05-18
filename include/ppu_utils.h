@@ -25,12 +25,12 @@ struct pixel make_pixel(uint8_t hi, uint8_t lo, int i, uint8_t *attributes);
 
 uint8_t slice_xflip(uint8_t slice);
 
-// in_window: read LX and LY and check if drawing in Window or BG
-int in_window(struct ppu *ppu);
+// on_window: read LX and LY and check if drawing in Window or BG
+int on_window(struct ppu *ppu);
 
-// in_object: reads the 10 OAM slots starting from obj_index and checks if we need to draw an object at current LX LY
+// on_object: reads the 10 OAM slots and checks if we need to draw an object at current LX LY
 // returns object index in obj_slots, -1 if no object
-int in_object(struct ppu *ppu, int obj_index);
+int on_object(struct ppu *ppu, int *bottom_part);
 
 int push_pixel(struct queue *target, struct pixel p);
 
@@ -49,6 +49,6 @@ int get_stat(struct ppu *ppu, int bit);
 void clear_stat(struct ppu *ppu, int bit);
 
 
-void check_lyc(struct ppu *ppu);
+void check_lyc(struct ppu *ppu, int line_153);
 
 #endif

@@ -50,21 +50,23 @@ uint8_t slice_xflip(uint8_t slice)
     return res;
 }
 
-int in_window(struct ppu *ppu)
+int on_window(struct ppu *ppu)
 {
-    return *ppu->ly >= *ppu->wy && ppu->lx >= *ppu->wx;
+    return get_lcdc(ppu, 0) && get_lcdc(ppu, 5) && ppu->wy_trigger && ppu->lx == *ppu->wx;
 }
 
-int in_object(struct ppu *ppu, int obj_index)
+int on_object(struct ppu *ppu, int *bottom_part)
 {
-    // TODO handle 8x16 object mode
-    for (int i = obj_index + 1; i < ppu->obj_count; ++i)
+    for (int i = 0; i < ppu->obj_count; ++i)
     {
+        // 8x16 (LCDC bit 2 = 1) or 8x8 (LCDC bit 2 = 0)
+        int y_max_offset = get_lcdc(ppu, 2) ? 8 : 16;
         if (ppu->obj_slots[i].x == ppu->lx &&
             *ppu->ly + 16 >= ppu->obj_slots[i].y &&
-            *ppu->ly + 16 < ppu->obj_slots[i].y + 8)
+            *ppu->ly + 16 < ppu->obj_slots[i].y + y_max_offset)
         {
-            ppu->obj_fetcher->obj_index = i;
+            if (y_max_offset == 16 && *ppu->ly + 16 >= ppu->obj_slots[i].y + 16)
+                *bottom_part = 1;
             return i;
         }
     }
@@ -137,12 +139,12 @@ int merge_obj(struct ppu *ppu, uint8_t hi, uint8_t lo, int obj_i)
     return 2; //not sure
 }
 
-void check_lyc(struct ppu *ppu)
+void check_lyc(struct ppu *ppu, int line_153)
 {
     if (*ppu->ly == *ppu->lyc)
     {
         set_stat(ppu, 2);
-        if (ppu->line_dot_count == 0 && get_stat(ppu, 6)) //&& !get_if(ppu->cpu, 1))
+        if ((line_153 || ppu->line_dot_count == 0) && get_stat(ppu, 6)) //&& !get_if(ppu->cpu, 1))
             set_if(ppu->cpu, 1);
     }
     else
