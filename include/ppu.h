@@ -8,6 +8,10 @@
 
 struct fetcher
 {
+    int obj_index;    //Used if PPU in OBJ mode
+    int bottom_part;
+
+    uint8_t attributes;
     uint8_t tileid; //Variables to Save state between dots
     uint8_t lo;
     uint8_t hi;
@@ -16,9 +20,6 @@ struct fetcher
                           //1 = get_tile_lo
                           //2 = get_tile_hi
                           //3 = push_pixels
-    int obj_index;    //Used if PPU in OBJ mode
-    int bottom_part;
-
     uint8_t tick;
 
     uint8_t lx_save;

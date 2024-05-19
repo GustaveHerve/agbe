@@ -45,9 +45,15 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
     else
     {
         if (ppu->dma)
+        {
             tileid = 0xFF;
+            ppu->obj_fetcher->attributes = 0xFF;
+        }
         else
+        {
             tileid = *(ppu->obj_slots[obj_index].oam_address + 2);
+            ppu->obj_fetcher->attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
+        }
 
         if (get_lcdc(ppu, 2))
         {
@@ -65,10 +71,10 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
 {
     uint8_t y_part = 0;
     int bit_12 = 0;
+    uint8_t attributes = ppu->obj_fetcher->attributes;
     if (obj_index != -1)
     {
         y_part = (*ppu->ly - (ppu->obj_slots[obj_index].y - 16)) % 8;
-        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
         // Y flip
         if ((attributes >> 6) & 0x01)
         {
@@ -98,7 +104,6 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
 
     if (obj_index != -1)
     {
-        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
         // X flip
         if ((attributes >> 5) & 0x01)
         {
@@ -109,16 +114,16 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
     return slice_low;
 }
 
-//TODO optimize this ? (address is same as low + 1)
+// TODO optimize this ? (address is same as low + 1)
 uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
 {
     uint8_t y_part = 0;
     int bit_12 = 0;
+    uint8_t attributes = ppu->obj_fetcher->attributes;
     if (obj_index != -1)
     {
         y_part = (*ppu->ly - (ppu->obj_slots[obj_index].y - 16)) % 8;
-        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
-        //Y flip
+        // Y flip
         if ((attributes >> 6) & 0x01)
         {
             uint8_t temp = 0x00;
@@ -146,8 +151,7 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
 
     if (obj_index != -1)
     {
-        uint8_t attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
-        //X flip
+        // X flip
         if ((attributes >> 5) & 0x01)
         {
             slice_high = slice_xflip(slice_high);
@@ -157,9 +161,10 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
     return slice_high;
 }
 
-//Fetcher functions
+// Fetcher functions
 void fetcher_reset(struct fetcher *f)
 {
+    f->attributes = 0;
     f->tileid = 0;
     f->lo = 0;
     f->hi = 0;
@@ -439,7 +444,7 @@ uint8_t send_pixel(struct ppu *ppu)
     struct pixel p = select_pixel(ppu);
 
     // Don't draw BG prefetch + shift SCX for first BG tile
-    if (!p.obj && !ppu->win_mode && ppu->first_tile && ppu->lx > 7)
+    if (p.obj < 0 && !ppu->win_mode && ppu->first_tile && ppu->lx > 7)
     {
         int discard = *ppu->scx % 8;
         if (ppu->bg_fifo->count < 8 - discard)
@@ -520,10 +525,9 @@ uint8_t mode3_handler(struct ppu *ppu)
     if (ppu->obj_mode && ppu->obj_fetcher->obj_index == -1)
     {
         ppu->obj_mode = 0;
+        // Force a new iteration of the loop in case of another object
         if (on_object(ppu, NULL))
-        {
             return 0;
-        }
     }
 
     // If we are in OBJ mode, we are fetching an object (FIFOs stall)

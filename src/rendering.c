@@ -9,7 +9,7 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
     Uint32 *pixels = (Uint32 *)rend->surface->pixels;
     Uint32 sdlPixel;
     uint8_t *c_regist;
-    if (p.obj)
+    if (p.obj > -1)
     {
         if (p.palette)
             c_regist = cpu->ppu->obp1;

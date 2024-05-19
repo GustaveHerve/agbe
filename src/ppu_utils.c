@@ -21,18 +21,18 @@ void clear_stat(struct ppu *ppu, int bit)
 }
 
 // Pixel and slice utils
-struct pixel make_pixel(uint8_t hi, uint8_t lo, int i, uint8_t *attributes)
+struct pixel make_pixel(uint8_t hi, uint8_t lo, int i, uint8_t *attributes, int obj_i)
 {
     struct pixel res;
     uint8_t hi_bit =  (hi >> (7-i)) & 0x01;
     uint8_t lo_bit = (lo >> (7-i)) & 0x01;
     res.color = (hi_bit << 1) | lo_bit;
-    res.obj = 0;
+    res.obj = -1;
     if (attributes != NULL)
     {
         res.palette = (*attributes >> 4) & 0x01;
         res.priority = (*attributes >> 7) & 0x01;
-        res.obj = 1;
+        res.obj = obj_i;
     }
     return res;
 }
@@ -103,12 +103,12 @@ struct pixel select_pixel(struct ppu *ppu)
 
 int push_slice(struct ppu *ppu, struct queue *q, uint8_t hi, uint8_t lo, int obj_i)
 {
-    uint8_t* attributes = NULL;
+    uint8_t *attributes = NULL;
     if (obj_i != -1)
-        attributes = ppu->obj_slots[obj_i].oam_address + 3;
+        attributes = &ppu->obj_fetcher->attributes;
     for (int i = 0; i < 8; ++i)
     {
-        struct pixel p = make_pixel(hi, lo, i, attributes);
+        struct pixel p = make_pixel(hi, lo, i, attributes, obj_i);
         //TODO verify this
         if (!get_lcdc(ppu, 0))
             p.color = 0;
@@ -119,17 +119,24 @@ int push_slice(struct ppu *ppu, struct queue *q, uint8_t hi, uint8_t lo, int obj
 
 int merge_obj(struct ppu *ppu, uint8_t hi, uint8_t lo, int obj_i)
 {
-    uint8_t *attributes = ppu->obj_slots[obj_i].oam_address + 3;
+    uint8_t attributes = ppu->obj_fetcher->attributes;
     struct queue_node *q = ppu->obj_fifo->front;
     int i = 0;
 
     // Merge the pending pixels in the OBJ FIFO
     while (q != NULL && i < 8)
     {
+        int same_x = ppu->obj_slots[q->data.obj].x == ppu->obj_slots[obj_i].x;
         // Replace only transparent pixels of object already pending
-        struct pixel p = make_pixel(hi, lo, i, attributes);
+        struct pixel p = make_pixel(hi, lo, i, &attributes, obj_i);
         if (q->data.color == 0)
             q->data = p;
+        else if (same_x && p.color != 0)
+        {
+            // If both objects have the same X, use OAM index to choose pixel
+            if (obj_i < q->data.obj)
+                q->data = p;
+        }
         q = q->next;
         ++i;
     }
@@ -137,7 +144,7 @@ int merge_obj(struct ppu *ppu, uint8_t hi, uint8_t lo, int obj_i)
     // Add the remaining pixels that don't need merging in the FIFO
     while (i < 8)
     {
-        struct pixel p = make_pixel(hi, lo, i, attributes);
+        struct pixel p = make_pixel(hi, lo, i, &attributes, obj_i);
         queue_push(ppu->obj_fifo, p);
         ++i;
     }

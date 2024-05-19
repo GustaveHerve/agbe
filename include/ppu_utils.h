@@ -8,10 +8,10 @@ struct queue;
 
 struct pixel
 {
+    int obj;
     uint8_t color;
     uint8_t palette;
     uint8_t priority;
-    uint8_t obj;
 };
 
 struct obj
@@ -22,9 +22,6 @@ struct obj
     uint8_t done;
 };
 
-struct pixel make_pixel(uint8_t hi, uint8_t lo, int i, uint8_t *attributes);
-
-uint8_t slice_xflip(uint8_t slice);
 
 // on_window: read LX and LY and check if drawing in Window or BG
 int on_window(struct ppu *ppu);
@@ -39,15 +36,18 @@ struct pixel select_pixel(struct ppu *ppu);
 
 int push_slice(struct ppu *ppu, struct queue *q, uint8_t hi, uint8_t lo, int obj_i);
 
-//OBJ Merge version of push_slice in case it is not empty, overwrite transparent pixels OBJ FIFO
+uint8_t slice_xflip(uint8_t slice);
+
+// OBJ Merge version of push_slice in case it is not empty, overwrite transparent pixels OBJ FIFO
 int merge_obj(struct ppu *ppu, uint8_t hi, uint8_t lo, int obj_i);
+
+void check_lyc(struct ppu *ppu, int line_153);
 
 // STAT
 void set_stat(struct ppu *ppu, int bit);
+
 int get_stat(struct ppu *ppu, int bit);
+
 void clear_stat(struct ppu *ppu, int bit);
-
-
-void check_lyc(struct ppu *ppu, int line_153);
 
 #endif
