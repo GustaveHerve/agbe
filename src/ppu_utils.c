@@ -117,16 +117,26 @@ int merge_obj(struct ppu *ppu, uint8_t hi, uint8_t lo, int obj_i)
     uint8_t *attributes = ppu->obj_slots[obj_i].oam_address + 3;
     struct queue_node *q = ppu->obj_fifo->front;
     int i = 0;
+
+    // Merge the pending pixels in the OBJ FIFO
     while (q != NULL && i < 8)
     {
-        //replace transparent pixels
+        // Replace only transparent pixels of object already pending
         struct pixel p = make_pixel(hi, lo, i, attributes);
         if (q->data.color == 0)
             q->data = p;
         q = q->next;
         ++i;
     }
-    return 2; //not sure
+
+    // Add the remaining pixels that don't need merging in the FIFO
+    while (i < 8)
+    {
+        struct pixel p = make_pixel(hi, lo, i, attributes);
+        queue_push(ppu->obj_fifo, p);
+        ++i;
+    }
+    return 2;
 }
 
 void check_lyc(struct ppu *ppu, int line_153)
