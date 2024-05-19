@@ -67,6 +67,7 @@ struct ppu
 
     uint8_t win_mode;
     uint8_t win_ly; // Internal ly specific for the window which tells which allow us to "remember" which line of the window we were rendering
+    uint8_t win_lx; // same for x
     uint8_t wy_trigger;
 
     uint8_t obj_mode;

@@ -24,7 +24,8 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
         int bit = 0;
         if (ppu->win_mode)
         {
-            x_part = (ppu->bg_fetcher->lx_save - *ppu->wx) / 8;
+            x_part = ppu->win_lx / 8;
+            ppu->win_lx += 8;
             y_part = ppu->win_ly / 8;
             bit = 6;
         }
@@ -309,6 +310,7 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
 
     ppu->win_mode = 0;
     ppu->win_ly = 0;
+    ppu->win_lx = 7;
     ppu->wy_trigger = 0;
     
     ppu->obj_mode = 1;
@@ -402,7 +404,6 @@ uint8_t fetchers_step(struct ppu *ppu)
     // There is a new object to render
     if (ppu->obj_fetcher->obj_index != -1)
     {
-
         // If OBJ mode is already enabled, it means either we are fetching the
         // obj_index, or a new object came up overlapping the currently rendering one
         if (!ppu->obj_mode)
@@ -417,9 +418,7 @@ uint8_t fetchers_step(struct ppu *ppu)
     }
 
     if (ppu->obj_mode)
-    {
         obj_fetcher_step(ppu);
-    }
     else
         bg_fetcher_step(ppu);
 
@@ -430,13 +429,12 @@ uint8_t fetchers_step(struct ppu *ppu)
 uint8_t send_pixel(struct ppu *ppu)
 {
     if (queue_isempty(ppu->bg_fifo) && queue_isempty(ppu->obj_fifo))
-    {
         return 0;
-    }
 
     struct pixel p = select_pixel(ppu);
-    //Don't draw prefetch + shift SCX for first tile
-    if (ppu->first_tile && ppu->lx > 7)
+
+    // Don't draw BG prefetch + shift SCX for first BG tile
+    if (!p.obj && !ppu->win_mode && ppu->first_tile && ppu->lx > 7)
     {
         int discard = *ppu->scx % 8;
         if (ppu->bg_fifo->count < 8 - discard)
@@ -444,11 +442,12 @@ uint8_t send_pixel(struct ppu *ppu)
         else
             --ppu->lx;
 
-        if (queue_isempty(ppu->bg_fifo))
-            ppu->first_tile = 0;
     }
     else if (ppu->lx > 7 && ppu->lx <= 167)
         draw_pixel(ppu->cpu, p);
+
+    if (ppu->first_tile && queue_isempty(ppu->bg_fifo))
+        ppu->first_tile = 0;
 
     return 1;
 }
@@ -458,9 +457,12 @@ uint8_t mode3_handler(struct ppu *ppu)
     // End of mode 3, go to HBlank (mode 0)
     if (ppu->lx > 167)
     {
-        // Update WIN internal LY
+        // Update WIN internal LY and reset internal LX
         if (ppu->win_mode)
+        {
             ++ppu->win_ly;
+            ppu->win_lx = 7;
+        }
         ppu->current_mode = 0;
         return 0;
     }
@@ -481,6 +483,7 @@ uint8_t mode3_handler(struct ppu *ppu)
         // Reset BG Fetcher and FIFO to current step 0 and enable win mode
         queue_clear(ppu->bg_fifo);
         ppu->bg_fetcher->current_step = 0;
+        ppu->bg_fetcher->tick = 0;
         ppu->win_mode = 1;
     }
 
@@ -515,9 +518,9 @@ uint8_t mode3_handler(struct ppu *ppu)
         }
         else
         {
-            // Draw current pixel on the LCD
-            send_pixel(ppu);
-            ++ppu->lx;
+            // Attempt to draw current pixel on the LCD
+            if (send_pixel(ppu))
+                ++ppu->lx;
         }
     }
 
@@ -610,6 +613,7 @@ uint8_t mode1_handler(struct ppu *ppu)
     ppu->current_mode = 2;
     *ppu->ly = 0;
     ppu->win_ly = 0;
+    ppu->win_lx = 7;
     return 0;
 }
 

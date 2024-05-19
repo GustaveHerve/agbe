@@ -52,7 +52,7 @@ uint8_t slice_xflip(uint8_t slice)
 
 int on_window(struct ppu *ppu)
 {
-    return get_lcdc(ppu, 0) && get_lcdc(ppu, 5) && ppu->wy_trigger && ppu->lx == *ppu->wx;
+    return get_lcdc(ppu, 0) && get_lcdc(ppu, 5) && ppu->wy_trigger && ppu->lx == *ppu->wx + 1;
 }
 
 int on_object(struct ppu *ppu, int *bottom_part)
