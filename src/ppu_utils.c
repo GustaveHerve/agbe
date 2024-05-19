@@ -60,12 +60,12 @@ int on_object(struct ppu *ppu, int *bottom_part)
     for (int i = 0; i < ppu->obj_count; ++i)
     {
         // 8x16 (LCDC bit 2 = 1) or 8x8 (LCDC bit 2 = 0)
-        int y_max_offset = get_lcdc(ppu, 2) ? 8 : 16;
+        int y_max_offset = get_lcdc(ppu, 2) ? 16 : 8;
         if (ppu->obj_slots[i].x == ppu->lx &&
             *ppu->ly + 16 >= ppu->obj_slots[i].y &&
             *ppu->ly + 16 < ppu->obj_slots[i].y + y_max_offset)
         {
-            if (y_max_offset == 16 && *ppu->ly + 16 >= ppu->obj_slots[i].y + 16)
+            if (y_max_offset == 16 && *ppu->ly + 16 >= ppu->obj_slots[i].y + 8)
                 *bottom_part = 1;
             return i;
         }

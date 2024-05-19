@@ -74,10 +74,10 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
                                 cpu->joyp_d &= ~(0x08);
                                 break;
 
-                            case SDLK_z:
+                            case SDLK_x:
                                 cpu->joyp_a &= ~(0x01);
                                 break;
-                            case SDLK_x:
+                            case SDLK_z:
                                 cpu->joyp_a &= ~(0x02);
                                 break;
                             case SDLK_SPACE:
@@ -107,10 +107,10 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
                                 cpu->joyp_d |= 0x08;
                                 break;
 
-                            case SDLK_z:
+                            case SDLK_x:
                                 cpu->joyp_a |= 0x01;
                                 break;
-                            case SDLK_x:
+                            case SDLK_z:
                                 cpu->joyp_a |= 0x02;
                                 break;
                             case SDLK_SPACE:

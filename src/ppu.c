@@ -51,7 +51,7 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
 
         if (get_lcdc(ppu, 2))
         {
-            if (bottom_part)
+            if (!bottom_part)
                 tileid &= 0xFE;
             else
                 tileid |= 0x01;
@@ -313,7 +313,7 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
     ppu->win_lx = 7;
     ppu->wy_trigger = 0;
     
-    ppu->obj_mode = 1;
+    ppu->obj_mode = 0;
 
     *ppu->lcdc = 0x00;
     *ppu->stat = 0x84;
