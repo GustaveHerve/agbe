@@ -158,14 +158,14 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
 }
 
 //Fetcher functions
-void fetcher_init(struct fetcher *f)
+void fetcher_reset(struct fetcher *f)
 {
-    f->current_step = 0;
-    f->bottom_part = 0;
-    f->hi = 0;
-    f->lo = 0;
     f->tileid = 0;
+    f->lo = 0;
+    f->hi = 0;
+    f->current_step = 0;
     f->obj_index = -1;
+    f->bottom_part = 0;
     f->tick = 0;
     f->lx_save = 0;
 }
@@ -180,7 +180,7 @@ int bg_fetcher_step(struct ppu *ppu)
     if (!f->tick && f->current_step != 3)
     {
         f->tick = 1;
-        // Save the state of lx during first wait dot
+        // Save the state of lx for next fetch
         f->lx_save = ppu->lx;
         return 1;
     }
@@ -206,6 +206,9 @@ int bg_fetcher_step(struct ppu *ppu)
                 {
                     push_slice(ppu, ppu->bg_fifo, f->hi, f->lo, -1);
                     f->current_step = 0;
+                    f->tick = 0;
+                    bg_fetcher_step(ppu);
+                    return 0;
                 }
                 f->tick = 0;
                 return 0;
@@ -292,8 +295,8 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
     ppu->bg_fetcher = malloc(sizeof(struct fetcher));
     ppu->obj_fetcher = malloc(sizeof(struct fetcher));
 
-    fetcher_init(ppu->bg_fetcher);
-    fetcher_init(ppu->obj_fetcher);
+    fetcher_reset(ppu->bg_fetcher);
+    fetcher_reset(ppu->obj_fetcher);
 
     ppu->renderer = renderer;
 
@@ -428,7 +431,7 @@ uint8_t fetchers_step(struct ppu *ppu)
 // Send one pixel to the LCD (1 dot)
 uint8_t send_pixel(struct ppu *ppu)
 {
-    if (queue_isempty(ppu->bg_fifo) && queue_isempty(ppu->obj_fifo))
+    if (queue_isempty(ppu->bg_fifo))
         return 0;
 
     struct pixel p = select_pixel(ppu);
@@ -467,6 +470,7 @@ uint8_t mode3_handler(struct ppu *ppu)
         return 0;
     }
 
+    // Start of mode 3
     if (ppu->line_dot_count == 80)
     {
         set_stat(ppu, 1);
@@ -475,6 +479,13 @@ uint8_t mode3_handler(struct ppu *ppu)
         // Lock OAM and VRAM read (return FF)
         ppu->oam_locked = 1;
         ppu->vram_locked = 1;
+
+        // Reset FIFOs and Fetchers
+        queue_clear(ppu->bg_fifo);
+        queue_clear(ppu->obj_fifo);
+
+        fetcher_reset(ppu->bg_fetcher);
+        fetcher_reset(ppu->obj_fetcher);
     }
 
     // Check if window triggers are fulfilled
