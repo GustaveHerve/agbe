@@ -201,22 +201,21 @@ int bg_fetcher_step(struct ppu *ppu)
             break;
         case 3:
             {
+                f->tick = 0;
+
                 //If BG empty, refill it
                 if (queue_isempty(ppu->bg_fifo))
                 {
                     push_slice(ppu, ppu->bg_fifo, f->hi, f->lo, -1);
                     f->current_step = 0;
-                    f->tick = 0;
-                    bg_fetcher_step(ppu);
-                    return 0;
+                    return bg_fetcher_step(ppu);
                 }
-                f->tick = 0;
                 return 0;
             }
     }
 
     f->tick = 0;
-    return 2;
+    return 1;
 }
 
 int obj_fetcher_step(struct ppu *ppu)
@@ -254,8 +253,10 @@ int obj_fetcher_step(struct ppu *ppu)
 
                 // Fetch is done, we can reset the index
                 // so that we can detect other (overlapped or not) objects
+                // also mark it done
+                ppu->obj_slots[f->obj_index].done = 1;
                 f->obj_index = -1;
-                ppu->obj_mode = 0;
+                //ppu->obj_mode = 0;
                 f->current_step = 0;
                 f->tick = 0;
                 return 0;
@@ -366,6 +367,7 @@ int oam_scan(struct ppu *ppu)
             ppu->obj_slots[ppu->obj_count].y = *obj_y;
             ppu->obj_slots[ppu->obj_count].x = *(obj_y + 1);
             ppu->obj_slots[ppu->obj_count].oam_address = obj_y;
+            ppu->obj_slots[ppu->obj_count].done = 0;
             ++ppu->obj_count;
         }
     }
@@ -512,6 +514,17 @@ uint8_t mode3_handler(struct ppu *ppu)
     }
 
     fetchers_step(ppu);
+
+    // OBJ mode = 1 and OBJ index = -1 means we just ended fetching an object
+    // if so check again for remaining not done object on the same LX and LY
+    if (ppu->obj_mode && ppu->obj_fetcher->obj_index == -1)
+    {
+        ppu->obj_mode = 0;
+        if (on_object(ppu, NULL))
+        {
+            return 0;
+        }
+    }
 
     // If we are in OBJ mode, we are fetching an object (FIFOs stall)
     if (ppu->obj_fetcher->obj_index == -1 && !ppu->obj_mode)

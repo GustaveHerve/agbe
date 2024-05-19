@@ -4,7 +4,7 @@
 #include "queue.h"
 #include "ppu.h"
 
-//STAT
+// STAT utils
 void set_stat(struct ppu *ppu, int bit)
 {
     *ppu->stat = *ppu->stat | (0x01 << bit);
@@ -20,6 +20,7 @@ void clear_stat(struct ppu *ppu, int bit)
     *ppu->stat = *ppu->stat & ~(0x01 << bit);
 }
 
+// Pixel and slice utils
 struct pixel make_pixel(uint8_t hi, uint8_t lo, int i, uint8_t *attributes)
 {
     struct pixel res;
@@ -59,13 +60,17 @@ int on_object(struct ppu *ppu, int *bottom_part)
 {
     for (int i = 0; i < ppu->obj_count; ++i)
     {
+        // Ignore already fetched objects
+        if (ppu->obj_slots[i].done)
+            continue;
+
         // 8x16 (LCDC bit 2 = 1) or 8x8 (LCDC bit 2 = 0)
         int y_max_offset = get_lcdc(ppu, 2) ? 16 : 8;
         if (ppu->obj_slots[i].x == ppu->lx &&
             *ppu->ly + 16 >= ppu->obj_slots[i].y &&
             *ppu->ly + 16 < ppu->obj_slots[i].y + y_max_offset)
         {
-            if (y_max_offset == 16 && *ppu->ly + 16 >= ppu->obj_slots[i].y + 8)
+            if (bottom_part != NULL && y_max_offset == 16 && *ppu->ly + 16 >= ppu->obj_slots[i].y + 8)
                 *bottom_part = 1;
             return i;
         }
