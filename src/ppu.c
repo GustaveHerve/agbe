@@ -53,6 +53,7 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
         {
             tileid = *(ppu->obj_slots[obj_index].oam_address + 2);
             ppu->obj_fetcher->attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
+            // tileid = read_mem(ppu->cpu, ppu->obj_slots[obj_index].oam_address + 2);
         }
 
         if (get_lcdc(ppu, 2))
@@ -261,7 +262,6 @@ int obj_fetcher_step(struct ppu *ppu)
                 // also mark it done
                 ppu->obj_slots[f->obj_index].done = 1;
                 f->obj_index = -1;
-                //ppu->obj_mode = 0;
                 f->current_step = 0;
                 f->tick = 0;
                 return 0;
@@ -346,7 +346,7 @@ void ppu_free(struct ppu *ppu)
     free(ppu);
 }
 
-//Sets back PPU to default state when turned off
+// Sets back PPU to default state when turned off
 void ppu_reset(struct ppu *ppu)
 {
     ppu->current_mode = 1;
@@ -526,7 +526,7 @@ uint8_t mode3_handler(struct ppu *ppu)
     {
         ppu->obj_mode = 0;
         // Force a new iteration of the loop in case of another object
-        if (on_object(ppu, NULL))
+        if (on_object(ppu, NULL) > -1)
             return 0;
     }
 
@@ -570,14 +570,14 @@ uint8_t mode0_handler(struct ppu *ppu)
     ppu->obj_fetcher->obj_index = -1;
     ppu->oam_locked = 0;
     ppu->vram_locked = 0;
-    //TODO verify dma lock
+    // TODO verify dma lock
     if (ppu->line_dot_count < 456)
     {
         ++ppu->line_dot_count;
         return 1;
     }
 
-    //Exit HBlank
+    // Exit HBlank
     ppu->lx = 0;
     *ppu->ly += 1;
 
@@ -592,7 +592,7 @@ uint8_t mode0_handler(struct ppu *ppu)
     if (get_stat(ppu, 5) && !get_stat(ppu, 4))
         set_if(ppu->cpu, 1);
 
-    //Start VBlank
+    // Start VBlank
     if (*ppu->ly > 143)
     {
         ppu->wy_trigger = 0;
@@ -667,8 +667,8 @@ void ppu_tick_m(struct ppu *ppu)
         }
     }
 
-    //DMA handling
-    //DMA first setup MCycle
+    // DMA handling
+    // DMA first setup MCycle
     if (ppu->dma == 2)
         ppu->dma = 1;
     else if (ppu->dma == 1)

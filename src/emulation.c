@@ -224,19 +224,22 @@ void tick_m(struct cpu *cpu)
 
 uint8_t read_mem(struct cpu *cpu, uint16_t address)
 {
-    if (cpu->ppu->dma)
+    // DMA, can only access HRAM
+    /*
+    if (cpu->ppu->dma == 1 && (address < 0xFF80 || address > 0xFFFE))
     {
-        //TODO
+        return 0xFF;
     }
+    */
 
-    //VRAM read
+    // VRAM read
     if (address >= 0x8000 && address <= 0x9FFF)
     {
         if (cpu->ppu->vram_locked)
             return 0xFF;
     }
 
-    //OAM read
+    // OAM read
     else if (address >= 0xFE00 && address <= 0xFEFF)
     {
         if (cpu->ppu->oam_locked)
