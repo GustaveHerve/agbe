@@ -53,12 +53,15 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
         {
             tileid = *(ppu->obj_slots[obj_index].oam_address + 2);
             ppu->obj_fetcher->attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
-            // tileid = read_mem(ppu->cpu, ppu->obj_slots[obj_index].oam_address + 2);
         }
 
         if (get_lcdc(ppu, 2))
         {
-            if (!bottom_part)
+            uint8_t cond = !bottom_part;
+            if ((ppu->obj_fetcher->attributes >> 6) & 0x01)
+                cond = bottom_part;
+
+            if (cond)
                 tileid &= 0xFE;
             else
                 tileid |= 0x01;
@@ -79,11 +82,8 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
         // Y flip
         if ((attributes >> 6) & 0x01)
         {
-            uint8_t temp = 0x00;
-            temp |= ((y_part >> 1) & 0x01) << 3;
-            temp |= ((y_part >> 2) & 0x01) << 2;
-            temp |= ((y_part >> 3) & 0x01) << 1;
-            y_part = temp;
+            y_part = ~y_part;
+            y_part &= 0x07;
         }
     }
     else if (ppu->win_mode)
@@ -127,11 +127,8 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
         // Y flip
         if ((attributes >> 6) & 0x01)
         {
-            uint8_t temp = 0x00;
-            temp = temp | (((y_part >> 1) & 0x01) << 3);
-            temp = temp | (((y_part >> 2) & 0x01) << 2);
-            temp = temp | (((y_part >> 3) & 0x01) << 1);
-            y_part = temp;
+            y_part = ~y_part;
+            y_part &= 0x07;
         }
     }
     else if (ppu->win_mode)
