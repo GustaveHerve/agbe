@@ -441,20 +441,27 @@ uint8_t send_pixel(struct ppu *ppu)
     if (queue_isempty(ppu->bg_fifo))
         return 0;
 
-    struct pixel p = select_pixel(ppu);
 
     // Don't draw BG prefetch + shift SCX for first BG tile
-    if (p.obj < 0 && !ppu->win_mode && ppu->first_tile && ppu->lx > 7)
+    if (!ppu->win_mode && ppu->first_tile && ppu->lx > 7)
     {
         int discard = *ppu->scx % 8;
-        if (ppu->bg_fifo->count < 8 - discard)
+        if (ppu->bg_fifo->count <= 8 - discard)
+        {
+            struct pixel p = select_pixel(ppu);
             draw_pixel(ppu->cpu, p);
-        else
+        }
+        else if (!queue_isempty(ppu->bg_fifo))
+        {
+            queue_pop(ppu->bg_fifo);
             --ppu->lx;
-
+        }
     }
     else if (ppu->lx > 7 && ppu->lx <= 167)
+    {
+        struct pixel p = select_pixel(ppu);
         draw_pixel(ppu->cpu, p);
+    }
 
     if (ppu->first_tile && queue_isempty(ppu->bg_fifo))
         ppu->first_tile = 0;
