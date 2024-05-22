@@ -67,7 +67,7 @@ int ld_hl_r(struct cpu *cpu, uint8_t *src)
 int ld_r_hl(struct cpu *cpu, uint8_t *dest)
 {
 	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-	uint8_t value = cpu->membus[address];
+	uint8_t value = read_mem(cpu, address);
 	*dest = value;
 	return 2;
 }
