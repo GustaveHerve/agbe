@@ -103,16 +103,18 @@ void main_loop(struct cpu *cpu, char *rom_path)
     FILE *fptr = fopen("testroms/boot.gb", "rb");
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
+
+    // Load cartridge boot sequence header in memory
     fptr = fopen(rom_path, "rb");
     fseek(fptr, 0x0100, SEEK_SET);
     fread(cpu->membus + 0x100, 1, 80, fptr);
     fclose(fptr);
 
-    //Init MBC / cartridge info and fill rom in buffer
+    // Init MBC / cartridge info and fill rom in buffer
     set_mbc(cpu);
     lcd_off(cpu);
 
-    //First OPCode Fetch
+    // First OPCode Fetch
     tick_m(cpu);
 
     size_t cycle_threshold = 1048576 / FRAMERATE;
@@ -128,15 +130,19 @@ void main_loop(struct cpu *cpu, char *rom_path)
             last_ticks = SDL_GetTicks64();
         }
         //TODO handle halt state
-        cycle_count += next_op(cpu); //Remaining MCycles are ticked in instructions
+        cycle_count += next_op(cpu); // Remaining MCycles are ticked in instructions
         tick_m(cpu); // OPCode fetch
         check_interrupt(cpu);
     }
 
+    // Open ROM and copy its content in MBC struct
     fptr = fopen(rom_path, "rb");
-    fread(cpu->membus, 1, 32768, fptr);
-    fseek(fptr, 0, SEEK_SET);
-    fread(cpu->rom, 1, cpu->mbc->rom_bank_count * 16384, fptr);
+    //fread(cpu->mbc->rom, 1, cpu->mbc->rom_bank_count * 16384, fptr);
+    //fseek(fptr, 0, SEEK_SET);
+    //fread(cpu->membus, 1, 32768, fptr);
+    fseek(fptr, 0, SEEK_END);
+    long fsize = ftell(fptr);
+    fread(cpu->mbc->rom, 1, fsize, fptr);
     fclose(fptr);
 
     init_cpu(cpu, 0x0a);
@@ -205,7 +211,7 @@ void tick_m(struct cpu *cpu)
         }
     }
 
-    //Overflow
+    // Overflow
     if (previous > *cpu->tima)
     {
         *cpu->tima = *cpu->tma;
@@ -232,14 +238,28 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
     }
     */
 
-    // VRAM read
-    if (address >= 0x8000 && address <= 0x9FFF)
+    // ROM
+    if (address <= 0x7FFF)
+    {
+        tick_m(cpu);
+        return read_mbc_rom(cpu, address);
+    }
+
+    // VRAM
+    else if (address >= 0x8000 && address <= 0x9FFF)
     {
         if (cpu->ppu->vram_locked)
             return 0xFF;
     }
 
-    // OAM read
+    // External RAM read
+    else if (address >= 0xA000 && address <= 0xBFFF)
+    {
+        tick_m(cpu);
+        return read_mbc_ram(cpu, address);
+    }
+
+    // OAM
     else if (address >= 0xFE00 && address <= 0xFEFF)
     {
         if (cpu->ppu->oam_locked)
@@ -252,20 +272,28 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
 
 void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
 {
-    int write = 1;
+    uint8_t write = 1;
     if (address <= 0x7FFF)
     {
         write = 0;
         write_mbc(cpu, address, val);
     }
 
+    // VRAM
     else if (address >= 0x8000 && address <= 0x9FFF)
     {
         if (cpu->ppu->vram_locked)
             write = 0;
     }
 
-    //OAM read
+    // External RAM
+    else if (address >= 0xA000 && address <= 0xBFFF)
+    {
+        write = 0;
+        write_mbc(cpu, address, val);
+    }
+
+    //OAM
     else if (address >= 0xFE00 && address <= 0xFEFF)
     {
         if (cpu->ppu->oam_locked)
@@ -298,6 +326,7 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         temp |= (val & 0x1F);
         cpu->membus[address] = temp;
     }
+
     else if (address == 0xFF46)
     {
         write = 0;
@@ -305,6 +334,7 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         cpu->ppu->dma_acc = 0;
         cpu->ppu->dma_source = val;
     }
+
     else if (address == 0xFFFF)
     {
         write = 0;
@@ -312,7 +342,9 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         temp |= (val & 0x1F);
         cpu->membus[address] = temp;
     }
+
     tick_m(cpu);
+
     if (write)
         cpu->membus[address] = val;
 }

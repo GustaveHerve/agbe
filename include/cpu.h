@@ -28,7 +28,6 @@ struct cpu
     struct ppu *ppu;
 	struct cpu_register *regist;
 	uint8_t *membus; //16-bit address bus that stores ROM RAM I/O
-    uint8_t *rom;
 
     int ime;
     uint8_t *ie;

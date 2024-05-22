@@ -1,6 +1,7 @@
 CC = gcc #clang
-CFLAGS = -Wall -Wextra -Wvla -pedantic -g -I include/ #-I /opt/homebrew/include
+CFLAGS = -Wall -Wextra -Wvla -pedantic -g -I include/ -fsanitize=address
 LDLIBS = -lSDL2 -lm
+LDFLAGS = -fsanitize=address
 
 BIN = agbe
 OBJ = src/control.o src/cpu.o src/disassembler.o src/emulation.o \
