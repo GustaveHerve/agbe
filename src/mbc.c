@@ -27,18 +27,6 @@ void mbc_free(struct mbc *mbc)
     free(mbc);
 }
 
-// Emulates ROM bank switching in membus range 0x4000-0x7FFF
-void rom_bank(struct cpu *cpu, uint8_t bank)
-{
-    memcpy(cpu->membus + 0x4000, cpu->mbc->rom + (0x4000 * bank), sizeof(uint8_t) * 0x4000);
-}
-
-// Emulates External RAM bank switching in membus range 0xA000-0xBFFF
-void ram_bank(struct cpu *cpu, uint8_t bank)
-{
-    memcpy(cpu->membus + 0xA000, cpu->mbc->ram + (0x2000 * bank), sizeof(uint8_t) * 0x2000);
-}
-
 void set_mbc(struct cpu *cpu)
 {
     struct mbc *mbc = cpu->mbc;
@@ -84,10 +72,6 @@ void set_mbc(struct cpu *cpu)
 
 uint8_t read_mbc_rom(struct cpu *cpu, uint16_t address)
 {
-    /*
-    uint16_t res_addr = (address - 0x4000) + 0x4000 * cpu->mbc->rom_bank_number;
-    return cpu->mbc->rom[res_addr];
-    */
     unsigned int res_addr = address & 0x3FFF;
 
     if (address <= 0x3FFF)
@@ -115,10 +99,6 @@ uint8_t read_mbc_ram(struct cpu *cpu, uint16_t address)
 {
     if (!cpu->mbc->ram_enabled || cpu->mbc->ram_bank_count == 0)
         return 0xFF;
-    /*
-    uint16_t res_addr = (address - 0xA000) + 0x2000 * cpu->mbc->ram_bank_number;
-    return cpu->mbc->ram[res_addr];
-    */
     unsigned int res_addr = address & 0x1FFF;
     if (cpu->mbc->mbc1_mode)
         res_addr = (cpu->mbc->ram_bank_number << 13) | res_addr;

@@ -100,18 +100,23 @@ void init_hardware(struct cpu *cpu)
 void main_loop(struct cpu *cpu, char *rom_path)
 {
     cpu->running = 1;
+
+    // Open BOOTROM
     FILE *fptr = fopen("testroms/boot.gb", "rb");
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
 
-    // Load cartridge boot sequence header in memory
-    fptr = fopen(rom_path, "rb");
-    fseek(fptr, 0x0100, SEEK_SET);
-    fread(cpu->membus + 0x100, 1, 80, fptr);
-    fclose(fptr);
-
     // Init MBC / cartridge info and fill rom in buffer
     set_mbc(cpu);
+
+    // Open ROM and copy its content in MBC struct
+    fptr = fopen(rom_path, "rb");
+    fseek(fptr, 0, SEEK_END);
+    long fsize = ftell(fptr);
+    rewind(fptr);
+    fread(cpu->mbc->rom, 1, fsize, fptr);
+    fclose(fptr);
+
     lcd_off(cpu);
 
     // First OPCode Fetch
@@ -134,16 +139,6 @@ void main_loop(struct cpu *cpu, char *rom_path)
         tick_m(cpu); // OPCode fetch
         check_interrupt(cpu);
     }
-
-    // Open ROM and copy its content in MBC struct
-    fptr = fopen(rom_path, "rb");
-    //fread(cpu->mbc->rom, 1, cpu->mbc->rom_bank_count * 16384, fptr);
-    //fseek(fptr, 0, SEEK_SET);
-    //fread(cpu->membus, 1, 32768, fptr);
-    fseek(fptr, 0, SEEK_END);
-    long fsize = ftell(fptr);
-    fread(cpu->mbc->rom, 1, fsize, fptr);
-    fclose(fptr);
 
     init_cpu(cpu, 0x0a);
     init_hardware(cpu);
