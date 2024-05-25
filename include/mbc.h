@@ -34,7 +34,7 @@ void mbc_init(struct mbc *mbc);
 
 void mbc_free(struct mbc *mbc);
 
-void set_mbc(struct cpu *cpu);
+void set_mbc(struct cpu *cpu, uint8_t *rom);
 
 uint8_t read_mbc_rom(struct cpu *cpu, uint16_t address);
 

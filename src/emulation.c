@@ -9,6 +9,7 @@
 #include "emulation.h"
 #include "mbc.h"
 
+#define CYCLE_PER_FRAME 1048576
 #define FRAMERATE 60
 
 void init_cpu(struct cpu *cpu, int checksum)
@@ -81,6 +82,7 @@ void init_hardware(struct cpu *cpu)
     cpu->membus[0xFF4B] = 0x00;
     cpu->membus[0xFF4D] = 0xFF;
     cpu->membus[0xFF4F] = 0xFF;
+    //cpu->membus[0xFF50] = 0xFE;
     cpu->membus[0xFF51] = 0xFF;
     cpu->membus[0xFF52] = 0xFF;
     cpu->membus[0xFF53] = 0xFF;
@@ -100,32 +102,34 @@ void init_hardware(struct cpu *cpu)
 void main_loop(struct cpu *cpu, char *rom_path)
 {
     cpu->running = 1;
+    // Enable bootrom
+    cpu->membus[0xFF50] = 0xFE;
 
     // Open BOOTROM
     FILE *fptr = fopen("testroms/boot.gb", "rb");
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
 
-    // Init MBC / cartridge info and fill rom in buffer
-    set_mbc(cpu);
 
-    // Open ROM and copy its content in MBC struct
+    // Open ROM, get its size and and copy its content in MBC struct
     fptr = fopen(rom_path, "rb");
     fseek(fptr, 0, SEEK_END);
     long fsize = ftell(fptr);
     rewind(fptr);
-    fread(cpu->mbc->rom, 1, fsize, fptr);
+
+    uint8_t *rom = malloc(sizeof(uint8_t) * fsize);
+    fread(rom, 1, fsize, fptr);
     fclose(fptr);
+
+    // Init MBC / cartridge info and fill rom in buffer
+    set_mbc(cpu, rom);
 
     lcd_off(cpu);
 
-    // First OPCode Fetch
-    tick_m(cpu);
-
-    size_t cycle_threshold = 1048576 / FRAMERATE;
+    size_t cycle_threshold = CYCLE_PER_FRAME / FRAMERATE;
     size_t cycle_count = 0;
     Uint64 last_ticks = SDL_GetTicks64();
-    while (cpu->running && cpu->regist->pc != 0x0150)
+    while (cpu->running && cpu->regist->pc != 0x0100)
     {
         if (cycle_count >= cycle_threshold)
         {
@@ -136,11 +140,10 @@ void main_loop(struct cpu *cpu, char *rom_path)
         }
         //TODO handle halt state
         cycle_count += next_op(cpu); // Remaining MCycles are ticked in instructions
-        tick_m(cpu); // OPCode fetch
         check_interrupt(cpu);
     }
 
-    init_cpu(cpu, 0x0a);
+    //init_cpu(cpu, 0x0a);
     init_hardware(cpu);
     cpu->div_timer = 52;
 
@@ -155,9 +158,10 @@ void main_loop(struct cpu *cpu, char *rom_path)
         }
 
         if (!cpu->halt)
-            cycle_count += next_op(cpu) - 1;
+            cycle_count += next_op(cpu);
+        else
+            tick_m(cpu); // Previous instruction tick + next OPCode fetch
 
-        tick_m(cpu); // Previous instruction tick + next OPCode fetch
         cycle_count += 1;
         check_interrupt(cpu);
     }
@@ -233,8 +237,15 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
     }
     */
 
+    // BOOTROM mapping
+    if (!(*cpu->boot & 0x01) && address <= 0x00FF)
+    {
+        tick_m(cpu);
+        return cpu->membus[address];
+    }
+
     // ROM
-    if (address <= 0x7FFF)
+    else if (address <= 0x7FFF)
     {
         tick_m(cpu);
         return read_mbc_rom(cpu, address);
@@ -288,14 +299,14 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         write_mbc(cpu, address, val);
     }
 
-    //OAM
+    // OAM
     else if (address >= 0xFE00 && address <= 0xFEFF)
     {
         if (cpu->ppu->oam_locked)
             write = 0;
     }
 
-    //JOYP
+    // JOYP
     else if (address == 0xFF00)
     {
         write = 0;
@@ -311,9 +322,11 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         cpu->membus[address] = new;
     }
 
+    // DIV
     else if (address == 0xFF04)
         *cpu->div = 0;
 
+    // IF
     else if (address == 0xFF0F)
     {
         write = 0;
@@ -322,6 +335,7 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         cpu->membus[address] = temp;
     }
 
+    // DMA
     else if (address == 0xFF46)
     {
         write = 0;
@@ -329,7 +343,16 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         cpu->ppu->dma_acc = 0;
         cpu->ppu->dma_source = val;
     }
+    
+    // BOOT
+    else if (address == 0xFF50)
+    {
+        // Prevent enabling bootrom again
+        if (cpu->membus[0xFF50] & 0x01)
+            write = 0;
+    }
 
+    // IE
     else if (address == 0xFFFF)
     {
         write = 0;

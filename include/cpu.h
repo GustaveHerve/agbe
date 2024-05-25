@@ -48,6 +48,8 @@ struct cpu
 
     uint8_t joyp_a;
     uint8_t joyp_d;
+
+    uint8_t *boot;
 };
 
 void cpu_init(struct cpu *new_cpu, struct renderer *rend);

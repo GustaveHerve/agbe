@@ -27,14 +27,16 @@ void mbc_free(struct mbc *mbc)
     free(mbc);
 }
 
-void set_mbc(struct cpu *cpu)
+void set_mbc(struct cpu *cpu, uint8_t *rom)
 {
     struct mbc *mbc = cpu->mbc;
 
-    mbc->type = cpu->membus[0x0147];
+    mbc->rom = rom;
 
-    mbc->rom_size = cpu->membus[0x0148];
-    mbc->ram_size = cpu->membus[0x0149];
+    mbc->type = rom[0x0147];
+
+    mbc->rom_size = rom[0x0148];
+    mbc->ram_size = rom[0x0149];
 
     mbc->rom_bank_count = pow(2, cpu->mbc->rom_size + 1);
     mbc->rom_bank_number = 1;
@@ -60,13 +62,12 @@ void set_mbc(struct cpu *cpu)
 
     mbc->ram_bank_number = 0;
 
-    free(mbc->rom);
-    free(mbc->ram);
 
     mbc->rom_total_size = mbc->rom_bank_count * 16384;
     mbc->ram_total_size = mbc->ram_bank_count * 8192;
 
-    mbc->rom = malloc(sizeof(uint8_t) * 16384 * mbc->rom_bank_count);
+    // Allocate the external RAM
+    free(mbc->ram);
     mbc->ram = malloc(sizeof(uint8_t) * 8192 * mbc->ram_bank_count);
 }
 
@@ -102,15 +103,6 @@ uint8_t read_mbc_ram(struct cpu *cpu, uint16_t address)
     unsigned int res_addr = address & 0x1FFF;
     if (cpu->mbc->mbc1_mode)
         res_addr = (cpu->mbc->ram_bank_number << 13) | res_addr;
-
-    // If address is too big for the size of RAM, only keep necessary bit count
-    // to address total RAM size values
-    unsigned int mask = 0x00100000;
-    while (res_addr > cpu->mbc->ram_total_size)
-    {
-        res_addr &= (~mask);
-        mask >>= 1;
-    }
 
     return cpu->mbc->ram[res_addr];
 }

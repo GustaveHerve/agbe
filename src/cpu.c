@@ -57,6 +57,8 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
     *cpu->tima = 0x00;
     *cpu->tma = 0x00;
     *cpu->tac = 0x00;
+
+    cpu->boot = &cpu->membus[0xFF50];
 }
 
 //Set registers' default values AFTER boot rom
