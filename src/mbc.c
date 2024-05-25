@@ -75,7 +75,7 @@ void set_mbc(struct cpu *cpu, uint8_t *rom)
 
     // Allocate the external RAM
     free(mbc->ram);
-    mbc->ram = malloc(sizeof(uint8_t) * 8192 * mbc->ram_bank_count);
+    mbc->ram = calloc(8192 * mbc->ram_bank_count, sizeof(uint8_t));
 
     // Create / Load save file if battery
     if (mbc->type == 0x03 || mbc->type == 0x06 || mbc->type == 0x09 || mbc->type == 0x0D || mbc->type == 0x0F || mbc->type == 0x10 || mbc->type == 0x13 || mbc->type == 0x1B || mbc->type == 0x1E || mbc->type == 0x22 || mbc->type == 0xFF)
@@ -116,6 +116,14 @@ uint8_t read_mbc_ram(struct cpu *cpu, uint16_t address)
         res_addr = (cpu->mbc->ram_bank_number << 13) | res_addr;
 
     return cpu->mbc->ram[res_addr];
+}
+
+void write_mbc_ram(struct cpu *cpu, uint16_t address, uint8_t val)
+{
+    unsigned int res_addr = address & 0x1FFF;
+    if (cpu->mbc->mbc1_mode)
+        res_addr = (cpu->mbc->ram_bank_number << 13) | res_addr;
+    cpu->mbc->ram[res_addr] = val;
 }
 
 void write_mbc(struct cpu *cpu, uint16_t address, uint8_t val)
@@ -172,8 +180,10 @@ void write_mbc(struct cpu *cpu, uint16_t address, uint8_t val)
         // Ignore writes if RAM is disabled or if there is no external RAM
         if (!mbc->ram_enabled || mbc->ram_bank_count == 0)
             return;
-        uint16_t res_addr = (address - 0xA000) + 0x2000 * mbc->ram_bank_number;
-        mbc->ram[res_addr] = val;
+
+        write_mbc_ram(cpu, address, val);
+        //uint16_t res_addr = (address - 0xA000) + 0x2000 * mbc->ram_bank_number;
+        //mbc->ram[res_addr] = val;
 
         // Save if MBC has a save battery
         if (mbc->save_file != NULL)

@@ -9,10 +9,15 @@ FILE *open_save_file(struct mbc *mbc)
     char *save_path = malloc(len);
     snprintf(save_path, len, "%s.sav", mbc->rom_path);
 
-    FILE *res = fopen(save_path, "wb+");
+    FILE *res = NULL;
+    res = fopen(save_path, "rb+");
+    if (!res)
+        res = fopen(save_path, "wb+");
     free(save_path);
 
-    size_t fsize = fseek(res, SEEK_END, 0);
+    rewind(res);
+    fseek(res, 0, SEEK_END);
+    long fsize = ftell(res);
     rewind(res);
     if (fsize <= mbc->ram_total_size)
         fread(mbc->ram, 1, fsize, res);
