@@ -132,7 +132,6 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
         SDL_RenderClear(rend->renderer);
         SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
         SDL_RenderPresent(rend->renderer);
-        //SDL_Delay(16);
     }
 }
 

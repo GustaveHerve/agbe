@@ -1,3 +1,5 @@
+#include <SDL2/SDL_thread.h>
+#include <SDL2/SDL_timer.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
@@ -9,8 +11,8 @@
 #include "emulation.h"
 #include "mbc.h"
 
-#define CYCLE_PER_FRAME 1048576
-#define FRAMERATE 60
+#define CYCLE_PER_FRAME 1048576.0f
+#define FRAMERATE 60.0f
 
 void init_cpu(struct cpu *cpu, int checksum)
 {
@@ -133,10 +135,12 @@ void main_loop(struct cpu *cpu, char *rom_path)
     {
         if (cycle_count >= cycle_threshold)
         {
-            if (SDL_GetTicks64() - last_ticks < 1000 / FRAMERATE)
+            Uint64 current_tick = SDL_GetTicks64();
+            if (current_tick - last_ticks < 1000.0f / FRAMERATE)
                 continue;
-            cycle_count = 0;
-            last_ticks = SDL_GetTicks64();
+            cycle_count -=cycle_threshold;
+            last_ticks = current_tick;
+
         }
         //TODO handle halt state
         cycle_count += next_op(cpu); // Remaining MCycles are ticked in instructions
@@ -151,10 +155,11 @@ void main_loop(struct cpu *cpu, char *rom_path)
     {
         if (cycle_count >= cycle_threshold)
         {
-            if (SDL_GetTicks64() - last_ticks < 1000 / FRAMERATE)
+            Uint64 current_tick = SDL_GetTicks64();
+            if (current_tick - last_ticks < 1000.0f / FRAMERATE)
                 continue;
-            cycle_count = 0;
-            last_ticks = SDL_GetTicks64();
+            cycle_count -=cycle_threshold;
+            last_ticks = current_tick;
         }
 
         if (!cpu->halt)
