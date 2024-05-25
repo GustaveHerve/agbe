@@ -2,6 +2,7 @@
 #define MBC_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 struct cpu;
 
@@ -27,10 +28,11 @@ struct mbc
 
     uint8_t mbc1_mode; // Banking Mode
 
-    uint8_t battery;
+    char *rom_path;
+    FILE *save_file;
 };
 
-void mbc_init(struct mbc *mbc);
+void mbc_init(struct mbc *mbc, char *rom_path);
 
 void mbc_free(struct mbc *mbc);
 

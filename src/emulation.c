@@ -102,6 +102,7 @@ void init_hardware(struct cpu *cpu)
 void main_loop(struct cpu *cpu, char *rom_path)
 {
     cpu->running = 1;
+
     // Enable bootrom
     cpu->membus[0xFF50] = 0xFE;
 
@@ -109,7 +110,6 @@ void main_loop(struct cpu *cpu, char *rom_path)
     FILE *fptr = fopen("testroms/boot.gb", "rb");
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
-
 
     // Open ROM, get its size and and copy its content in MBC struct
     fptr = fopen(rom_path, "rb");

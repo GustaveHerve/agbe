@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     rend->texture = texture;
 
 	struct cpu *cpu = malloc(sizeof(struct cpu));
-	cpu_init(cpu, rend);
+	cpu_init(cpu, rend, argv[1]);
 
     main_loop(cpu, argv[1]);
 

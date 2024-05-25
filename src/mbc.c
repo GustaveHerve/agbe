@@ -4,24 +4,32 @@
 #include <string.h>
 #include "cpu.h"
 #include "mbc.h"
+#include "save.h"
 
-void mbc_init(struct mbc *mbc)
+void mbc_init(struct mbc *mbc, char *rom_path)
 {
     mbc->rom = NULL;
     mbc->ram = NULL;
+
     mbc->rom_bank_number = 1;
     mbc->ram_bank_number = 0;
+
     mbc->rom_bank_count = 0;
     mbc->ram_bank_count = 0;
+
     mbc->ram_enabled = 0;
-    mbc->battery = 0;
     mbc->ram_size = 0;
     mbc->rom_size = 0;
+
     mbc->mbc1_mode = 0;
+
+    mbc->rom_path = rom_path;
+    mbc->save_file = NULL;
 }
 
 void mbc_free(struct mbc *mbc)
 {
+    fclose(mbc->save_file);
     free(mbc->rom);
     free(mbc->ram);
     free(mbc);
@@ -62,13 +70,16 @@ void set_mbc(struct cpu *cpu, uint8_t *rom)
 
     mbc->ram_bank_number = 0;
 
-
     mbc->rom_total_size = mbc->rom_bank_count * 16384;
     mbc->ram_total_size = mbc->ram_bank_count * 8192;
 
     // Allocate the external RAM
     free(mbc->ram);
     mbc->ram = malloc(sizeof(uint8_t) * 8192 * mbc->ram_bank_count);
+
+    // Create / Load save file if battery
+    if (mbc->type == 0x03 || mbc->type == 0x06 || mbc->type == 0x09 || mbc->type == 0x0D || mbc->type == 0x0F || mbc->type == 0x10 || mbc->type == 0x13 || mbc->type == 0x1B || mbc->type == 0x1E || mbc->type == 0x22 || mbc->type == 0xFF)
+        mbc->save_file = open_save_file(mbc);
 }
 
 uint8_t read_mbc_rom(struct cpu *cpu, uint16_t address)
@@ -163,5 +174,9 @@ void write_mbc(struct cpu *cpu, uint16_t address, uint8_t val)
             return;
         uint16_t res_addr = (address - 0xA000) + 0x2000 * mbc->ram_bank_number;
         mbc->ram[res_addr] = val;
+
+        // Save if MBC has a save battery
+        if (mbc->save_file != NULL)
+            save_ram_to_file(mbc);
     }
 }

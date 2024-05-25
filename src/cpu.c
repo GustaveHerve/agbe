@@ -12,14 +12,14 @@
 
 int get_ie(struct cpu *cpu, int bit);
 
-void cpu_init(struct cpu *cpu, struct renderer *rend)
+void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
 {
 	cpu->regist = malloc(sizeof(struct cpu_register));
 	cpu->membus = calloc(MEMBUS_SIZE, sizeof(uint8_t));
     cpu->mbc = malloc(sizeof(struct mbc));
     cpu->ppu = malloc(sizeof(struct ppu));
 
-    mbc_init(cpu->mbc);
+    mbc_init(cpu->mbc, rom_path);
     ppu_init(cpu->ppu, cpu, rend);
 
     cpu->ime = 0;
