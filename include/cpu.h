@@ -28,7 +28,6 @@ struct cpu
     struct ppu *ppu;
 	struct cpu_register *regist;
 	uint8_t *membus; //16-bit address bus that stores ROM RAM I/O
-    uint8_t *rom;
 
     int ime;
     uint8_t *ie;
@@ -49,9 +48,11 @@ struct cpu
 
     uint8_t joyp_a;
     uint8_t joyp_d;
+
+    uint8_t *boot;
 };
 
-void cpu_init(struct cpu *new_cpu, struct renderer *rend);
+void cpu_init(struct cpu *new_cpu, struct renderer *rend, char *rom_path);
 void cpu_start(struct cpu *cpu);
 void cpu_free(struct cpu *todelete);
 

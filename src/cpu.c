@@ -12,13 +12,16 @@
 
 int get_ie(struct cpu *cpu, int bit);
 
-void cpu_init(struct cpu *cpu, struct renderer *rend)
+void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
 {
 	cpu->regist = malloc(sizeof(struct cpu_register));
 	cpu->membus = calloc(MEMBUS_SIZE, sizeof(uint8_t));
-    cpu->rom = NULL;
+    cpu->mbc = malloc(sizeof(struct mbc));
     cpu->ppu = malloc(sizeof(struct ppu));
+
+    mbc_init(cpu->mbc, rom_path);
     ppu_init(cpu->ppu, cpu, rend);
+
     cpu->ime = 0;
     cpu->ie = &cpu->membus[0xFFFF];
     cpu->_if = &cpu->membus[0xFF0F];
@@ -33,7 +36,6 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
     cpu->div_timer = 0;
     cpu->tima_timer = 0;
 
-    cpu->mbc = malloc(sizeof(struct mbc));
 
     //Joypad
     cpu->joyp_a = 0xFF;
@@ -55,6 +57,8 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
     *cpu->tima = 0x00;
     *cpu->tma = 0x00;
     *cpu->tac = 0x00;
+
+    cpu->boot = &cpu->membus[0xFF50];
 }
 
 //Set registers' default values AFTER boot rom
@@ -76,10 +80,8 @@ void cpu_free(struct cpu *todelete)
 {
     ppu_free(todelete->ppu);
 	free(todelete->membus);
-    if (todelete->rom != NULL)
-        free(todelete->rom);
     free(todelete->regist);
-    free(todelete->mbc);
+    mbc_free(todelete->mbc);
 	free(todelete);
 }
 

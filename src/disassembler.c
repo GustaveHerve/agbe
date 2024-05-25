@@ -12,8 +12,7 @@
 int next_op(struct cpu *cpu)
 {
     int mcycles = 0;
-    uint8_t opcode = cpu->membus[cpu->regist->pc];
-    ++cpu->regist->pc;
+    uint8_t opcode = read_mem(cpu, cpu->regist->pc++);
     switch (opcode)
     {
         case 0x00:
@@ -761,9 +760,7 @@ int next_op(struct cpu *cpu)
 int prefix_op(struct cpu *cpu)
 {
     //Fetch the prefix opcode
-    tick_m(cpu);
-    uint8_t opcode = cpu->membus[cpu->regist->pc];
-    ++cpu->regist->pc;
+    uint8_t opcode = read_mem(cpu, cpu->regist->pc++);
     int mcycles = 0;
     switch (opcode)
     {
