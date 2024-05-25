@@ -29,7 +29,8 @@ void mbc_init(struct mbc *mbc, char *rom_path)
 
 void mbc_free(struct mbc *mbc)
 {
-    fclose(mbc->save_file);
+    if (mbc->save_file)
+        fclose(mbc->save_file);
     free(mbc->rom);
     free(mbc->ram);
     free(mbc);

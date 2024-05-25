@@ -129,7 +129,7 @@ void main_loop(struct cpu *cpu, char *rom_path)
     size_t cycle_threshold = CYCLE_PER_FRAME / FRAMERATE;
     size_t cycle_count = 0;
     Uint64 last_ticks = SDL_GetTicks64();
-    while (cpu->running && cpu->regist->pc != 0x0100)
+    while (cpu->running && cpu->regist->pc != 0x0150)
     {
         if (cycle_count >= cycle_threshold)
         {
@@ -160,9 +160,11 @@ void main_loop(struct cpu *cpu, char *rom_path)
         if (!cpu->halt)
             cycle_count += next_op(cpu);
         else
+        {
             tick_m(cpu); // Previous instruction tick + next OPCode fetch
+            cycle_count += 1;
+        }
 
-        cycle_count += 1;
         check_interrupt(cpu);
     }
 }
@@ -365,4 +367,35 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
 
     if (write)
         cpu->membus[address] = val;
+}
+
+uint8_t read_mem_no_tick(struct cpu *cpu, uint16_t address)
+{
+    // BOOTROM mapping
+    if (!(*cpu->boot & 0x01) && address <= 0x00FF)
+        return cpu->membus[address];
+
+    // ROM
+    else if (address <= 0x7FFF)
+        return read_mbc_rom(cpu, address);
+
+    // VRAM
+    else if (address >= 0x8000 && address <= 0x9FFF)
+    {
+        if (cpu->ppu->vram_locked)
+            return 0xFF;
+    }
+
+    // External RAM read
+    else if (address >= 0xA000 && address <= 0xBFFF)
+        return read_mbc_ram(cpu, address);
+
+    // OAM
+    else if (address >= 0xFE00 && address <= 0xFEFF)
+    {
+        if (cpu->ppu->oam_locked)
+            return 0xFF;
+    }
+
+    return cpu->membus[address];
 }

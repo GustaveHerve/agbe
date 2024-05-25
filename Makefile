@@ -1,7 +1,6 @@
 CC = gcc #clang
-CFLAGS = -Wall -Wextra -Wvla -pedantic -g -I include/ -fsanitize=address
+CFLAGS = -Wall -Wextra -Wvla -pedantic -g -I include/
 LDLIBS = -lSDL2 -lm
-LDFLAGS = -fsanitize=address
 
 BIN = agbe
 OBJ = src/control.o src/cpu.o src/disassembler.o src/emulation.o \
@@ -11,6 +10,10 @@ OBJ = src/control.o src/cpu.o src/disassembler.o src/emulation.o \
 
 all: $(BIN)
 	$(CC) -o $(BIN) $(OBJ) $(LDLIBS) $(LDFLAGS)
+
+debug: CFLAGS += -fsanitize=address
+debug: LDFLAGS += -fsanitize=address
+debug: all
 
 $(BIN): $(OBJ)
 

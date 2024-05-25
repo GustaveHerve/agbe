@@ -14,4 +14,6 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address);
 
 void write_mem(struct cpu *cpu, uint16_t address, uint8_t val);
 
+uint8_t read_mem_no_tick(struct cpu *cpu, uint16_t address);
+
 #endif
