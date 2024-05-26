@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <math.h>
 #include <err.h>
 #include "cpu.h"
 #include "ppu.h"
@@ -141,19 +142,27 @@ void main_loop(struct cpu *cpu, char *rom_path)
 
     size_t cycle_threshold = CYCLE_PER_FRAME / FRAMERATE;
     size_t cycle_count = 0;
-    Uint64 last_ticks = SDL_GetTicks64();
+    Uint64 start = SDL_GetPerformanceCounter();
     while (cpu->running && cpu->regist->pc != 0x0150)
     {
         if (cycle_count >= cycle_threshold)
         {
-            Uint64 current_tick = SDL_GetTicks64();
-            if (current_tick - last_ticks < 1000.0f / FRAMERATE)
-                continue;
+            Uint64 end = SDL_GetPerformanceCounter();
+            float elapsedMS = (end - start) / (float)SDL_GetPerformanceFrequency() * 1000.0f;
+            if (floor(16.666f - elapsedMS > 0))
+                SDL_Delay(floor(16.666f - elapsedMS));
             cycle_count -=cycle_threshold;
-            last_ticks = current_tick;
-
+            start = SDL_GetPerformanceCounter();
         }
-        //TODO handle halt state
+
+        if (!cpu->halt)
+            cycle_count += next_op(cpu);
+        else
+        {
+            tick_m(cpu); // Previous instruction tick + next OPCode fetch
+            cycle_count += 1;
+        }
+
         cycle_count += next_op(cpu); // Remaining MCycles are ticked in instructions
         check_interrupt(cpu);
     }
@@ -166,11 +175,12 @@ void main_loop(struct cpu *cpu, char *rom_path)
     {
         if (cycle_count >= cycle_threshold)
         {
-            Uint64 current_tick = SDL_GetTicks64();
-            if (current_tick - last_ticks < 1000.0f / FRAMERATE)
-                continue;
+            Uint64 end = SDL_GetPerformanceCounter();
+            float elapsedMS = (end - start) / (float)SDL_GetPerformanceFrequency() * 1000.0f;
+            if (floor(16.666f - elapsedMS > 0))
+                SDL_Delay(floor(16.666f - elapsedMS));
             cycle_count -=cycle_threshold;
-            last_ticks = current_tick;
+            start = SDL_GetPerformanceCounter();
         }
 
         if (!cpu->halt)

@@ -45,6 +45,7 @@ void apu_init(struct cpu *cpu, struct apu *apu);
 
 void apu_free(struct apu *apu);
 
+void apu_tick_m(struct apu *apu);
 
 static inline uint8_t is_apu_off(struct apu *apu)
 {

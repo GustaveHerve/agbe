@@ -12,6 +12,6 @@ void apu_free(struct apu *apu)
     free(apu);
 }
 
-void apu_off(struct apu *apu)
+void apu_tick_m(struct apu *apu)
 {
 }
