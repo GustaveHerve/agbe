@@ -10,6 +10,7 @@
 #include "disassembler.h"
 #include "emulation.h"
 #include "mbc.h"
+#include "serial.h"
 
 #define CYCLE_PER_FRAME 1048576.0f
 #define FRAMERATE 60.0f
@@ -231,6 +232,19 @@ void tick_m(struct cpu *cpu)
         cpu->ppu->oam_locked = 0;
         cpu->ppu->vram_locked = 0;
         ppu_reset(cpu->ppu);
+    }
+
+    // Serial clock
+    cpu->serial_clock += 4;
+    if (get_transfer_enable(cpu) && get_clock_select(cpu) && cpu->serial_clock == 512)
+    {
+        if (cpu->serial_acc == 0)
+            cpu->serial_acc = 8;
+        serial_transfer(cpu);
+        --cpu->serial_acc;
+        if (cpu->serial_acc == 0)
+            set_if(cpu, 3);
+        cpu->serial_clock = 0;
     }
 }
 

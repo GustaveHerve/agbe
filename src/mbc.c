@@ -21,7 +21,7 @@ void mbc_init(struct mbc *mbc, char *rom_path)
     mbc->ram_size = 0;
     mbc->rom_size = 0;
 
-    mbc->mbc1_mode = 0;
+    mbc->mbc1_mode = 1;
 
     mbc->rom_path = rom_path;
     mbc->save_file = NULL;

@@ -32,10 +32,10 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
     cpu->halt = 0;
     cpu->stop = 0;
 
-
     cpu->div_timer = 0;
     cpu->tima_timer = 0;
-
+    cpu->serial_clock = 0;
+    cpu->serial_acc = 0;
 
     //Joypad
     cpu->joyp_a = 0xFF;
@@ -59,6 +59,9 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
     *cpu->tac = 0x00;
 
     cpu->boot = &cpu->membus[0xFF50];
+
+    cpu->sb = &cpu->membus[0xFF01];
+    cpu->sc = &cpu->membus[0xFF02];
 }
 
 //Set registers' default values AFTER boot rom

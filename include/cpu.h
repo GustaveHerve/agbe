@@ -18,8 +18,8 @@ struct cpu_register
 	uint8_t h;
 	uint8_t l;
 
-	uint16_t sp; //full 16 bit
-	uint16_t pc; //full 16 bit
+	uint16_t sp;
+	uint16_t pc;
 };
 
 struct cpu
@@ -27,7 +27,7 @@ struct cpu
     int running;
     struct ppu *ppu;
 	struct cpu_register *regist;
-	uint8_t *membus; //16-bit address bus that stores ROM RAM I/O
+	uint8_t *membus;
 
     int ime;
     uint8_t *ie;
@@ -43,6 +43,8 @@ struct cpu
 
     int div_timer;
     int tima_timer;
+    uint16_t serial_clock;
+    uint8_t serial_acc;
 
     struct mbc *mbc;
 
@@ -50,13 +52,16 @@ struct cpu
     uint8_t joyp_d;
 
     uint8_t *boot;
+
+    uint8_t *sb;
+    uint8_t *sc;
 };
 
 void cpu_init(struct cpu *new_cpu, struct renderer *rend, char *rom_path);
 void cpu_start(struct cpu *cpu);
 void cpu_free(struct cpu *todelete);
 
-//Interrupts
+// Interrupts
 int check_interrupt(struct cpu *cpu);
 int handle_interrupt(struct cpu *cpu, int bit);
 
