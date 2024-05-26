@@ -111,11 +111,21 @@ void main_loop(struct cpu *cpu, char *rom_path)
 
     // Open BOOTROM
     FILE *fptr = fopen("testroms/boot.gb", "rb");
+    if (!fptr)
+    {
+        puts("Unable to find boot.gb");
+        return;
+    }
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
 
     // Open ROM, get its size and and copy its content in MBC struct
     fptr = fopen(rom_path, "rb");
+    if (!fptr)
+    {
+        puts("Unable to find rom");
+        return;
+    }
     fseek(fptr, 0, SEEK_END);
     long fsize = ftell(fptr);
     rewind(fptr);
