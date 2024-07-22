@@ -12,6 +12,12 @@ void apu_free(struct apu *apu)
     free(apu);
 }
 
+static void ch1_tick_m(struct apu *apu)
+{
+
+}
+
 void apu_tick_m(struct apu *apu)
 {
+
 }
