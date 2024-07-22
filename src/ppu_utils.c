@@ -156,7 +156,9 @@ void check_lyc(struct ppu *ppu, int line_153)
     if (*ppu->ly == *ppu->lyc)
     {
         set_stat(ppu, 2);
-        if ((line_153 || ppu->line_dot_count == 0) && get_stat(ppu, 6)) //&& !get_if(ppu->cpu, 1))
+        if (line_153 && ppu->line_dot_count == 12 && get_stat(ppu, 6))
+            set_if(ppu->cpu, 1);
+        else if (ppu->line_dot_count == 4 && get_stat(ppu, 6)) //&& !get_if(ppu->cpu, 1))
             set_if(ppu->cpu, 1);
     }
     else

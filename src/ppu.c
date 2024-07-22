@@ -618,7 +618,7 @@ uint8_t mode1_handler(struct ppu *ppu)
             set_if(ppu->cpu, 1);
     }
 
-    check_lyc(ppu, 0);
+    check_lyc(ppu, ppu->mode1_153th);
 
     if (ppu->line_dot_count < 456)
     {
