@@ -346,9 +346,22 @@ void ppu_free(struct ppu *ppu)
 // Sets back PPU to default state when turned off
 void ppu_reset(struct ppu *ppu)
 {
-    ppu->current_mode = 1;
-    ppu->line_dot_count = 400;
-    ppu->mode1_153th = 1;
+    *ppu->ly = 0;
+    ppu->lx = 0;
+    ppu->current_mode = 0;
+    ppu->mode1_153th = 0;
+    ppu->line_dot_count = 0;
+
+    *ppu->stat = 0x80;
+
+    fetcher_reset(ppu->bg_fetcher);
+    fetcher_reset(ppu->obj_fetcher);
+
+    queue_clear(ppu->obj_fifo);
+    queue_clear(ppu->bg_fifo);
+
+    check_lyc(ppu, 0);
+    lcd_off(ppu->cpu);
 }
 
 // Mode 2

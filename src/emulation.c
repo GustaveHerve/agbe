@@ -100,7 +100,11 @@ void init_hardware(struct cpu *cpu)
     cpu->membus[0xFF70] = 0xFF;
     cpu->membus[0xFFFF] = 0x00;
 
-    ppu_reset(cpu->ppu);
+    //ppu_reset(cpu->ppu);
+
+    cpu->ppu->current_mode = 1;
+    cpu->ppu->line_dot_count = 400;
+    cpu->ppu->mode1_153th = 1;
 }
 
 void main_loop(struct cpu *cpu, char *rom_path)
@@ -247,12 +251,14 @@ void tick_m(struct cpu *cpu)
 
     if (get_lcdc(cpu->ppu, 7))
         ppu_tick_m(cpu->ppu);
+    /*
     else
     {
         cpu->ppu->oam_locked = 0;
         cpu->ppu->vram_locked = 0;
         ppu_reset(cpu->ppu);
     }
+    */
 
     // Serial clock
     cpu->serial_clock += 4;
@@ -374,6 +380,14 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         uint8_t temp = (cpu->membus[address] & 0xE0);
         temp |= (val & 0x1F);
         cpu->membus[address] = temp;
+    }
+
+    // STAT
+    else if (address == 0xFF40)
+    {
+        // LCD off
+        if (!(val >> 6))
+            ppu_reset(cpu->ppu);
     }
 
     // DMA
