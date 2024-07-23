@@ -3,5 +3,10 @@
 
 void serial_transfer(struct cpu *cpu)
 {
-    *cpu->sb = (*cpu->sb << 1) | 0x01;
+    *cpu->sb = 0x81;
+}
+
+void transfer_complete(struct cpu *cpu)
+{
+    *cpu->sb &= ~0x80;
 }

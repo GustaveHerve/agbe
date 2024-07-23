@@ -91,7 +91,7 @@ void cpu_free(struct cpu *todelete)
 //Interrupt handling
 int check_interrupt(struct cpu *cpu)
 {
-    if (!cpu->ime)
+    if (!cpu->halt && !cpu->ime)
         return 0;
 
     //Joypad check
@@ -114,6 +114,8 @@ int check_interrupt(struct cpu *cpu)
         if (get_if(cpu, i) && get_ie(cpu, i))
         {
             cpu->halt = 0;
+            if (!cpu->ime) // Wake up from halt with IME = 0
+                return 0;
             handle_interrupt(cpu, i);
         }
     }

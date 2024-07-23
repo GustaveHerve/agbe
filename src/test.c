@@ -8,7 +8,10 @@
 int main(int argc, char **argv)
 {
     if (argc != 2)
+    {
+        puts("Usage: agbe ROM_PATH");
         return -1;
+    }
 
     if (SDL_Init(SDL_INIT_EVERYTHING))
         return EXIT_FAILURE;

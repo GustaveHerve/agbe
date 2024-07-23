@@ -23,13 +23,13 @@ OBJ = src/control.o \
 	  src/apu.o
 
 all: $(BIN)
-	$(CC) -o $(BIN) $(OBJ) $(LDLIBS) $(LDFLAGS)
 
 debug: CFLAGS += -fsanitize=address
 debug: LDFLAGS += -fsanitize=address
 debug: all
 
 $(BIN): $(OBJ)
+	$(CC) -o $(BIN) $(OBJ) $(LDLIBS) $(LDFLAGS)
 
 clean:
 	$(RM) $(OBJ) $(BIN)

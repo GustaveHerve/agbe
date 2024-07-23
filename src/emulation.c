@@ -86,7 +86,7 @@ void init_hardware(struct cpu *cpu)
     cpu->membus[0xFF4B] = 0x00;
     cpu->membus[0xFF4D] = 0xFF;
     cpu->membus[0xFF4F] = 0xFF;
-    //cpu->membus[0xFF50] = 0xFE;
+    cpu->membus[0xFF50] = 0xFF;
     cpu->membus[0xFF51] = 0xFF;
     cpu->membus[0xFF52] = 0xFF;
     cpu->membus[0xFF53] = 0xFF;
@@ -125,7 +125,6 @@ void main_loop(struct cpu *cpu, char *rom_path)
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
 #endif
-    cpu->membus[0xFF50] = 0xFF;
 
     // Open ROM, get its size and and copy its content in MBC struct
     FILE *fptr = fopen(rom_path, "rb");
@@ -177,7 +176,6 @@ void main_loop(struct cpu *cpu, char *rom_path)
             cycle_count += 1;
         }
 
-        //cycle_count += next_op(cpu); // Remaining MCycles are ticked in instructions
         check_interrupt(cpu);
     }
 
@@ -225,9 +223,9 @@ void tick_m(struct cpu *cpu)
         cpu->div_timer = 0;
     }
 
-    uint8_t previous = *cpu->tima;
     if (*cpu->tac >> 2 & 0x01)
     {
+        uint8_t previous = *cpu->tima;
         int temp = 0;
         uint8_t clock = *cpu->tac & 0x03;
         switch (clock)
@@ -252,25 +250,19 @@ void tick_m(struct cpu *cpu)
             *cpu->tima += 1;
             cpu->tima_timer = 0;
         }
-    }
+        else
+            cpu->tima_timer += 1;
 
-    // Overflow
-    if (previous > *cpu->tima)
-    {
-        *cpu->tima = *cpu->tma;
-        set_if(cpu, 2);
+        // Overflow
+        if (previous > *cpu->tima)
+        {
+            *cpu->tima = *cpu->tma;
+            set_if(cpu, 2);
+        }
     }
 
     if (get_lcdc(cpu->ppu, 7))
         ppu_tick_m(cpu->ppu);
-    /*
-    else
-    {
-        cpu->ppu->oam_locked = 0;
-        cpu->ppu->vram_locked = 0;
-        ppu_reset(cpu->ppu);
-    }
-    */
 
     // Serial clock
     cpu->serial_clock += 4;
@@ -281,7 +273,10 @@ void tick_m(struct cpu *cpu)
         serial_transfer(cpu);
         --cpu->serial_acc;
         if (cpu->serial_acc == 0)
+        {
+            transfer_complete(cpu);
             set_if(cpu, 3);
+        }
         cpu->serial_clock = 0;
     }
 }
@@ -381,9 +376,26 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         cpu->membus[address] = new;
     }
 
+    // SC
+    else if (address == 0xFF02)
+    {
+        *cpu->sc = 0x7C | (val & 0x81);
+        write = 0;
+    }
+
     // DIV
     else if (address == 0xFF04)
+    {
         *cpu->div = 0;
+        write = 0;
+    }
+
+    // TAC
+    else if (address == 0xFF07)
+    {
+        *cpu->tac = 0xF8 | (val & 0x7);
+        write = 0;
+    }
 
     // IF
     else if (address == 0xFF0F)

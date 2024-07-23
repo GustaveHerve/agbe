@@ -14,5 +14,6 @@ static inline uint8_t get_transfer_enable(struct cpu *cpu)
 }
 
 void serial_transfer(struct cpu *cpu);
+void transfer_complete(struct cpu *cpu);
 
 #endif

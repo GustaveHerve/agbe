@@ -29,3 +29,5 @@ coredumps
 
 backup_scx
 diff
+
+vgcore*

@@ -1,0 +1,9 @@
+# Known leaks to ignore
+
+# SDL2
+leak:libSDL2
+
+# Various graphics drivers and X11 stuff.
+leak:libdbus
+leak:libnvidia-glcore
+leak:radeonsi_dri
