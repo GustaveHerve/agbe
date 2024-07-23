@@ -111,6 +111,7 @@ void main_loop(struct cpu *cpu, char *rom_path)
 {
     cpu->running = 1;
 
+#if 0
     // Enable bootrom
     cpu->membus[0xFF50] = 0xFE;
 
@@ -123,9 +124,11 @@ void main_loop(struct cpu *cpu, char *rom_path)
     }
     fread(cpu->membus, 1, 256, fptr);
     fclose(fptr);
+#endif
+    cpu->membus[0xFF50] = 0xFF;
 
     // Open ROM, get its size and and copy its content in MBC struct
-    fptr = fopen(rom_path, "rb");
+    FILE *fptr = fopen(rom_path, "rb");
     if (!fptr)
     {
         puts("Unable to find rom");
@@ -147,8 +150,15 @@ void main_loop(struct cpu *cpu, char *rom_path)
     size_t cycle_threshold = CYCLE_PER_FRAME / FRAMERATE;
     size_t cycle_count = 0;
     Uint64 start = SDL_GetPerformanceCounter();
-    while (cpu->running && cpu->regist->pc != 0x0150)
+
+    cpu->regist->pc = 0x0100;
+    init_hardware(cpu);
+
+    while (cpu->running)// && cpu->regist->pc != 0x0150)
     {
+        //if (cpu->regist->pc == 0x0100)
+        //    init_hardware(cpu);
+
         if (cycle_count >= cycle_threshold)
         {
             Uint64 end = SDL_GetPerformanceCounter();
@@ -167,10 +177,11 @@ void main_loop(struct cpu *cpu, char *rom_path)
             cycle_count += 1;
         }
 
-        cycle_count += next_op(cpu); // Remaining MCycles are ticked in instructions
+        //cycle_count += next_op(cpu); // Remaining MCycles are ticked in instructions
         check_interrupt(cpu);
     }
 
+#if 0
     //init_cpu(cpu, 0x0a);
     init_hardware(cpu);
     cpu->div_timer = 52;
@@ -197,6 +208,7 @@ void main_loop(struct cpu *cpu, char *rom_path)
 
         check_interrupt(cpu);
     }
+#endif
 }
 
 void tick_m(struct cpu *cpu)
