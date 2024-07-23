@@ -352,7 +352,11 @@ void ppu_reset(struct ppu *ppu)
     ppu->mode1_153th = 0;
     ppu->line_dot_count = 0;
 
-    *ppu->stat = 0x80;
+    ppu->oam_locked = 0;
+    ppu->vram_locked = 0;
+
+    *ppu->stat &= ~0x03;
+    check_lyc(ppu, 0);
 
     fetcher_reset(ppu->bg_fetcher);
     fetcher_reset(ppu->obj_fetcher);
@@ -360,7 +364,6 @@ void ppu_reset(struct ppu *ppu)
     queue_clear(ppu->obj_fifo);
     queue_clear(ppu->bg_fifo);
 
-    check_lyc(ppu, 0);
     lcd_off(ppu->cpu);
 }
 
