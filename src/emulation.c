@@ -406,8 +406,8 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         cpu->membus[address] = temp;
     }
 
-    tick_m(cpu);
-
     if (write)
         cpu->membus[address] = val;
+
+    tick_m(cpu);
 }
