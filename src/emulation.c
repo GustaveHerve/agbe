@@ -47,6 +47,7 @@ void init_hardware(struct cpu *cpu)
     cpu->membus[0xFF01] = 0x00;
     cpu->membus[0xFF02] = 0x7E;
     cpu->membus[0xFF04] = 0xAB;
+    cpu->internal_div = 0xAB00;
     cpu->membus[0xFF05] = 0x00;
     cpu->membus[0xFF06] = 0x00;
     cpu->membus[0xFF07] = 0xF8;
@@ -214,52 +215,7 @@ void tick_m(struct cpu *cpu)
     if (cpu->ime == 2)
         cpu->ime = 1;
 
-    if (!cpu->stop)
-        ++cpu->div_timer;
-
-    if (cpu->div_timer >= 64)
-    {
-        *cpu->div += 1;
-        cpu->div_timer = 0;
-    }
-
-    if (*cpu->tac >> 2 & 0x01)
-    {
-        uint8_t previous = *cpu->tima;
-        int temp = 0;
-        uint8_t clock = *cpu->tac & 0x03;
-        switch (clock)
-        {
-            case 0:
-                temp = 256;
-                break;
-            case 1:
-                temp = 4;
-                break;
-            case 2:
-                temp = 16;
-                break;
-            case 3:
-                temp = 64;
-                break;
-        }
-
-
-        if (cpu->tima_timer >= temp)
-        {
-            *cpu->tima += 1;
-            cpu->tima_timer = 0;
-        }
-        else
-            cpu->tima_timer += 1;
-
-        // Overflow
-        if (previous > *cpu->tima)
-        {
-            *cpu->tima = *cpu->tma;
-            set_if(cpu, 2);
-        }
-    }
+    update_timers(cpu);
 
     if (get_lcdc(cpu->ppu, 7))
         ppu_tick_m(cpu->ppu);
@@ -294,14 +250,14 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
     // BOOTROM mapping
     if (!(*cpu->boot & 0x01) && address <= 0x00FF)
     {
-        tick_m(cpu);
+        //tick_m(cpu);
         return cpu->membus[address];
     }
 
     // ROM
     else if (address <= 0x7FFF)
     {
-        tick_m(cpu);
+        //tick_m(cpu);
         return read_mbc_rom(cpu, address);
     }
 
@@ -315,7 +271,7 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
     // External RAM read
     else if (address >= 0xA000 && address <= 0xBFFF)
     {
-        tick_m(cpu);
+        //tick_m(cpu);
         return read_mbc_ram(cpu, address);
     }
 
@@ -326,8 +282,15 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
             return 0xFF;
     }
 
-    tick_m(cpu);
+    //tick_m(cpu);
     return cpu->membus[address];
+}
+
+uint8_t read_mem_tick(struct cpu *cpu, uint16_t address)
+{
+    uint8_t res = read_mem(cpu, address);
+    tick_m(cpu);
+    return res;
 }
 
 void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
@@ -386,7 +349,10 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
     // DIV
     else if (address == 0xFF04)
     {
+        cpu->internal_div = 0;
         *cpu->div = 0;
+        // TODO: handle TIMA increase falling edge
+        // TODO: handle disabling timer TIMA increase falling edge
         write = 0;
     }
 
@@ -444,35 +410,4 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
 
     if (write)
         cpu->membus[address] = val;
-}
-
-uint8_t read_mem_no_tick(struct cpu *cpu, uint16_t address)
-{
-    // BOOTROM mapping
-    if (!(*cpu->boot & 0x01) && address <= 0x00FF)
-        return cpu->membus[address];
-
-    // ROM
-    else if (address <= 0x7FFF)
-        return read_mbc_rom(cpu, address);
-
-    // VRAM
-    else if (address >= 0x8000 && address <= 0x9FFF)
-    {
-        if (cpu->ppu->vram_locked)
-            return 0xFF;
-    }
-
-    // External RAM read
-    else if (address >= 0xA000 && address <= 0xBFFF)
-        return read_mbc_ram(cpu, address);
-
-    // OAM
-    else if (address >= 0xFE00 && address <= 0xFEFF)
-    {
-        if (cpu->ppu->oam_locked)
-            return 0xFF;
-    }
-
-    return cpu->membus[address];
 }

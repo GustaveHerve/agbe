@@ -7,7 +7,7 @@
 // x18	3 MCycle
 int jr_e8(struct cpu *cpu)
 {
-	int8_t e = read_mem(cpu, cpu->regist->pc);
+	int8_t e = read_mem_tick(cpu, cpu->regist->pc);
 	++cpu->regist->pc;
     tick_m(cpu);
 	cpu->regist->pc = cpu->regist->pc + e;
@@ -17,7 +17,7 @@ int jr_e8(struct cpu *cpu)
 // jr cc e (signed 8 bit)
 int jr_cc_e8(struct cpu *cpu, int cc)
 {
-    int8_t e = read_mem(cpu, cpu->regist->pc);
+    int8_t e = read_mem_tick(cpu, cpu->regist->pc);
     ++cpu->regist->pc;
     if (cc)
     {
@@ -32,9 +32,9 @@ int jr_cc_e8(struct cpu *cpu, int cc)
 // xC9   4 MCycles
 int ret(struct cpu *cpu)
 {
-    uint8_t lo = read_mem(cpu, cpu->regist->sp);
+    uint8_t lo = read_mem_tick(cpu, cpu->regist->sp);
     ++cpu->regist->sp;
-    uint8_t hi  = read_mem(cpu, cpu->regist->sp);
+    uint8_t hi  = read_mem_tick(cpu, cpu->regist->sp);
     ++cpu->regist->sp;
     tick_m(cpu);
     cpu->regist->pc = convert_8to16(&hi, &lo);
@@ -48,9 +48,9 @@ int ret_cc(struct cpu *cpu, int cc)
     tick_m(cpu);
     if (cc)
     {
-        uint8_t lo = read_mem(cpu, cpu->regist->sp);
+        uint8_t lo = read_mem_tick(cpu, cpu->regist->sp);
         ++cpu->regist->sp;
-        uint8_t hi  = read_mem(cpu, cpu->regist->sp);
+        uint8_t hi  = read_mem_tick(cpu, cpu->regist->sp);
         ++cpu->regist->sp;
         tick_m(cpu);
         cpu->regist->pc = convert_8to16(&hi, &lo);
@@ -79,9 +79,9 @@ int jp_hl(struct cpu *cpu)
 
 int jp_nn(struct cpu *cpu)
 {
-    uint8_t lo = read_mem(cpu, cpu->regist->pc);
+    uint8_t lo = read_mem_tick(cpu, cpu->regist->pc);
     ++cpu->regist->pc;
-    uint8_t hi = read_mem(cpu, cpu->regist->pc);
+    uint8_t hi = read_mem_tick(cpu, cpu->regist->pc);
     uint16_t address = convert_8to16(&hi, &lo);
     tick_m(cpu);
     cpu->regist->pc = address;
@@ -90,9 +90,9 @@ int jp_nn(struct cpu *cpu)
 
 int jp_cc_nn(struct cpu *cpu, int cc)
 {
-    uint8_t lo = read_mem(cpu, cpu->regist->pc);
+    uint8_t lo = read_mem_tick(cpu, cpu->regist->pc);
     ++cpu->regist->pc;
-    uint8_t hi = read_mem(cpu, cpu->regist->pc);
+    uint8_t hi = read_mem_tick(cpu, cpu->regist->pc);
     ++cpu->regist->pc;
     uint16_t address = convert_8to16(&hi, &lo);
     if (cc)
@@ -106,9 +106,9 @@ int jp_cc_nn(struct cpu *cpu, int cc)
 
 int call_nn(struct cpu *cpu)
 {
-    uint8_t lo = read_mem(cpu, cpu->regist->pc);
+    uint8_t lo = read_mem_tick(cpu, cpu->regist->pc);
     ++cpu->regist->pc;
-    uint8_t hi = read_mem(cpu, cpu->regist->pc);
+    uint8_t hi = read_mem_tick(cpu, cpu->regist->pc);
     uint16_t nn = convert_8to16(&hi, &lo);
     ++cpu->regist->pc;
     tick_m(cpu);
@@ -122,9 +122,9 @@ int call_nn(struct cpu *cpu)
 
 int call_cc_nn(struct cpu *cpu, int cc)
 {
-    uint8_t lo = read_mem(cpu, cpu->regist->pc);
+    uint8_t lo = read_mem_tick(cpu, cpu->regist->pc);
     ++cpu->regist->pc;
-    uint8_t hi = read_mem(cpu, cpu->regist->pc);
+    uint8_t hi = read_mem_tick(cpu, cpu->regist->pc);
     uint16_t nn = convert_8to16(&hi, &lo);
     ++cpu->regist->pc;
     if (cc)

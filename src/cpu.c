@@ -10,6 +10,9 @@
 
 #define MEMBUS_SIZE 65536 // In bytes
 
+#define TAC_TIMER_ENABLED (0x1 << 2)
+#define TAC_CLOCK_SELECT 0x3
+
 int get_ie(struct cpu *cpu, int bit);
 
 void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
@@ -32,8 +35,8 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
     cpu->halt = 0;
     cpu->stop = 0;
 
-    cpu->div_timer = 0;
-    cpu->tima_timer = 0;
+    cpu->previous_div = 0;
+    cpu->internal_div = 0;
     cpu->serial_clock = 0;
     cpu->serial_acc = 0;
 
@@ -41,7 +44,6 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
     cpu->joyp_a = 0xFF;
     cpu->joyp_d = 0xFF;
 
-    //Values BEFORE bootrom
     cpu->regist->a = 0x00;
     cpu->regist->f = 0x00;
     cpu->regist->b = 0x00;
@@ -57,6 +59,9 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
     *cpu->tima = 0x00;
     *cpu->tma = 0x00;
     *cpu->tac = 0x00;
+
+    cpu->disabling_timer = 0;
+    cpu->schedule_tima_overflow = 0;
 
     cpu->boot = &cpu->membus[0xFF50];
 
@@ -88,7 +93,47 @@ void cpu_free(struct cpu *todelete)
 	free(todelete);
 }
 
-//Interrupt handling
+static unsigned int clock_masks[] = { 1 << 9, 1 << 3, 1 << 5, 1 << 7 };
+
+void update_timers(struct cpu *cpu)
+{
+    if (cpu->schedule_tima_overflow)
+    {
+        set_if(cpu, 2);
+        *cpu->tima = *cpu->tma;
+        cpu->schedule_tima_overflow = 0;
+    }
+
+    if (!cpu->stop)
+    {
+        cpu->internal_div += 4;
+        *cpu->div = cpu->internal_div >> 8;
+    }
+
+    uint8_t previous_tima = *cpu->tima;
+    unsigned int selected_clock = *cpu->tac & TAC_CLOCK_SELECT;
+    unsigned int clock_mask = clock_masks[selected_clock];
+    if (*cpu->tac & TAC_TIMER_ENABLED || cpu->disabling_timer)
+    {
+        /* Increase TIMA on falling edge */
+        if (cpu->disabling_timer)
+        {
+            /* Handle TIMA increment quirk when disabling timer in TAC */
+            if (cpu->previous_div & clock_mask)
+                ++(*cpu->tima);
+            cpu->disabling_timer = 0;
+        }
+        else if ((cpu->previous_div & clock_mask) && !(cpu->internal_div & clock_mask))
+            ++(*cpu->tima);
+
+        /* TIMA Overflow */
+        if (previous_tima > *cpu->tima)
+            cpu->schedule_tima_overflow = 1; /* Schedule an interrupt for next Mcycle*/
+    }
+
+    cpu->previous_div = cpu->internal_div;
+}
+
 int check_interrupt(struct cpu *cpu)
 {
     if (!cpu->halt && !cpu->ime)
@@ -122,6 +167,9 @@ int check_interrupt(struct cpu *cpu)
     return 1;
 }
 
+                                /* VBlank, LCD STAT, Timer, Serial, Joypad */
+static unsigned int handler_vectors[] = { 0x40, 0x48, 0x50, 0x58, 0x60 };
+
 int handle_interrupt(struct cpu *cpu, int bit)
 {
     clear_if(cpu, bit);
@@ -134,31 +182,7 @@ int handle_interrupt(struct cpu *cpu, int bit)
     write_mem(cpu, cpu->regist->sp, hi);
     --cpu->regist->sp;
     write_mem(cpu, cpu->regist->sp, lo);
-    uint16_t handler = 0;
-    switch (bit)
-    {
-        // VBlank
-        case 0:
-            handler = 0x40;
-            break;
-        // LCD STAT
-        case 1:
-            handler = 0x48;
-            break;
-        // Timer
-        case 2:
-            handler = 0x50;
-            break;
-        // Serial
-        case 3:
-            handler = 0x58;
-            break;
-        // Joypad
-        case 4:
-            handler = 0x60;
-            break;
-
-    }
+    uint16_t handler = handler_vectors[bit];
     cpu->regist->pc = handler;
     tick_m(cpu);
     return 1;

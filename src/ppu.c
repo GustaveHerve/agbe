@@ -694,7 +694,7 @@ void ppu_tick_m(struct ppu *ppu)
     else if (ppu->dma == 1)
     {
         ppu->cpu->membus[0xFE00 + ppu->dma_acc] =
-            read_mem_no_tick(ppu->cpu, (ppu->dma_source << 8) + ppu->dma_acc);
+            read_mem(ppu->cpu, (ppu->dma_source << 8) + ppu->dma_acc);
         ++ppu->dma_acc;
         if (ppu->dma_acc >= 160)
             ppu->dma = 0;

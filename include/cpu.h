@@ -33,16 +33,19 @@ struct cpu
     uint8_t *ie;
     uint8_t *_if;
 
+    uint16_t previous_div;
+    uint16_t internal_div;
     uint8_t *div;
     uint8_t *tima;
     uint8_t *tma;
     uint8_t *tac;
 
+    uint8_t disabling_timer;
+    uint8_t schedule_tima_overflow;
+
     int halt;
     int stop;
 
-    int div_timer;
-    int tima_timer;
     uint16_t serial_clock;
     uint8_t serial_acc;
 
@@ -60,6 +63,8 @@ struct cpu
 void cpu_init(struct cpu *new_cpu, struct renderer *rend, char *rom_path);
 void cpu_start(struct cpu *cpu);
 void cpu_free(struct cpu *todelete);
+
+void update_timers(struct cpu *cpu);
 
 // Interrupts
 int check_interrupt(struct cpu *cpu);

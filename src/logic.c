@@ -20,7 +20,7 @@ int inc_hl(struct cpu *cpu)
 {
 	set_n(cpu->regist, 0);
 	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-	uint8_t value = read_mem(cpu, address);
+	uint8_t value = read_mem_tick(cpu, address);
 	hflag_add_set(cpu->regist, value, 1);
     ++value;
     write_mem(cpu, address, value);
@@ -68,7 +68,7 @@ int dec_hl(struct cpu *cpu)
 {
 	set_n(cpu->regist, 1);
 	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-	uint8_t value = read_mem(cpu, address);
+	uint8_t value = read_mem_tick(cpu, address);
     hflag_sub_set(cpu->regist, value, 1);
     --value;
     write_mem(cpu, address, value);
@@ -117,7 +117,7 @@ int add_a_hl(struct cpu *cpu)
 {
     set_n(cpu->regist, 0);
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t val = read_mem(cpu, address);
+    uint8_t val = read_mem_tick(cpu, address);
     hflag_add_set(cpu->regist, cpu->regist->a, val);
     cflag_add_set(cpu->regist, cpu->regist->a, val);
     cpu->regist->a += val;
@@ -129,7 +129,7 @@ int add_a_hl(struct cpu *cpu)
 // xC6   2 MCycle
 int add_a_n(struct cpu *cpu)
 {
-    uint8_t n = read_mem(cpu, cpu->regist->pc);
+    uint8_t n = read_mem_tick(cpu, cpu->regist->pc);
     set_n(cpu->regist, 0);
     hflag_add_set(cpu->regist, cpu->regist->a, n);
     cflag_add_set(cpu->regist, cpu->regist->a, n);
@@ -168,7 +168,7 @@ int adc_a_hl(struct cpu *cpu)
     uint8_t a_copy = cpu->regist->a;
     set_n(cpu->regist, 0);
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t val = read_mem(cpu, address);
+    uint8_t val = read_mem_tick(cpu, address);
     int temp = cpu->regist->a + val;
     cpu->regist->a += val;
     if (get_c(cpu->regist))
@@ -189,7 +189,7 @@ int adc_a_hl(struct cpu *cpu)
 int adc_a_n(struct cpu *cpu)
 {
     uint8_t a_copy = cpu->regist->a;
-    uint8_t val = read_mem(cpu, cpu->regist->pc);
+    uint8_t val = read_mem_tick(cpu, cpu->regist->pc);
     set_n(cpu->regist, 0);
     int temp = cpu->regist->a + val;
     cpu->regist->a += val;
@@ -242,7 +242,7 @@ int add_hl_sp(struct cpu *cpu)
 
 int add_sp_e8(struct cpu *cpu)
 {
-    int8_t offset = read_mem(cpu, cpu->regist->pc);
+    int8_t offset = read_mem_tick(cpu, cpu->regist->pc);
     uint8_t lo = regist_lo(&cpu->regist->sp);
     tick_m(cpu);
     cflag_add_set(cpu->regist, lo, offset);
@@ -272,7 +272,7 @@ int sub_a_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     set_n(cpu->regist, 1);
-    uint8_t val = read_mem(cpu, address);
+    uint8_t val = read_mem_tick(cpu, address);
     cflag_sub_set(cpu->regist, cpu->regist->a, val);
     hflag_sub_set(cpu->regist, cpu->regist->a, val);
     cpu->regist->a -= val;
@@ -282,7 +282,7 @@ int sub_a_hl(struct cpu *cpu)
 
 int sub_a_n(struct cpu *cpu)
 {
-    uint8_t n = read_mem(cpu, cpu->regist->pc);
+    uint8_t n = read_mem_tick(cpu, cpu->regist->pc);
     set_n(cpu->regist, 1);
     cflag_sub_set(cpu->regist, cpu->regist->a, n);
     hflag_sub_set(cpu->regist, cpu->regist->a, n);
@@ -318,7 +318,7 @@ int sbc_a_hl(struct cpu *cpu)
     uint8_t a_copy = cpu->regist->a;
     set_n(cpu->regist, 1);
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    uint8_t val = read_mem(cpu, address);
+    uint8_t val = read_mem_tick(cpu, address);
     cpu->regist->a -= val;
     if (get_c(cpu->regist))
     {
@@ -338,7 +338,7 @@ int sbc_a_n(struct cpu *cpu)
 {
     uint8_t a_copy = cpu->regist->a;
     set_n(cpu->regist, 1);
-    uint8_t val = read_mem(cpu, cpu->regist->pc);
+    uint8_t val = read_mem_tick(cpu, cpu->regist->pc);
     cpu->regist->a -= val;
     if (get_c(cpu->regist))
     {
@@ -370,7 +370,7 @@ int and_a_r(struct cpu *cpu, uint8_t *src)
 int and_a_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    cpu->regist->a = cpu->regist->a & read_mem(cpu, address);
+    cpu->regist->a = cpu->regist->a & read_mem_tick(cpu, address);
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 1);
     set_c(cpu->regist, 0);
@@ -382,7 +382,7 @@ int and_a_hl(struct cpu *cpu)
 // xE6   2 MCycle
 int and_a_n(struct cpu *cpu)
 {
-    uint8_t n = read_mem(cpu, cpu->regist->pc);
+    uint8_t n = read_mem_tick(cpu, cpu->regist->pc);
     cpu->regist->a = cpu->regist->a & n;
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 1);
@@ -409,7 +409,7 @@ int xor_a_r(struct cpu *cpu, uint8_t *src)
 int xor_a_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    cpu->regist->a = cpu->regist->a ^ read_mem(cpu, address);
+    cpu->regist->a = cpu->regist->a ^ read_mem_tick(cpu, address);
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 0);
     set_c(cpu->regist, 0);
@@ -421,7 +421,7 @@ int xor_a_hl(struct cpu *cpu)
 // xEE   2 MCycle
 int xor_a_n(struct cpu *cpu)
 {
-    uint8_t n = read_mem(cpu, cpu->regist->pc);
+    uint8_t n = read_mem_tick(cpu, cpu->regist->pc);
     cpu->regist->a = cpu->regist->a ^ n;
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 0);
@@ -448,7 +448,7 @@ int or_a_r(struct cpu *cpu, uint8_t *src)
 int or_a_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-    cpu->regist->a = cpu->regist->a | read_mem(cpu, address);
+    cpu->regist->a = cpu->regist->a | read_mem_tick(cpu, address);
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 0);
     set_c(cpu->regist, 0);
@@ -460,7 +460,7 @@ int or_a_hl(struct cpu *cpu)
 // xF6   2 MCycle
 int or_a_n(struct cpu *cpu)
 {
-    uint8_t n = read_mem(cpu, cpu->regist->pc);
+    uint8_t n = read_mem_tick(cpu, cpu->regist->pc);
     cpu->regist->a = cpu->regist->a | n;
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 0);
@@ -487,7 +487,7 @@ int cp_a_hl(struct cpu *cpu)
 {
     uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     set_n(cpu->regist, 1);
-    uint8_t val = read_mem(cpu, address);
+    uint8_t val = read_mem_tick(cpu, address);
     cflag_sub_set(cpu->regist, cpu->regist->a, val);
     hflag_sub_set(cpu->regist, cpu->regist->a, val);
     set_z(cpu->regist, cpu->regist->a == val);
@@ -498,7 +498,7 @@ int cp_a_hl(struct cpu *cpu)
 // xFE   2 MCycle
 int cp_a_n(struct cpu *cpu)
 {
-    uint8_t n = read_mem(cpu, cpu->regist->pc);
+    uint8_t n = read_mem_tick(cpu, cpu->regist->pc);
     ++cpu->regist->pc;
     set_n(cpu->regist, 1);
     cflag_sub_set(cpu->regist, cpu->regist->a, n);
