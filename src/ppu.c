@@ -7,12 +7,6 @@
 #include "queue.h"
 #include "rendering.h"
 
-int get_lcdc(struct ppu *ppu, int bit)
-{
-    uint8_t lcdc = *ppu->lcdc;
-    return (lcdc >> bit & 0x01);
-}
-
 // obj_index == -1 means BG/Win Mode
 uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
 {
@@ -27,13 +21,13 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
             x_part = ppu->win_lx / 8;
             ppu->win_lx += 8;
             y_part = ppu->win_ly / 8;
-            bit = 6;
+            bit = LCDC_WINDOW_TILE_MAP;
         }
         else
         {
             x_part =  ((uint8_t) (ppu->bg_fetcher->lx_save + *ppu->scx)) / 8;
             y_part =  ((uint8_t) (*ppu->ly + *ppu->scy)) / 8;
-            bit = 3;
+            bit = LCDC_BG_TILE_MAP;
         }
 
         uint16_t address = (0x13 << 11) | (get_lcdc(ppu, bit) << 10)
@@ -55,7 +49,7 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
             ppu->obj_fetcher->attributes = *(ppu->obj_slots[obj_index].oam_address + 3);
         }
 
-        if (get_lcdc(ppu, 2))
+        if (get_lcdc(ppu, LCDC_OBJ_SIZE))
         {
             uint8_t cond = !bottom_part;
             if ((ppu->obj_fetcher->attributes >> 6) & 0x01)
@@ -89,12 +83,12 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
     else if (ppu->win_mode)
     {
         y_part = ppu->win_ly % 8;
-        bit_12 = !(get_lcdc(ppu, 4) | (tileid & 0x80));
+        bit_12 = !(get_lcdc(ppu, LCDC_BG_WINDOW_TILES) | (tileid & 0x80));
     }
     else
     {
         y_part = (uint8_t)(((*ppu->ly + *ppu->scy)) % 8);
-        bit_12 = !(get_lcdc(ppu, 4) | (tileid & 0x80));
+        bit_12 = !(get_lcdc(ppu, LCDC_BG_WINDOW_TILES) | (tileid & 0x80));
     }
 
 
@@ -134,12 +128,12 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
     else if (ppu->win_mode)
     {
         y_part = ppu->win_ly % 8;
-        bit_12 = !(get_lcdc(ppu, 4) | (tileid & 0x80));
+        bit_12 = !(get_lcdc(ppu, LCDC_BG_WINDOW_TILES) | (tileid & 0x80));
     }
     else
     {
         y_part = (uint8_t)(((*ppu->ly + *ppu->scy)) % 8);
-        bit_12 = !(get_lcdc(ppu, 4) | (tileid & 0x80));
+        bit_12 = !(get_lcdc(ppu, LCDC_BG_WINDOW_TILES) | (tileid & 0x80));
     }
 
     uint16_t address_high = (0x4 << 13) | (bit_12 << 12) |
@@ -378,7 +372,7 @@ int oam_scan(struct ppu *ppu)
     {
         // 8x16 (LCDC bit 2 = 1) or 8x8 (LCDC bit 2 = 0)
         // TODO: obj_y + 1 != 0 is weird ? check this
-        int y_max_offset = get_lcdc(ppu, 2) ? 16 : 8;
+        int y_max_offset = get_lcdc(ppu, LCDC_OBJ_SIZE) ? 16 : 8;
         if (*(obj_y + 1) != 0 && *ppu->ly + 16 >= *obj_y
                 && *ppu->ly + 16 < *obj_y + y_max_offset)
         {
@@ -528,7 +522,7 @@ uint8_t mode3_handler(struct ppu *ppu)
     // Check for object if we are not already treating one
     int obj = -1;
     int bottom_part = 0;
-    if (ppu->obj_fetcher->obj_index == -1 && get_lcdc(ppu, 1))
+    if (ppu->obj_fetcher->obj_index == -1 && get_lcdc(ppu, LCDC_OBJ_ENABLE))
     {
         obj = on_object(ppu,  &bottom_part);
         if (obj > -1)

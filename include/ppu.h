@@ -6,6 +6,15 @@
 #include "queue.h"
 #include "rendering.h"
 
+#define LCDC_BG_WINDOW_ENABLE   0
+#define LCDC_OBJ_ENABLE         1
+#define LCDC_OBJ_SIZE           2
+#define LCDC_BG_TILE_MAP        3
+#define LCDC_BG_WINDOW_TILES    4
+#define LCDC_WINDOW_ENABLE      5
+#define LCDC_WINDOW_TILE_MAP    6
+#define LCDC_LCD_PPU_ENABLE     7
+
 struct fetcher
 {
     int obj_index;    //Used if PPU in OBJ mode
@@ -82,6 +91,10 @@ void ppu_reset(struct ppu *ppu);
 
 void ppu_tick_m(struct ppu *ppu);
 
-int get_lcdc(struct ppu *ppu, int bit);
+static inline int get_lcdc(struct ppu *ppu, int bit)
+{
+    uint8_t lcdc = *ppu->lcdc;
+    return (lcdc >> bit & 0x01);
+}
 
 #endif

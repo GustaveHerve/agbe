@@ -46,7 +46,7 @@ struct cpu
     int halt;
     int stop;
 
-    uint16_t serial_clock;
+    uint8_t serial_clock;
     uint8_t serial_acc;
 
     struct mbc *mbc;

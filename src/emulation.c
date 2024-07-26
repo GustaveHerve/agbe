@@ -194,25 +194,10 @@ void tick_m(struct cpu *cpu)
         cpu->ime = 1;
 
     update_timers(cpu);
+    update_serial(cpu);
 
-    if (get_lcdc(cpu->ppu, 7))
+    if (get_lcdc(cpu->ppu, LCDC_LCD_PPU_ENABLE))
         ppu_tick_m(cpu->ppu);
-
-    // Serial clock
-    cpu->serial_clock += 4;
-    if (get_transfer_enable(cpu) && get_clock_select(cpu) && cpu->serial_clock == 512)
-    {
-        if (cpu->serial_acc == 0)
-            cpu->serial_acc = 8;
-        serial_transfer(cpu);
-        --cpu->serial_acc;
-        if (cpu->serial_acc == 0)
-        {
-            transfer_complete(cpu);
-            set_if(cpu, 3);
-        }
-        cpu->serial_clock = 0;
-    }
 }
 
 uint8_t read_mem(struct cpu *cpu, uint16_t address)

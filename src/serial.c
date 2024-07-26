@@ -1,12 +1,32 @@
 #include "cpu.h"
+#include "serial.h"
 #include <stddef.h>
 
-void serial_transfer(struct cpu *cpu)
+static void transfer_complete(struct cpu *cpu)
 {
-    *cpu->sb = 0x81;
+    *cpu->sc &= ~0x80;
 }
 
-void transfer_complete(struct cpu *cpu)
+void update_serial(struct cpu *cpu)
 {
-    *cpu->sb &= ~0x80;
+    uint8_t previous_serial_clock = cpu->serial_clock;
+    cpu->serial_clock += 4;
+    /* Bit 7 falling edge detection */
+    if (previous_serial_clock >> 7 && !(cpu->serial_clock >> 7))
+    {
+        if (get_clock_select(cpu))
+        {
+            *cpu->sb <<= 1; /* Shift bit out */
+            *cpu->sb |= 1;  /* Simulate no slave GameBoy connected, receiving $FF */
+            ++cpu->serial_acc;
+        }
+    }
+
+    if (get_transfer_enable(cpu) && cpu->serial_acc == 8)
+    {
+        transfer_complete(cpu);
+        set_if(cpu, 3); 
+    }
+
+    cpu->serial_acc %= 8;
 }

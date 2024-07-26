@@ -53,7 +53,7 @@ uint8_t slice_xflip(uint8_t slice)
 
 int on_window(struct ppu *ppu)
 {
-    return get_lcdc(ppu, 0) && get_lcdc(ppu, 5) && ppu->wy_trigger && ppu->lx == *ppu->wx + 1;
+    return get_lcdc(ppu, LCDC_BG_WINDOW_ENABLE) && get_lcdc(ppu, LCDC_WINDOW_ENABLE) && ppu->wy_trigger && ppu->lx == *ppu->wx + 1;
 }
 
 int on_object(struct ppu *ppu, int *bottom_part)
@@ -65,7 +65,7 @@ int on_object(struct ppu *ppu, int *bottom_part)
             continue;
 
         // 8x16 (LCDC bit 2 = 1) or 8x8 (LCDC bit 2 = 0)
-        int y_max_offset = get_lcdc(ppu, 2) ? 16 : 8;
+        int y_max_offset = get_lcdc(ppu, LCDC_OBJ_SIZE) ? 16 : 8;
         if (ppu->obj_slots[i].x == ppu->lx &&
             *ppu->ly + 16 >= ppu->obj_slots[i].y &&
             *ppu->ly + 16 < ppu->obj_slots[i].y + y_max_offset)
@@ -90,9 +90,9 @@ struct pixel select_pixel(struct ppu *ppu)
     if (queue_isempty(ppu->obj_fifo))
         return bg_p;
     struct pixel obj_p = queue_pop(ppu->obj_fifo);
-    if (!get_lcdc(ppu, 0))
+    if (!get_lcdc(ppu, LCDC_BG_WINDOW_ENABLE))
         return obj_p;
-    if (!get_lcdc(ppu, 1))
+    if (!get_lcdc(ppu, LCDC_OBJ_ENABLE))
         return bg_p;
     if (obj_p.priority && bg_p.color != 0)
         return bg_p;
@@ -110,7 +110,7 @@ int push_slice(struct ppu *ppu, struct queue *q, uint8_t hi, uint8_t lo, int obj
     {
         struct pixel p = make_pixel(hi, lo, i, attributes, obj_i);
         //TODO verify this
-        if (!get_lcdc(ppu, 0))
+        if (!get_lcdc(ppu, LCDC_BG_WINDOW_ENABLE))
             p.color = 0;
         push_pixel(q, p);
     }

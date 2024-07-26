@@ -37,6 +37,7 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
 
     cpu->previous_div = 0;
     cpu->internal_div = 0;
+
     cpu->serial_clock = 0;
     cpu->serial_acc = 0;
 
