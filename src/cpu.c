@@ -69,19 +69,29 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
     cpu->sc = &cpu->membus[0xFF02];
 }
 
-//Set registers' default values AFTER boot rom
-void cpu_init_regist(struct cpu *cpu)
+void cpu_init_registers(struct cpu *cpu, int checksum)
 {
     cpu->regist->a = 0x01;
-    cpu->regist->f = 0xB0;
+    set_z(cpu->regist, 1);
+    set_n(cpu->regist, 0);
+    if (checksum == 0x00)
+    {
+        set_h(cpu->regist, 0);
+        set_c(cpu->regist, 0);
+    }
+    else
+    {
+        set_h(cpu->regist, 1);
+        set_c(cpu->regist, 1);
+    }
     cpu->regist->b = 0x00;
     cpu->regist->c = 0x13;
     cpu->regist->d = 0x00;
     cpu->regist->e = 0xD8;
     cpu->regist->h = 0x01;
     cpu->regist->l = 0x4D;
-    cpu->regist->sp = 0xFFFE;
     cpu->regist->pc = 0x0100;
+    cpu->regist->sp = 0xFFFE;
 }
 
 void cpu_free(struct cpu *todelete)

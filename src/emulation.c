@@ -16,31 +16,6 @@
 #define CYCLE_PER_FRAME 1048576.0f
 #define FRAMERATE 60.0f
 
-void init_cpu(struct cpu *cpu, int checksum)
-{
-    cpu->regist->a = 0x01;
-    set_z(cpu->regist, 1);
-    set_n(cpu->regist, 0);
-    if (checksum == 0x00)
-    {
-        set_h(cpu->regist, 0);
-        set_c(cpu->regist, 0);
-    }
-    else
-    {
-        set_h(cpu->regist, 1);
-        set_c(cpu->regist, 1);
-    }
-    cpu->regist->b = 0x00;
-    cpu->regist->c = 0x13;
-    cpu->regist->d = 0x00;
-    cpu->regist->e = 0xD8;
-    cpu->regist->h = 0x01;
-    cpu->regist->l = 0x4D;
-    cpu->regist->pc = 0x0100;
-    cpu->regist->sp = 0xFFFE;
-}
-
 void init_hardware(struct cpu *cpu)
 {
     cpu->membus[0xFF00] = 0xCF;
@@ -142,6 +117,8 @@ void main_loop(struct cpu *cpu, char *rom_path)
     fread(rom, 1, fsize, fptr);
     fclose(fptr);
 
+    uint8_t checksum = rom[0x14d];
+
     // Init MBC / cartridge info and fill rom in buffer
     set_mbc(cpu, rom);
 
@@ -152,6 +129,7 @@ void main_loop(struct cpu *cpu, char *rom_path)
     Uint64 start = SDL_GetPerformanceCounter();
 
     cpu->regist->pc = 0x0100;
+    cpu_init_registers(cpu, checksum);
     init_hardware(cpu);
 
     while (cpu->running)// && cpu->regist->pc != 0x0150)
@@ -249,17 +227,11 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
 
     // BOOTROM mapping
     if (!(*cpu->boot & 0x01) && address <= 0x00FF)
-    {
-        //tick_m(cpu);
         return cpu->membus[address];
-    }
 
     // ROM
     else if (address <= 0x7FFF)
-    {
-        //tick_m(cpu);
         return read_mbc_rom(cpu, address);
-    }
 
     // VRAM
     else if (address >= 0x8000 && address <= 0x9FFF)
@@ -270,10 +242,11 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
 
     // External RAM read
     else if (address >= 0xA000 && address <= 0xBFFF)
-    {
-        //tick_m(cpu);
         return read_mbc_ram(cpu, address);
-    }
+
+    // Echo RAM
+    else if (address >= 0xE000 && address <= 0xFDFF)
+        return cpu->membus[address - 0x2000];
 
     // OAM
     else if (address >= 0xFE00 && address <= 0xFEFF)
@@ -282,7 +255,6 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
             return 0xFF;
     }
 
-    //tick_m(cpu);
     return cpu->membus[address];
 }
 
@@ -315,6 +287,10 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         write = 0;
         write_mbc(cpu, address, val);
     }
+
+    // Echo RAM
+    else if (address >= 0xE000 && address <= 0xFDFF)
+        address -= 0x2000;
 
     // OAM
     else if (address >= 0xFE00 && address <= 0xFEFF)
@@ -351,8 +327,6 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
     {
         cpu->internal_div = 0;
         *cpu->div = 0;
-        // TODO: handle TIMA increase falling edge
-        // TODO: handle disabling timer TIMA increase falling edge
         write = 0;
     }
 

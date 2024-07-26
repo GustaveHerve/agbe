@@ -64,6 +64,8 @@ void cpu_init(struct cpu *new_cpu, struct renderer *rend, char *rom_path);
 void cpu_start(struct cpu *cpu);
 void cpu_free(struct cpu *todelete);
 
+void cpu_init_registers(struct cpu *cpu, int checksum);
+
 void update_timers(struct cpu *cpu);
 
 // Interrupts

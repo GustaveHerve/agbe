@@ -14,8 +14,9 @@ int nop(void)
 int stop(struct cpu *cpu)
 {
     cpu->stop = 1;
-    // Reset DIV Timer
+    /* Reset DIV Timer */
     *cpu->div = 0;
+    cpu->internal_div = 0;
 	return 1;
 }
 
