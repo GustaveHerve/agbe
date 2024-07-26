@@ -8,6 +8,7 @@
 #include "prefix.h"
 #include "emulation.h"
 #include "disassembler.h"
+#include <err.h>
 
 int next_op(struct cpu *cpu)
 {
@@ -751,7 +752,7 @@ int next_op(struct cpu *cpu)
             mcycles = rst(cpu, 0x38);
             break;
         default:
-            //TODO undefined opcode behaviour ?
+            errx(-2, "ERROR: undefined opcode at PC=0x%X, closing emulator...", cpu->regist->pc - 1);
             break;
     }
     return mcycles;

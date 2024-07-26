@@ -18,7 +18,7 @@ OBJ = src/control.o \
 	  src/queue.o \
 	  src/rendering.o \
 	  src/rotshift.o \
-	  src/test.o \
+	  src/main.o \
 	  src/save.o \
 	  src/serial.o \
 	  src/apu.o
