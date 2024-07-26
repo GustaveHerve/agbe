@@ -1,4 +1,5 @@
 #include "cpu.h"
+#include "interrupts.h"
 #include "serial.h"
 #include <stddef.h>
 
@@ -25,7 +26,7 @@ void update_serial(struct cpu *cpu)
     if (get_transfer_enable(cpu) && cpu->serial_acc == 8)
     {
         transfer_complete(cpu);
-        set_if(cpu, 3); 
+        set_if(cpu, INTERRUPT_SERIAL); 
     }
 
     cpu->serial_acc %= 8;

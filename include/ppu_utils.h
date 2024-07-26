@@ -22,7 +22,6 @@ struct obj
     uint8_t done;
 };
 
-
 // on_window: read LX and LY and check if drawing in Window or BG
 int on_window(struct ppu *ppu);
 
@@ -42,12 +41,5 @@ uint8_t slice_xflip(uint8_t slice);
 int merge_obj(struct ppu *ppu, uint8_t hi, uint8_t lo, int obj_i);
 
 void check_lyc(struct ppu *ppu, int line_153);
-
-// STAT
-void set_stat(struct ppu *ppu, int bit);
-
-int get_stat(struct ppu *ppu, int bit);
-
-void clear_stat(struct ppu *ppu, int bit);
 
 #endif

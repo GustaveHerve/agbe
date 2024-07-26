@@ -6,6 +6,7 @@
 #include <math.h>
 #include <err.h>
 #include "cpu.h"
+#include "interrupts.h"
 #include "ppu.h"
 #include "utils.h"
 #include "disassembler.h"

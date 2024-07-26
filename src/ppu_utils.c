@@ -1,24 +1,9 @@
 #include <stdlib.h>
 #include "cpu.h"
+#include "interrupts.h"
 #include "ppu_utils.h"
 #include "queue.h"
 #include "ppu.h"
-
-// STAT utils
-void set_stat(struct ppu *ppu, int bit)
-{
-    *ppu->stat = *ppu->stat | (0x01 << bit);
-}
-
-int get_stat(struct ppu *ppu, int bit)
-{
-    return (*ppu->stat >> bit) & 0x01;
-}
-
-void clear_stat(struct ppu *ppu, int bit)
-{
-    *ppu->stat = *ppu->stat & ~(0x01 << bit);
-}
 
 // Pixel and slice utils
 struct pixel make_pixel(uint8_t hi, uint8_t lo, int i, uint8_t *attributes, int obj_i)
@@ -155,11 +140,11 @@ void check_lyc(struct ppu *ppu, int line_153)
 {
     if (*ppu->ly == *ppu->lyc)
     {
-        set_stat(ppu, 2);
+        set_stat(ppu, STAT_LYC_EQUAL_LY);
         if (line_153 && ppu->line_dot_count == 12 && get_stat(ppu, 6))
-            set_if(ppu->cpu, 1);
-        else if (ppu->line_dot_count == 4 && get_stat(ppu, 6)) //&& !get_if(ppu->cpu, 1))
-            set_if(ppu->cpu, 1);
+            set_if(ppu->cpu, INTERRUPT_LCD);
+        else if (ppu->line_dot_count == 4 && get_stat(ppu, 6)) //&& !get_if(ppu->cpu, INTERRUPT_LCD))
+            set_if(ppu->cpu, INTERRUPT_LCD);
     }
     else
         clear_stat(ppu, 2);

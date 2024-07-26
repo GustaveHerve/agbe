@@ -5,6 +5,7 @@ LDLIBS = -lSDL2 -lm
 BIN = agbe
 OBJ = src/control.o \
 	  src/cpu.o \
+	  src/interrupts.o \
 	  src/disassembler.o \
 	  src/emulation.o \
 	  src/jump.o \

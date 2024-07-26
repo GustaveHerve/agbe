@@ -15,6 +15,12 @@
 #define LCDC_WINDOW_TILE_MAP    6
 #define LCDC_LCD_PPU_ENABLE     7
 
+#define STAT_LYC_EQUAL_LY       2
+#define STAT_MODE_0_SELECT      3
+#define STAT_MODE_1_SELECT      4
+#define STAT_MODE_2_SELECT      5
+#define STAT_LYC_SELECT         6
+
 struct fetcher
 {
     int obj_index;    //Used if PPU in OBJ mode
@@ -85,16 +91,31 @@ struct ppu
     struct renderer *renderer;
 };
 
-void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer);
-void ppu_free(struct ppu *ppu);
-void ppu_reset(struct ppu *ppu);
-
-void ppu_tick_m(struct ppu *ppu);
-
 static inline int get_lcdc(struct ppu *ppu, int bit)
 {
     uint8_t lcdc = *ppu->lcdc;
     return (lcdc >> bit & 0x01);
 }
+
+static inline void set_stat(struct ppu *ppu, int bit)
+{
+    *ppu->stat = *ppu->stat | (0x01 << bit);
+}
+
+static inline int get_stat(struct ppu *ppu, int bit)
+{
+    return (*ppu->stat >> bit) & 0x01;
+}
+
+static inline void clear_stat(struct ppu *ppu, int bit)
+{
+    *ppu->stat = *ppu->stat & ~(0x01 << bit);
+}
+
+void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer);
+void ppu_free(struct ppu *ppu);
+void ppu_reset(struct ppu *ppu);
+
+void ppu_tick_m(struct ppu *ppu);
 
 #endif

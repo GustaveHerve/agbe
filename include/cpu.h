@@ -68,12 +68,4 @@ void cpu_init_registers(struct cpu *cpu, int checksum);
 
 void update_timers(struct cpu *cpu);
 
-// Interrupts
-int check_interrupt(struct cpu *cpu);
-int handle_interrupt(struct cpu *cpu, int bit);
-
-int get_if(struct cpu *cpu, int bit);
-void set_if(struct cpu *cpu, int bit);
-void clear_if(struct cpu *cpu, int bit);
-
 #endif

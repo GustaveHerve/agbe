@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <err.h>
 #include "cpu.h"
+#include "interrupts.h"
 #include "ppu.h"
 #include "ppu_utils.h"
 #include "emulation.h"
@@ -577,8 +578,8 @@ uint8_t mode0_handler(struct ppu *ppu)
     {
         clear_stat(ppu, 1);
         clear_stat(ppu, 0);
-        if (get_stat(ppu, 3) && !get_if(ppu->cpu, 1))
-            set_if(ppu->cpu, 1);
+        if (get_stat(ppu, 3) && !get_if(ppu->cpu, INTERRUPT_LCD))
+            set_if(ppu->cpu, INTERRUPT_LCD);
     }
 
     ppu->obj_fetcher->obj_index = -1;
@@ -604,7 +605,7 @@ uint8_t mode0_handler(struct ppu *ppu)
     set_stat(ppu, 1);
     clear_stat(ppu, 0);
     if (get_stat(ppu, 5) && !get_stat(ppu, 4))
-        set_if(ppu->cpu, 1);
+        set_if(ppu->cpu, INTERRUPT_LCD);
 
     // Start VBlank
     if (*ppu->ly > 143)
@@ -623,9 +624,9 @@ uint8_t mode1_handler(struct ppu *ppu)
     {
         clear_stat(ppu, 1);
         set_stat(ppu, 0);
-        set_if(ppu->cpu, 0); // VBlank Interrupt
+        set_if(ppu->cpu, INTERRUPT_VBLANK); // VBlank Interrupt
         if (get_stat(ppu, 4) && !get_stat(ppu, 3)) // STAT VBlank Interrupt
-            set_if(ppu->cpu, 1);
+            set_if(ppu->cpu, INTERRUPT_LCD);
     }
 
     check_lyc(ppu, ppu->mode1_153th);
