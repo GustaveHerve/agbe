@@ -21,8 +21,8 @@ struct mbc
     uint16_t rom_bank_count;
     uint8_t ram_bank_count;
 
-    uint8_t rom_bank_number; // AKA BANK1
-    uint8_t ram_bank_number; // AKA BANK2
+    uint8_t bank1;
+    uint8_t bank2;
 
     uint8_t ram_enabled; // AKA RAMG
 
