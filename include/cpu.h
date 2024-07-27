@@ -66,6 +66,4 @@ void cpu_free(struct cpu *todelete);
 
 void cpu_init_registers(struct cpu *cpu, int checksum);
 
-void update_timers(struct cpu *cpu);
-
 #endif

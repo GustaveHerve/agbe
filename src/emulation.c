@@ -9,6 +9,7 @@
 #include "interrupts.h"
 #include "ppu.h"
 #include "utils.h"
+#include "timers.h"
 #include "disassembler.h"
 #include "emulation.h"
 #include "mbc.h"
@@ -84,30 +85,35 @@ void init_hardware(struct cpu *cpu)
     cpu->ppu->mode1_153th = 1;
 }
 
-void main_loop(struct cpu *cpu, char *rom_path)
+void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 {
     cpu->running = 1;
 
-#if 0
-    // Enable bootrom
-    cpu->membus[0xFF50] = 0xFE;
-
-    // Open BOOTROM
-    FILE *fptr = fopen("testroms/boot.gb", "rb");
-    if (!fptr)
+    if (boot_rom_path != NULL)
     {
-        puts("Unable to find boot.gb");
-        return;
+        // Enable bootrom
+        cpu->membus[0xFF50] = 0xFE;
+
+        // Open BOOTROM
+        FILE *fptr = fopen("testroms/boot.gb", "rb");
+        if (!fptr)
+        {
+            fprintf(stderr, "Invalid boot rom path: %s", boot_rom_path);
+            return;
+        }
+        fseek(fptr, 0, SEEK_END);
+        long fsize = ftell(fptr);
+        rewind(fptr);
+
+        fread(cpu->membus, 1, fsize, fptr);
+        fclose(fptr);
     }
-    fread(cpu->membus, 1, 256, fptr);
-    fclose(fptr);
-#endif
 
     // Open ROM, get its size and and copy its content in MBC struct
     FILE *fptr = fopen(rom_path, "rb");
     if (!fptr)
     {
-        puts("Unable to find rom");
+        fprintf(stderr, "Invalid boot rom path: %s", boot_rom_path);
         return;
     }
     fseek(fptr, 0, SEEK_END);
@@ -129,40 +135,12 @@ void main_loop(struct cpu *cpu, char *rom_path)
     size_t cycle_count = 0;
     Uint64 start = SDL_GetPerformanceCounter();
 
-    cpu->regist->pc = 0x0100;
-    cpu_init_registers(cpu, checksum);
-    init_hardware(cpu);
-
-    while (cpu->running)// && cpu->regist->pc != 0x0150)
+    if (boot_rom_path == NULL)
     {
-        //if (cpu->regist->pc == 0x0100)
-        //    init_hardware(cpu);
-
-        if (cycle_count >= cycle_threshold)
-        {
-            Uint64 end = SDL_GetPerformanceCounter();
-            float elapsedMS = (end - start) / (float)SDL_GetPerformanceFrequency() * 1000.0f;
-            if (floor(16.666f - elapsedMS > 0))
-                SDL_Delay(floor(16.666f - elapsedMS));
-            cycle_count -=cycle_threshold;
-            start = SDL_GetPerformanceCounter();
-        }
-
-        if (!cpu->halt)
-            cycle_count += next_op(cpu);
-        else
-        {
-            tick_m(cpu); // Previous instruction tick + next OPCode fetch
-            cycle_count += 1;
-        }
-
-        check_interrupt(cpu);
+        cpu->regist->pc = 0x0100;
+        cpu_init_registers(cpu, checksum);
+        init_hardware(cpu);
     }
-
-#if 0
-    //init_cpu(cpu, 0x0a);
-    init_hardware(cpu);
-    cpu->div_timer = 52;
 
     while (cpu->running)
     {
@@ -186,7 +164,6 @@ void main_loop(struct cpu *cpu, char *rom_path)
 
         check_interrupt(cpu);
     }
-#endif
 }
 
 void tick_m(struct cpu *cpu)
