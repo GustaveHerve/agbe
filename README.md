@@ -9,13 +9,22 @@ Currently the following is implemented:
 - Basic keyboard input support (B: Z key, A: X key, Space: Select, Enter: Start, Arrow keys for D-Pad)
 - Support for no mapper and MBC1 cartridges, including exporting external RAM in a .sav file if the mapper has a battery
 
+## Usage
+### Building
+For now, you can simply use the included barebones Makefile: `make`
+
+### Usage
+`./agbe [-b BOOT_ROM_PATH] ROM_PATH`
+
 ## Credits
 ### Documentation
-The following are the documentation I used for this project:
+This emulator was made using the following documentation:
 - [Pandocs](https://gbdev.io/pandocs/)
 - [The Cycle-Accurate Game Boy Docs](https://github.com/AntonioND/giibiiadvance/blob/master/docs/TCAGBD.pdf)
 - [Gekkio's Complete Technical Reference](https://gekkio.fi/files/gb-docs/gbctr.pdf)
 - [The Ultimate Game Boy Talk](https://www.youtube.com/watch?v=HyzD8pNlpwI)
+- [The Gameboy Emulator Development Guide](https://hacktix.github.io/GBEDG/)
+
 
 ### Frameworks
 I used the following technologies and frameworks to make AGBE:
