@@ -6,9 +6,9 @@
 #include <math.h>
 #include <err.h>
 #include "cpu.h"
+#include "apu.h"
 #include "interrupts.h"
 #include "ppu.h"
-#include "utils.h"
 #include "timers.h"
 #include "disassembler.h"
 #include "emulation.h"
@@ -307,6 +307,26 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         uint8_t temp = (cpu->membus[address] & 0xE0);
         temp |= (val & 0x1F);
         cpu->membus[address] = temp;
+    }
+
+    // APU registers
+    else if (address == NR14 || address == NR24 || address == NR34 || address == NR44)
+    {
+        uint8_t ch_number = ((address - NR14) / (NR24 - NR14)) + 1;
+        /* Trigger event */
+        if (val & NRx4_TRIGGER_MASK)
+        {
+            static void (*trigger_handlers[])(struct apu *) 
+                = { &handle_trigger_event_ch1,
+                    &handle_trigger_event_ch2,
+                    &handle_trigger_event_ch3,
+                    &handle_trigger_event_ch4, };
+
+            trigger_handlers[ch_number - 1](cpu->apu);
+        }
+
+        if (val & NRx4_LENGTH_ENABLE)
+            enable_timer(cpu->apu, ch_number);
     }
 
     // STAT

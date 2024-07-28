@@ -26,6 +26,7 @@ struct cpu
 {
     int running;
     struct ppu *ppu;
+    struct apu *apu;
 	struct cpu_register *regist;
 	uint8_t *membus;
 

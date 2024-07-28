@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "cpu.h"
 #include "ppu.h"
+#include "apu.h"
 #include "control.h"
 #include "jump.h"
 #include "load.h"
@@ -16,6 +17,7 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
 	cpu->membus = calloc(MEMBUS_SIZE, sizeof(uint8_t));
     cpu->mbc = malloc(sizeof(struct mbc));
     cpu->ppu = malloc(sizeof(struct ppu));
+    cpu->apu = malloc(sizeof(struct apu));
 
     mbc_init(cpu->mbc, rom_path);
     ppu_init(cpu->ppu, cpu, rend);
@@ -96,5 +98,6 @@ void cpu_free(struct cpu *todelete)
 	free(todelete->membus);
     free(todelete->regist);
     mbc_free(todelete->mbc);
+    apu_free(todelete->apu);
 	free(todelete);
 }

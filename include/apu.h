@@ -35,6 +35,10 @@
 #define NR43 0xFF22
 #define NR44 0xFF23
 
+#define NRx4_TRIGGER_MASK (1 << 7)
+#define NRx4_LENGTH_ENABLE (1 << 6)
+#define NRx4_PERIOD (0x7 << 0)
+
 struct apu
 {
     struct cpu *cpu;
@@ -49,12 +53,19 @@ struct apu
 
 struct ch1
 {
+    /* Length */
+    unsigned int length_timer;
+
+    /* Envelope */
     unsigned int period_timer;
     unsigned int current_volume;
+    unsigned int env_dir;
+    unsigned int env_period;
 
     unsigned int frequency_timer;
     unsigned int duty_pos;
 
+    /* Sweep */
     unsigned int sweep_enabled;
     unsigned int shadow_frequency;
     unsigned int sweep_timer;
@@ -62,8 +73,14 @@ struct ch1
 
 struct ch2
 {
+    /* Length */
+    unsigned int length_timer;
+
+    /* Envelope */
     unsigned int period_timer;
     unsigned int current_volume;
+    unsigned int env_dir;
+    unsigned int env_period;
 
     unsigned int frequency_timer;
     unsigned int duty_pos;
@@ -71,23 +88,56 @@ struct ch2
 
 struct ch3
 {
+    /* Length */
+    unsigned int length_timer;
+
+    unsigned int frequency_timer;
+
+    unsigned int wave_pos;
+    unsigned int sample_buffer;
 };
 
 struct ch4
 {
+    /* Length */
+    unsigned int length_timer;
+
+    /* Envelope */
     unsigned int period_timer;
     unsigned int current_volume;
+    unsigned int env_dir;
+    unsigned int env_period;
+
+    unsigned int frequency_timer;
+
+    unsigned int lfsr;
+    unsigned int polynomial_counter;
 };
 
 void apu_init(struct cpu *cpu, struct apu *apu);
 
 void apu_free(struct apu *apu);
 
+void handle_trigger_event_ch1(struct apu *apu);
+void handle_trigger_event_ch2(struct apu *apu);
+void handle_trigger_event_ch3(struct apu *apu);
+void handle_trigger_event_ch4(struct apu *apu);
+
+void enable_timer(struct apu *apu, uint8_t ch_number);
+
 void apu_tick_m(struct apu *apu);
 
 static inline uint8_t is_apu_on(struct apu *apu)
 {
     return apu->cpu->membus[NR52] >> 7;
+}
+
+static inline uint8_t is_dac_on(struct apu *apu, uint8_t number)
+{
+    if (number == 3)
+        return apu->cpu->membus[NR30] >> 7;
+    unsigned int nrx2 = NR12 + ((NR22 - NR12) * (number - 1));
+    return apu->cpu->membus[nrx2] & 0x01;
 }
 
 static inline uint8_t is_channel_on(struct apu *apu, uint8_t number)
