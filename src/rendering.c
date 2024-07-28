@@ -141,7 +141,7 @@ void lcd_off(struct cpu *cpu)
     Uint32 *pixels = (Uint32 *)rend->surface->pixels;
     Uint32 sdlPixel;
     SDL_LockSurface(rend->surface);
-    sdlPixel = SDL_MapRGB(rend->surface->format, 224, 248, 208);
+    sdlPixel = SDL_MapRGB(rend->surface->format, 229, 245, 218);
     int total = 160 * 144;
     for (int i = 0; i < total; ++i)
         pixels[i] = sdlPixel;
@@ -151,7 +151,6 @@ void lcd_off(struct cpu *cpu)
     SDL_RenderClear(rend->renderer);
     SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
     SDL_RenderPresent(rend->renderer);
-    //SDL_PumpEvents();
 }
 
 void free_renderer(struct renderer *rend)

@@ -39,7 +39,7 @@ void update_timers(struct cpu *cpu)
 
         /* TIMA Overflow */
         if (previous_tima > *cpu->tima)
-            cpu->schedule_tima_overflow = 1; /* Schedule an interrupt for next Mcycle*/
+            cpu->schedule_tima_overflow = 1; /* Schedule an interrupt for next Mcycle */
     }
 
     cpu->previous_div = cpu->internal_div;

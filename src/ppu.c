@@ -8,10 +8,10 @@
 #include "queue.h"
 #include "rendering.h"
 
-// obj_index == -1 means BG/Win Mode
 uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
 {
     uint8_t tileid = 0;
+    /* obj_index == -1 means BG/Win Mode */
     if (obj_index == -1)
     {
         uint8_t x_part = 0;
@@ -110,7 +110,7 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
     return slice_low;
 }
 
-// TODO optimize this ? (address is same as low + 1)
+/* TODO optimize this ? (address is same as low + 1) */
 uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
 {
     uint8_t y_part = 0;
@@ -119,7 +119,7 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
     if (obj_index != -1)
     {
         y_part = (*ppu->ly - (ppu->obj_slots[obj_index].y - 16)) % 8;
-        // Y flip
+        /* Y flip */
         if ((attributes >> 6) & 0x01)
         {
             y_part = ~y_part;
@@ -144,7 +144,7 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
 
     if (obj_index != -1)
     {
-        // X flip
+        /* X flip */
         if ((attributes >> 5) & 0x01)
         {
             slice_high = slice_xflip(slice_high);
