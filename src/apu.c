@@ -6,6 +6,8 @@
 #define SAMPLING_RATE 48000
 #define SAMPLING_TCYCLES_INTERVAL (CPU_FREQUENCY / SAMPLING_RATE)
 
+#define AUDIO_BUFFER_SIZE 4096
+
 static unsigned int duty_table[][8] = {
     { 0, 0, 0, 0, 0, 0, 0, 1, },
     { 0, 0, 0, 0, 0, 0, 1, 1, },
@@ -48,6 +50,9 @@ static unsigned int ch4_divisors[] = { 8, 16, 32, 48, 64, 80, 96, 112, };
 #define PANNING_LEFT    0
 #define PANNING_RIGHT   1
 
+#define LEFT_MASTER_VOLUME(NR50) (((NR50) >> 4) & 0x7)
+#define RIGHT_MASTER_VOLUME(NR50) ((NR50) & 0x7)
+
 struct ch_generic
 {
     unsigned int length_timer;
@@ -66,6 +71,9 @@ void apu_init(struct cpu *cpu, struct apu *apu)
     apu->ch4 = calloc(1, sizeof(struct ch4));
     apu->fs_pos = 0;
     apu->sampling_counter = SAMPLING_TCYCLES_INTERVAL;
+
+    apu->audio_buffer = calloc(AUDIO_BUFFER_SIZE, sizeof(float));
+    apu->buffer_len = 0;
 
     SDL_AudioSpec desired_spec = {
         .freq = SAMPLING_RATE,
@@ -90,6 +98,7 @@ void apu_free(struct apu *apu)
     free(apu->ch2);
     free(apu->ch3);
     free(apu->ch4);
+    free(apu->audio_buffer);
     free(apu);
 }
 
@@ -194,18 +203,18 @@ void enable_timer(struct apu *apu, uint8_t ch_number)
     switch (ch_number)
     {
         case 1:
-            ch = (void *) &apu->ch1;
+            ch = (void *) apu->ch1;
             break;
         case 2:
-            ch = (void *) &apu->ch2;
+            ch = (void *) apu->ch2;
             break;
         case 3:
-            ch = (void *) &apu->ch3;
+            ch = (void *) apu->ch3;
             val = 256;
             init_len_mask = 0xFF;
             break;
         case 4:
-            ch = (void *) &apu->ch4;
+            ch = (void *) apu->ch4;
             break;
     }
     unsigned int nrx1 = NR11 + ((NR21 - NR11) * (ch_number - 1));
@@ -251,9 +260,7 @@ static unsigned int calculate_frequency(struct apu *apu, uint8_t sweep_shift, ui
         new_frequency = ch1->shadow_frequency + new_frequency;
 
     if (new_frequency > 2047)
-    {
         turn_channel_off(apu, 1);
-    }
 
     return new_frequency;
 }
@@ -419,19 +426,25 @@ static unsigned int get_channel_amplitude(struct apu *apu, uint8_t number, uint8
 
 static float mix_channels(struct apu *apu, uint8_t panning)
 {
-    float sum = 0;
+    float sum = 0.0f;
     for (size_t i = 0; i < 4; ++i)
         sum += dac_output(get_channel_amplitude(apu, i, panning));
-    return sum / 4.0;
+    return sum / 4.0f;
 }
 
 static void queue_audio(struct apu *apu)
 {
-    float left_sample = mix_channels(apu, PANNING_LEFT);
-    float right_sample = mix_channels(apu, PANNING_RIGHT);
-
-    float data[2] = { left_sample, right_sample };
-    SDL_QueueAudio(apu->device_id, &data, sizeof(float) * 2);
+    uint8_t nr50 = apu->cpu->membus[NR50];
+    float left_sample = mix_channels(apu, PANNING_LEFT) * LEFT_MASTER_VOLUME(nr50) / 8;
+    float right_sample = mix_channels(apu, PANNING_RIGHT) * RIGHT_MASTER_VOLUME(nr50) / 8;
+    apu->audio_buffer[apu->buffer_len] = left_sample;
+    apu->audio_buffer[apu->buffer_len + 1] = right_sample;
+    apu->buffer_len += 2;
+    if (apu->buffer_len == AUDIO_BUFFER_SIZE)
+    {
+        SDL_QueueAudio(apu->device_id, apu->audio_buffer, sizeof(float) * AUDIO_BUFFER_SIZE);
+        apu->buffer_len = 0;
+    }
 }
 
 void apu_tick_m(struct apu *apu)
@@ -441,14 +454,14 @@ void apu_tick_m(struct apu *apu)
 
     struct cpu *cpu = apu->cpu;
 
-    uint16_t div = cpu->internal_div + 4;
-
-    /* DIV bit 5 falling edge detection */
-    if ((cpu->previous_div & DIV_APU_MASK) && !(div & DIV_APU_MASK))
-        frame_sequencer_step(apu);
-
     for (size_t i = 0; i < 4; ++i)
     {
+        uint16_t div = cpu->internal_div + i;
+
+        /* DIV bit 5 falling edge detection */
+        if ((cpu->previous_div & DIV_APU_MASK) && !(div & DIV_APU_MASK))
+            frame_sequencer_step(apu);
+
         ch1_tick(apu);
         ch2_tick(apu);
         ch3_tick(apu);

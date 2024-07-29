@@ -52,7 +52,10 @@ struct apu
     uint8_t fs_pos;
 
     unsigned int sampling_counter;
+
     SDL_AudioDeviceID device_id;
+    float *audio_buffer;
+    size_t buffer_len;
 };
 
 struct ch1

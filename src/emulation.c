@@ -98,7 +98,7 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
         FILE *fptr = fopen("testroms/boot.gb", "rb");
         if (!fptr)
         {
-            fprintf(stderr, "Invalid boot rom path: %s", boot_rom_path);
+            fprintf(stderr, "Invalid boot rom path: %s\n", boot_rom_path);
             return;
         }
         fseek(fptr, 0, SEEK_END);
@@ -113,7 +113,7 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
     FILE *fptr = fopen(rom_path, "rb");
     if (!fptr)
     {
-        fprintf(stderr, "Invalid boot rom path: %s", boot_rom_path);
+        fprintf(stderr, "Invalid rom path: %s\n", rom_path);
         return;
     }
     fseek(fptr, 0, SEEK_END);
