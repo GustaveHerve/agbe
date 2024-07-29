@@ -1,6 +1,7 @@
 #ifndef APU_H
 #define APU_H
 
+#include <SDL2/SDL_audio.h>
 #include <stdint.h>
 #include "cpu.h"
 
@@ -49,6 +50,9 @@ struct apu
     struct ch4 *ch4;
 
     uint8_t fs_pos;
+
+    unsigned int sampling_counter;
+    SDL_AudioDeviceID device_id;
 };
 
 struct ch1
@@ -153,6 +157,11 @@ static inline void turn_channel_off(struct apu *apu, uint8_t number)
 static inline void turn_channel_on(struct apu *apu, uint8_t number)
 {
     apu->cpu->membus[NR52] |= 1 << (number - 1);
+}
+
+static inline float dac_output(unsigned int amplitude)
+{
+    return (amplitude / 7.5f) - 1.0f;
 }
 
 #endif

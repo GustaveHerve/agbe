@@ -21,6 +21,7 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
 
     mbc_init(cpu->mbc, rom_path);
     ppu_init(cpu->ppu, cpu, rend);
+    apu_init(cpu, cpu->apu);
 
     cpu->ime = 0;
     cpu->ie = &cpu->membus[0xFFFF];

@@ -7,6 +7,9 @@ struct ppu;
 struct renderer;
 struct mbc;
 
+#define CPU_FREQUENCY 4194304
+#define CPU_FREQUENCY_MCYCLE (4194304 / 4)
+
 struct cpu_register
 {
 	uint8_t a;
