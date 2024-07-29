@@ -56,6 +56,8 @@ struct apu
     SDL_AudioDeviceID device_id;
     float *audio_buffer;
     size_t buffer_len;
+
+    uint16_t previous_div;
 };
 
 struct ch1

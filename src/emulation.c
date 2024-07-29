@@ -171,13 +171,13 @@ void tick_m(struct cpu *cpu)
     if (cpu->ime == 2)
         cpu->ime = 1;
 
+    apu_tick_m(cpu->apu);
+
     update_timers(cpu);
     update_serial(cpu);
 
     if (get_lcdc(cpu->ppu, LCDC_LCD_PPU_ENABLE))
         ppu_tick_m(cpu->ppu);
-
-    apu_tick_m(cpu->apu);
 }
 
 uint8_t read_mem(struct cpu *cpu, uint16_t address)
