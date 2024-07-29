@@ -6,7 +6,7 @@
 #define SAMPLING_RATE 48000
 #define SAMPLING_TCYCLES_INTERVAL (CPU_FREQUENCY / SAMPLING_RATE)
 
-#define AUDIO_BUFFER_SIZE 2
+#define AUDIO_BUFFER_SIZE 2048
 
 static unsigned int duty_table[][8] = {
     { 0, 0, 0, 0, 0, 0, 0, 1, },
@@ -19,13 +19,12 @@ static unsigned int ch3_shifts[] = { 4, 0, 1, 2, };
 
 static unsigned int ch4_divisors[] = { 8, 16, 32, 48, 64, 80, 96, 112, };
 
-
 #define NRXY(X, Y) (NR1##Y + ((NR2##Y - NR1##Y) * ((X) - 1)))
 
 #define FREQUENCY(CH_NUMBER) ((apu->cpu->membus[NR##CH_NUMBER##4] & 0x07) << 8 \
         | apu->cpu->membus[NR##CH_NUMBER##3])
 
-#define DIV_APU_MASK (1 << 5)
+#define DIV_APU_MASK (1 << (5 + 8))
 
 #define WAVE_DUTY(NRX1) ((NRX1) >> 6)
 
@@ -347,8 +346,7 @@ static void ch1_tick(struct apu *apu)
 {
     if (!is_channel_on(apu, 1) || !is_dac_on(apu, 1))
         return;
-    if (apu->ch1->frequency_timer == 0)
-        return;
+
     apu->ch1->frequency_timer -= 1;
     if (apu->ch1->frequency_timer == 0)
     {
@@ -361,8 +359,7 @@ static void ch2_tick(struct apu *apu)
 {
     if (!is_channel_on(apu, 2) || !is_dac_on(apu, 2))
         return;
-    if (apu->ch2->frequency_timer == 0)
-        return;
+
     apu->ch2->frequency_timer -= 1;
     if (apu->ch2->frequency_timer == 0)
     {
@@ -375,8 +372,7 @@ static void ch3_tick(struct apu *apu)
 {
     if (!is_channel_on(apu, 3) || !is_dac_on(apu, 3))
         return;
-    if (apu->ch3->frequency_timer == 0)
-        return;
+
     apu->ch3->frequency_timer -= 1;
     if (apu->ch3->frequency_timer == 0)
     {
@@ -398,12 +394,10 @@ static void ch4_tick(struct apu *apu)
 {
     if (!is_channel_on(apu, 4) || !is_dac_on(apu, 4))
         return;
+
     uint8_t nr43 = apu->cpu->membus[NR43];
     unsigned int shift = NOISE_CLOCK_SHIFT(nr43);
     unsigned int divisor_code = NOISE_CLOCK_DIVIDER_CODE(nr43);
-
-    if (apu->ch4->frequency_timer == 0)
-        return;
 
     apu->ch4->frequency_timer -= 1;
     if (apu->ch4->frequency_timer == 0)
@@ -434,14 +428,14 @@ static unsigned int get_channel_amplitude(struct apu *apu, uint8_t number, uint8
     {
         unsigned int wave_duty = WAVE_DUTY(apu->cpu->membus[NR11]);
         unsigned int duty_pos = apu->ch1->duty_pos;
-        return duty_table[wave_duty][duty_pos]  * 0x7;//* apu->ch1->current_volume;
+        return duty_table[wave_duty][duty_pos]  * apu->ch1->current_volume;
     }
 
     if (number == 2)
     {
         unsigned int wave_duty = WAVE_DUTY(apu->cpu->membus[NR21]);
         unsigned int duty_pos = apu->ch2->duty_pos;
-        return duty_table[wave_duty][duty_pos] * 0x7;//apu->ch2->current_volume;
+        return duty_table[wave_duty][duty_pos] * apu->ch2->current_volume;
     }
 
     if (number == 3)
