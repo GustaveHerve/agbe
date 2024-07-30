@@ -3,10 +3,6 @@
 #include "cpu.h"
 #include "apu.h"
 
-#define SAMPLING_RATE 48000
-#define SAMPLING_TCYCLES_INTERVAL (CPU_FREQUENCY / SAMPLING_RATE)
-
-#define AUDIO_BUFFER_SIZE 2048
 
 static unsigned int duty_table[][8] = {
     { 0, 0, 0, 0, 0, 0, 0, 1, },

@@ -132,9 +132,11 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
     lcd_off(cpu);
 
+#if 0
     size_t cycle_threshold = CYCLE_PER_FRAME / FRAMERATE;
     size_t cycle_count = 0;
     Uint64 start = SDL_GetPerformanceCounter();
+#endif
 
     if (boot_rom_path == NULL)
     {
@@ -164,11 +166,12 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
         }
 
         if (!cpu->halt)
-            cycle_count += next_op(cpu);
+            next_op(cpu);
+            //cycle_count += next_op(cpu);
         else
         {
             tick_m(cpu); // Previous instruction tick + next OPCode fetch
-            cycle_count += 1;
+            //cycle_count += 1;
         }
 
         check_interrupt(cpu);
