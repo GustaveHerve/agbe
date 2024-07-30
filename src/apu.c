@@ -24,7 +24,7 @@ static unsigned int ch4_divisors[] = { 8, 16, 32, 48, 64, 80, 96, 112, };
 #define FREQUENCY(CH_NUMBER) ((apu->cpu->membus[NR##CH_NUMBER##4] & 0x07) << 8 \
         | apu->cpu->membus[NR##CH_NUMBER##3])
 
-#define DIV_APU_MASK (1 << (5 + 8))
+#define DIV_APU_MASK (1 << (4 + 8))
 
 #define WAVE_DUTY(NRX1) ((NRX1) >> 6)
 
