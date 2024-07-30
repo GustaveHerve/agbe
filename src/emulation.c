@@ -16,7 +16,7 @@
 #include "serial.h"
 
 #define CYCLE_PER_FRAME 1048576.0f
-#define FRAMERATE 60.0f
+#define FRAMERATE 59.73f
 
 void init_hardware(struct cpu *cpu)
 {

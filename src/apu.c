@@ -6,7 +6,7 @@
 #define SAMPLING_RATE 48000
 #define SAMPLING_TCYCLES_INTERVAL (CPU_FREQUENCY / SAMPLING_RATE)
 
-#define AUDIO_BUFFER_SIZE 2048
+#define AUDIO_BUFFER_SIZE 2
 
 static unsigned int duty_table[][8] = {
     { 0, 0, 0, 0, 0, 0, 0, 1, },
@@ -110,7 +110,7 @@ void apu_free(struct apu *apu)
 
 static void length_trigger(struct apu *apu, struct ch_generic *ch)
 {
-    if ((void *)ch == (void *)&apu->ch3 && ch->length_timer == 0)
+    if ((void *)ch == (void *)apu->ch3 && ch->length_timer == 0)
         ch->length_timer = 256;
     else if (ch->length_timer == 0)
         ch->length_timer = 64;
@@ -404,10 +404,10 @@ static void ch4_tick(struct apu *apu)
     {
         apu->ch4->frequency_timer = ch4_divisors[divisor_code] << shift;
 
-        unsigned xor_res = ((apu->ch4->lfsr >> 1) & 0x01) ^ (apu->ch4->lfsr & 0x01);
+        uint8_t xor_res = ((apu->ch4->lfsr >> 1) & 0x01) ^ (apu->ch4->lfsr & 0x01);
         apu->ch4->lfsr = (apu->ch4->lfsr >> 1) | (xor_res << 14);
 
-        if (NOISE_LFSR_WIDTH(NR43))
+        if (NOISE_LFSR_WIDTH(nr43))
             apu->ch4->lfsr = (apu->ch4->lfsr & ~(1 << 6)) | (xor_res << 6);
     }
 }
@@ -444,7 +444,7 @@ static unsigned int get_channel_amplitude(struct apu *apu, uint8_t number, uint8
         return apu->ch3->sample_buffer >> ch3_shifts[wave_output];
     }
 
-    return (~(apu->ch4->lfsr) & 0x1) * apu->ch4->current_volume;
+    return ((~apu->ch4->lfsr) & 0x1) * apu->ch4->current_volume;
 }
 
 static float mix_channels(struct apu *apu, uint8_t panning)

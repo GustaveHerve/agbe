@@ -146,7 +146,7 @@ static inline uint8_t is_dac_on(struct apu *apu, uint8_t number)
     if (number == 3)
         return apu->cpu->membus[NR30] >> 7;
     unsigned int nrx2 = NR12 + ((NR22 - NR12) * (number - 1));
-    return apu->cpu->membus[nrx2] & 0x01;
+    return apu->cpu->membus[nrx2] & 0xF8;
 }
 
 static inline uint8_t is_channel_on(struct apu *apu, uint8_t number)
