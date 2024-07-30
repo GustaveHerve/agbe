@@ -421,7 +421,7 @@ static unsigned int get_channel_amplitude(struct apu *apu, uint8_t number, uint8
     if (panning == PANNING_LEFT)
         panning_mask <<= 4;
 
-    if (!(apu->cpu->membus[NR50] & panning_mask))
+    if (!(apu->cpu->membus[NR51] & panning_mask))
         return 0;
 
     if (number == 1)
@@ -450,7 +450,7 @@ static unsigned int get_channel_amplitude(struct apu *apu, uint8_t number, uint8
 static float mix_channels(struct apu *apu, uint8_t panning)
 {
     float sum = 0.0f;
-    for (size_t i = 0; i < 4; ++i)
+    for (size_t i = 1; i < 5; ++i)
         sum += dac_output(get_channel_amplitude(apu, i, panning));
     return sum / 4.0f;
 }
