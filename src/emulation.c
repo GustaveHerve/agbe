@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_audio.h>
 #include <math.h>
 #include <err.h>
 #include "cpu.h"
@@ -144,6 +145,7 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
     while (cpu->running)
     {
+#if 0
         if (cycle_count >= cycle_threshold)
         {
             Uint64 end = SDL_GetPerformanceCounter();
@@ -152,6 +154,13 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
                 SDL_Delay(floor(16.666f - elapsedMS));
             cycle_count -=cycle_threshold;
             start = SDL_GetPerformanceCounter();
+        }
+#endif
+        if (SDL_GetQueuedAudioSize(cpu->apu->device_id) == AUDIO_BUFFER_SIZE * sizeof(float))
+        {
+            /* Wait for audio queue to be cleared */
+            while (SDL_GetQueuedAudioSize(cpu->apu->device_id) > 0)
+                continue;
         }
 
         if (!cpu->halt)

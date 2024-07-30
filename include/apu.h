@@ -5,6 +5,10 @@
 #include <stdint.h>
 #include "cpu.h"
 
+#define SAMPLING_RATE 48000
+#define SAMPLING_TCYCLES_INTERVAL (CPU_FREQUENCY / SAMPLING_RATE)
+#define AUDIO_BUFFER_SIZE 2048
+
 /* Global control registers */
 #define NR50 0xFF24 // Master volume ^ VIN panning
 #define NR51 0xFF25 // Sound Panning

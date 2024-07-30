@@ -173,26 +173,11 @@ void write_mbc(struct cpu *cpu, uint16_t address, uint8_t val)
 
     // RAM bank switch OR Upper bits of ROM bank switch
     else if (address >= 0x4000 && address <= 0x5FFF)
-    {
         mbc->bank2 = val & 0x03;
-#if 0
-        uint8_t bank = val & 0x03;
-        // RAM bank switch
-        // RAM size needs to be 32 kiB (4 banks of 8 kiB)
-        if (mbc->ram_bank_count == 4)
-            mbc->bank2 = bank;
-#endif
-    }
 
     // Banking mode select
     else if (address >= 0x6000 && address <= 0x7FFF)
-    {
-#if 0
-        if (mbc->rom_bank_count <= 32 && mbc->ram_bank_count <= 1)
-            return;
-#endif
         mbc->mbc1_mode = val & 0x01;
-    }
 
     // External RAM
     else if (address >= 0xA000 && address <= 0xBFFF)
