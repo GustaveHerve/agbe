@@ -3,7 +3,6 @@
 #include "cpu.h"
 #include "apu.h"
 
-
 static unsigned int duty_table[][8] = {
     { 0, 0, 0, 0, 0, 0, 0, 1, },
     { 0, 0, 0, 0, 0, 0, 1, 1, },
@@ -454,8 +453,8 @@ static float mix_channels(struct apu *apu, uint8_t panning)
 static void queue_audio(struct apu *apu)
 {
     uint8_t nr50 = apu->cpu->membus[NR50];
-    float left_sample = mix_channels(apu, PANNING_LEFT) * (float)LEFT_MASTER_VOLUME(nr50) / 8.0f;
-    float right_sample = mix_channels(apu, PANNING_RIGHT) * (float)RIGHT_MASTER_VOLUME(nr50) / 8.0f;
+    float left_sample = mix_channels(apu, PANNING_LEFT) * (float)LEFT_MASTER_VOLUME(nr50) / 8.0f * EMULATOR_SOUND_VOLUME;
+    float right_sample = mix_channels(apu, PANNING_RIGHT) * (float)RIGHT_MASTER_VOLUME(nr50) / 8.0f * EMULATOR_SOUND_VOLUME;
     apu->audio_buffer[apu->buffer_len] = left_sample;
     apu->audio_buffer[apu->buffer_len + 1] = right_sample;
     apu->buffer_len += 2;

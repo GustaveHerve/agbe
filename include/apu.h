@@ -9,6 +9,9 @@
 #define SAMPLING_TCYCLES_INTERVAL (CPU_FREQUENCY / SAMPLING_RATE)
 #define AUDIO_BUFFER_SIZE 2048
 
+/* Default GB audio samples are WAY too loud by default, scale them back */
+#define EMULATOR_SOUND_VOLUME 0.3f;
+
 /* Global control registers */
 #define NR50 0xFF24 // Master volume ^ VIN panning
 #define NR51 0xFF25 // Sound Panning
