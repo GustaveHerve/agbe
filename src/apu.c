@@ -80,7 +80,7 @@ void apu_init(struct cpu *cpu, struct apu *apu)
         .freq = SAMPLING_RATE,
         .format = AUDIO_F32SYS,
         .channels = 2,
-        .samples = 1024,
+        .samples = AUDIO_BUFFER_SIZE / 2,
         .callback = NULL,
     };
 

@@ -31,3 +31,6 @@ backup_scx
 diff
 
 vgcore*
+
+# CMake build folder
+build/

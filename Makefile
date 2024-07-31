@@ -1,5 +1,5 @@
 CC = gcc #clang
-CFLAGS = -Wall -Wextra -Wvla -pedantic -g -I include/ -O0
+CFLAGS = -Wall -Wextra -Wvla -pedantic -g -I include/ -O0 -std=c99
 LDLIBS = -lSDL2 -lm
 
 BIN = agbe

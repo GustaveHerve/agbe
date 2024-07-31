@@ -135,7 +135,7 @@ int add_a_n(struct cpu *cpu)
     cflag_add_set(cpu->regist, cpu->regist->a, n);
     cpu->regist->a += n;
     set_z(cpu->regist, cpu->regist->a == 0);
-    cpu->regist->pc++;
+    ++cpu->regist->pc;
     return 2;
 }
 
@@ -349,7 +349,7 @@ int sbc_a_n(struct cpu *cpu)
         set_h(cpu->regist, (((a_copy & 0xF) - (val & 0xF)) & 0x10) == 0x10);
     set_c(cpu->regist, val + get_c(cpu->regist) > a_copy);
     set_z(cpu->regist, cpu->regist->a == 0);
-    cpu->regist->pc++;
+    ++cpu->regist->pc;
     return 2;
 }
 

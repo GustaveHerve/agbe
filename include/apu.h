@@ -7,7 +7,7 @@
 
 #define SAMPLING_RATE 48000
 #define SAMPLING_TCYCLES_INTERVAL (CPU_FREQUENCY / SAMPLING_RATE)
-#define AUDIO_BUFFER_SIZE 2048
+#define AUDIO_BUFFER_SIZE 1024
 
 /* Default GB audio samples are WAY too loud by default, scale them back */
 #define EMULATOR_SOUND_VOLUME 0.3f;

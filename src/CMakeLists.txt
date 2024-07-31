@@ -1,0 +1,23 @@
+target_sources(agbe PUBLIC 
+    control.c
+    cpu.c
+    interrupts.c
+    timers.c
+    disassembler.c
+    emulation.c
+    jump.c
+    load.c
+    logic.c
+    mbc.c
+    ppu.c
+    ppu_utils.c
+    prefix.c
+    queue.c
+    rendering.c
+    rotshift.c
+    rendering.c
+    main.c
+    save.c
+    serial.c
+    apu.c
+)
