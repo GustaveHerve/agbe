@@ -1,4 +1,3 @@
-#include <SDL2/SDL_audio.h>
 #include <stdlib.h>
 #include "cpu.h"
 #include "apu.h"

@@ -1,7 +1,7 @@
 #ifndef APU_H
 #define APU_H
 
-#include <SDL2/SDL_audio.h>
+#include "SDL_audio.h"
 #include <stdint.h>
 #include "cpu.h"
 
@@ -10,7 +10,7 @@
 #define AUDIO_BUFFER_SIZE 1024
 
 /* Default GB audio samples are WAY too loud by default, scale them back */
-#define EMULATOR_SOUND_VOLUME 0.3f;
+#define EMULATOR_SOUND_VOLUME 0.4f;
 
 /* Global control registers */
 #define NR50 0xFF24 // Master volume ^ VIN panning

@@ -1,10 +1,10 @@
 #define _POSIX_C_SOURCE 2
 
 #include <stdlib.h>
-#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <err.h>
+#include "SDL.h"
 #include "cpu.h"
 #include "emulation.h"
 #include "ppu.h"

@@ -1,7 +1,8 @@
 #ifndef RENDERING_H
 #define RENDERING_H
 
-#include <SDL2/SDL.h>
+#include "SDL_surface.h"
+#include "SDL_render.h"
 
 struct cpu;
 struct ppu;

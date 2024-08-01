@@ -1,10 +1,5 @@
-#include <SDL2/SDL_thread.h>
-#include <SDL2/SDL_timer.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_audio.h>
-#include <math.h>
 #include <err.h>
 #include "cpu.h"
 #include "apu.h"

@@ -1,4 +1,4 @@
-#include <SDL2/SDL.h>
+#include "SDL_events.h"
 #include "cpu.h"
 #include "ppu.h"
 #include "ppu_utils.h"

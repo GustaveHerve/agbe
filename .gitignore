@@ -32,5 +32,8 @@ diff
 
 vgcore*
 
-# CMake build folder
+# CMake files
 build/
+CMakeFiles
+*.cmake
+Makefile
