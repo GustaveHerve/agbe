@@ -12,17 +12,17 @@ struct mbc;
 
 struct cpu_register
 {
-	uint8_t a;
-	uint8_t f;
-	uint8_t b;
-	uint8_t c;
-	uint8_t d;
-	uint8_t e;
-	uint8_t h;
-	uint8_t l;
+    uint8_t a;
+    uint8_t f;
+    uint8_t b;
+    uint8_t c;
+    uint8_t d;
+    uint8_t e;
+    uint8_t h;
+    uint8_t l;
 
-	uint16_t sp;
-	uint16_t pc;
+    uint16_t sp;
+    uint16_t pc;
 };
 
 struct cpu
@@ -30,8 +30,8 @@ struct cpu
     int running;
     struct ppu *ppu;
     struct apu *apu;
-	struct cpu_register *regist;
-	uint8_t *membus;
+    struct cpu_register *regist;
+    uint8_t *membus;
 
     int ime;
     uint8_t *ie;

@@ -1,8 +1,9 @@
 #ifndef APU_H
 #define APU_H
 
-#include "SDL_audio.h"
 #include <stdint.h>
+
+#include "SDL_audio.h"
 #include "cpu.h"
 
 #define SAMPLING_RATE 48000

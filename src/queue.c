@@ -1,7 +1,8 @@
+#include "queue.h"
+
+#include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <err.h>
-#include "queue.h"
 
 struct queue *queue_init(void)
 {

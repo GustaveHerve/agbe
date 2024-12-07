@@ -1,4 +1,4 @@
-target_sources(agbe PUBLIC 
+target_sources(agbe PUBLIC
     control.c
     cpu.c
     interrupts.c

@@ -1,17 +1,18 @@
 #include <err.h>
+
 #include "cpu.h"
-#include "utils.h"
 #include "emulation.h"
+#include "utils.h"
 
 // jr e (signed 8 bit)
 // x18	3 MCycle
 int jr_e8(struct cpu *cpu)
 {
-	int8_t e = read_mem_tick(cpu, cpu->regist->pc);
-	++cpu->regist->pc;
+    int8_t e = read_mem_tick(cpu, cpu->regist->pc);
+    ++cpu->regist->pc;
     tick_m(cpu);
-	cpu->regist->pc = cpu->regist->pc + e;
-	return 3;
+    cpu->regist->pc = cpu->regist->pc + e;
+    return 3;
 }
 
 // jr cc e (signed 8 bit)
@@ -34,7 +35,7 @@ int ret(struct cpu *cpu)
 {
     uint8_t lo = read_mem_tick(cpu, cpu->regist->sp);
     ++cpu->regist->sp;
-    uint8_t hi  = read_mem_tick(cpu, cpu->regist->sp);
+    uint8_t hi = read_mem_tick(cpu, cpu->regist->sp);
     ++cpu->regist->sp;
     tick_m(cpu);
     cpu->regist->pc = convert_8to16(&hi, &lo);
@@ -50,7 +51,7 @@ int ret_cc(struct cpu *cpu, int cc)
     {
         uint8_t lo = read_mem_tick(cpu, cpu->regist->sp);
         ++cpu->regist->sp;
-        uint8_t hi  = read_mem_tick(cpu, cpu->regist->sp);
+        uint8_t hi = read_mem_tick(cpu, cpu->regist->sp);
         ++cpu->regist->sp;
         tick_m(cpu);
         cpu->regist->pc = convert_8to16(&hi, &lo);
@@ -85,7 +86,7 @@ int jp_nn(struct cpu *cpu)
     uint16_t address = convert_8to16(&hi, &lo);
     tick_m(cpu);
     cpu->regist->pc = address;
-    return  4;
+    return 4;
 }
 
 int jp_cc_nn(struct cpu *cpu, int cc)

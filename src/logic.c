@@ -1,102 +1,103 @@
 #include <err.h>
+
 #include "cpu.h"
-#include "utils.h"
 #include "emulation.h"
+#include "utils.h"
 
 // inc r (8 bit)
 // x(0-3)(4 or C)	1 MCycle
 int inc_r(struct cpu *cpu, uint8_t *dest)
 {
-	set_n(cpu->regist, 0);
-	hflag_add_set(cpu->regist, *dest, 1);
-	*dest += 1;
-	set_z(cpu->regist, *dest == 0);
-	return 1;
+    set_n(cpu->regist, 0);
+    hflag_add_set(cpu->regist, *dest, 1);
+    *dest += 1;
+    set_z(cpu->regist, *dest == 0);
+    return 1;
 }
 
 // inc (HL) (8 bit)
 // x34	3 MCycle
 int inc_hl(struct cpu *cpu)
 {
-	set_n(cpu->regist, 0);
-	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-	uint8_t value = read_mem_tick(cpu, address);
-	hflag_add_set(cpu->regist, value, 1);
+    set_n(cpu->regist, 0);
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    uint8_t value = read_mem_tick(cpu, address);
+    hflag_add_set(cpu->regist, value, 1);
     ++value;
     write_mem(cpu, address, value);
-	set_z(cpu->regist, value == 0);
-	return 3;
+    set_z(cpu->regist, value == 0);
+    return 3;
 }
 
 // inc rr
 // x(0-3)3	2 MCycle
 int inc_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
-    //During fetch of the opcode probably writes to lo
-	uint16_t convert = convert_8to16(hi, lo);
-	++convert;
+    // During fetch of the opcode probably writes to lo
+    uint16_t convert = convert_8to16(hi, lo);
+    ++convert;
     tick_m(cpu);
-	*lo = regist_lo(&convert);
-	*hi = regist_hi(&convert);
-	return 2;
+    *lo = regist_lo(&convert);
+    *hi = regist_hi(&convert);
+    return 2;
 }
 
 // inc SP
 // x33	2 MCycle
 int inc_sp(struct cpu *cpu)
 {
-    //During fetch of the opcode probably writes to lo
-	++cpu->regist->sp;
+    // During fetch of the opcode probably writes to lo
+    ++cpu->regist->sp;
     tick_m(cpu);
-	return 2;
+    return 2;
 }
 
 // dec r (8 bit)
 // x(0-3)(5 or D)	1 MCycle
 int dec_r(struct cpu *cpu, uint8_t *dest)
 {
-	set_n(cpu->regist, 1);
-	hflag_sub_set(cpu->regist, *dest, 1);
-	*dest -= 1;
-	set_z(cpu->regist, *dest == 0);
-	return 1;
+    set_n(cpu->regist, 1);
+    hflag_sub_set(cpu->regist, *dest, 1);
+    *dest -= 1;
+    set_z(cpu->regist, *dest == 0);
+    return 1;
 }
 
 // dec (HL) (8 bit)
 // x35	3 MCycle
 int dec_hl(struct cpu *cpu)
 {
-	set_n(cpu->regist, 1);
-	uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-	uint8_t value = read_mem_tick(cpu, address);
+    set_n(cpu->regist, 1);
+    uint16_t address = convert_8to16(&cpu->regist->h, &cpu->regist->l);
+    uint8_t value = read_mem_tick(cpu, address);
     hflag_sub_set(cpu->regist, value, 1);
     --value;
     write_mem(cpu, address, value);
-	set_z(cpu->regist, value == 0);
-	return 3;
+    set_z(cpu->regist, value == 0);
+    return 3;
 }
 
 // dec rr
 // x(0-2)B	2MCycle
 int dec_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
-    //During fetch of the opcode probably writes to lo
-	uint16_t temp = convert_8to16(hi, lo);
-	--temp;
+    // During fetch of the opcode probably writes to lo
+    uint16_t temp = convert_8to16(hi, lo);
+    --temp;
     tick_m(cpu);
-	*lo = regist_lo(&temp);
-	*hi = regist_hi(&temp);
-	return 2;
+    *lo = regist_lo(&temp);
+    *hi = regist_hi(&temp);
+    return 2;
 }
 
 // dec sp
 // x3B	2 MCycle
 int dec_sp(struct cpu *cpu)
 {
-    //During fetch of the opcode probably writes to lo
-	--cpu->regist->sp;
+    // During fetch of the opcode probably writes to lo
+    --cpu->regist->sp;
     tick_m(cpu);
-	return 2;
+    return 2;
 }
 
 // add A,r
@@ -211,33 +212,33 @@ int adc_a_n(struct cpu *cpu)
 // x(0-2)9	2 MCycle
 int add_hl_rr(struct cpu *cpu, uint8_t *hi, uint8_t *lo)
 {
-    //During fetch of the opcode probably writes to lo
-	set_n(cpu->regist, 0);
+    // During fetch of the opcode probably writes to lo
+    set_n(cpu->regist, 0);
     uint16_t hl = convert_8to16(&cpu->regist->h, &cpu->regist->l);
     uint16_t rr = convert_8to16(hi, lo);
-	hflag16_add_set(cpu->regist, hl, rr);
+    hflag16_add_set(cpu->regist, hl, rr);
     cflag16_add_set(cpu->regist, hl, rr);
-	uint16_t sum = hl + rr;
-	cpu->regist->h = regist_hi(&sum);
-	cpu->regist->l = regist_lo(&sum);
+    uint16_t sum = hl + rr;
+    cpu->regist->h = regist_hi(&sum);
+    cpu->regist->l = regist_lo(&sum);
     tick_m(cpu);
-	return 2;
+    return 2;
 }
 
 // add HL,SP
 // x39	2 MCycle
 int add_hl_sp(struct cpu *cpu)
 {
-    //During fetch of the opcode probably writes to lo
-	set_n(cpu->regist, 0);
+    // During fetch of the opcode probably writes to lo
+    set_n(cpu->regist, 0);
     uint16_t hl = convert_8to16(&cpu->regist->h, &cpu->regist->l);
-	hflag16_add_set(cpu->regist, hl, cpu->regist->sp);
+    hflag16_add_set(cpu->regist, hl, cpu->regist->sp);
     cflag16_add_set(cpu->regist, hl, cpu->regist->sp);
-	uint16_t sum = hl + cpu->regist->sp;
-	cpu->regist->h = regist_hi(&sum);
-	cpu->regist->l = regist_lo(&sum);
+    uint16_t sum = hl + cpu->regist->sp;
+    cpu->regist->h = regist_hi(&sum);
+    cpu->regist->l = regist_lo(&sum);
     tick_m(cpu);
-	return 2;
+    return 2;
 }
 
 int add_sp_e8(struct cpu *cpu)
@@ -302,11 +303,11 @@ int sbc_a_r(struct cpu *cpu, uint8_t *src)
     if (get_c(cpu->regist))
     {
         --cpu->regist->a;
-        set_h(cpu->regist, (((a_copy & 0xF) - (*src& 0xF) - (1 & 0xF)) & 0x10) == 0x10);
+        set_h(cpu->regist, (((a_copy & 0xF) - (*src & 0xF) - (1 & 0xF)) & 0x10) == 0x10);
     }
     else
-        set_h(cpu->regist, (((a_copy & 0xF) - (*src& 0xF)) & 0x10) == 0x10);
-    set_c(cpu->regist, *src+ get_c(cpu->regist) > a_copy);
+        set_h(cpu->regist, (((a_copy & 0xF) - (*src & 0xF)) & 0x10) == 0x10);
+    set_c(cpu->regist, *src + get_c(cpu->regist) > a_copy);
     set_z(cpu->regist, cpu->regist->a == 0);
     return 1;
 }
@@ -511,39 +512,39 @@ int cp_a_n(struct cpu *cpu)
 // x27	1 MCycle
 int daa(struct cpu *cpu)
 {
-	if (!get_n(cpu->regist))	//Addition case
-	{
-		if (get_c(cpu->regist) || cpu->regist->a > 0x99) //check high nibble
-		{
-			cpu->regist->a += 0x60;
-			set_c(cpu->regist, 1);
-		}
+    if (!get_n(cpu->regist)) // Addition case
+    {
+        if (get_c(cpu->regist) || cpu->regist->a > 0x99) // check high nibble
+        {
+            cpu->regist->a += 0x60;
+            set_c(cpu->regist, 1);
+        }
 
-		if (get_h(cpu->regist) || (cpu->regist->a & 0x0F) > 0x09)	//check low nibble
-		{
-			cpu->regist->a += 0x6;
-		}
-	}
+        if (get_h(cpu->regist) || (cpu->regist->a & 0x0F) > 0x09) // check low nibble
+        {
+            cpu->regist->a += 0x6;
+        }
+    }
 
-	else	//Subtraction case
-	{
-		if (get_c(cpu->regist))
-			cpu->regist->a -= 0x60;
-		if (get_h(cpu->regist))
-			cpu->regist->a -= 0x6;
-	}
+    else // Subtraction case
+    {
+        if (get_c(cpu->regist))
+            cpu->regist->a -= 0x60;
+        if (get_h(cpu->regist))
+            cpu->regist->a -= 0x6;
+    }
     set_z(cpu->regist, cpu->regist->a == 0x00);
     set_h(cpu->regist, 0);
 
-	return 1;
+    return 1;
 }
 
 // cpl
 // x2F	1 MCycle
 int cpl(struct cpu *cpu)
 {
-	cpu->regist->a = ~cpu->regist->a;
-	set_n(cpu->regist, 1);
-	set_h(cpu->regist, 1);
-	return 1;
+    cpu->regist->a = ~cpu->regist->a;
+    set_n(cpu->regist, 1);
+    set_h(cpu->regist, 1);
+    return 1;
 }

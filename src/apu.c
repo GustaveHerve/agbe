@@ -1,22 +1,39 @@
-#include <stdlib.h>
-#include "cpu.h"
 #include "apu.h"
 
+#include <stdlib.h>
+
+#include "cpu.h"
+
+// clang-format off
 static unsigned int duty_table[][8] = {
     { 0, 0, 0, 0, 0, 0, 0, 1, },
     { 0, 0, 0, 0, 0, 0, 1, 1, },
     { 0, 0, 0, 0, 1, 1, 1, 1, },
     { 1, 1, 1, 1, 1, 1, 0, 0, },
 };
+// clang-format on
 
-static unsigned int ch3_shifts[] = { 4, 0, 1, 2, };
+static unsigned int ch3_shifts[] = {
+    4,
+    0,
+    1,
+    2,
+};
 
-static unsigned int ch4_divisors[] = { 8, 16, 32, 48, 64, 80, 96, 112, };
+static unsigned int ch4_divisors[] = {
+    8,
+    16,
+    32,
+    48,
+    64,
+    80,
+    96,
+    112,
+};
 
 #define NRXY(X, Y) (NR1##Y + ((NR2##Y - NR1##Y) * ((X) - 1)))
 
-#define FREQUENCY(CH_NUMBER) ((apu->cpu->membus[NR##CH_NUMBER##4] & 0x07) << 8 \
-        | apu->cpu->membus[NR##CH_NUMBER##3])
+#define FREQUENCY(CH_NUMBER) ((apu->cpu->membus[NR##CH_NUMBER##4] & 0x07) << 8 | apu->cpu->membus[NR##CH_NUMBER##3])
 
 #define DIV_APU_MASK (1 << (4 + 8))
 
@@ -43,8 +60,8 @@ static unsigned int ch4_divisors[] = { 8, 16, 32, 48, 64, 80, 96, 112, };
 #define NOISE_LFSR_WIDTH(NR43) (((NR43) >> 3) & 0x1)
 #define NOISE_CLOCK_SHIFT(NR43) (((NR43) >> 4) & 0xF)
 
-#define PANNING_LEFT    0
-#define PANNING_RIGHT   1
+#define PANNING_LEFT 0
+#define PANNING_RIGHT 1
 
 #define LEFT_MASTER_VOLUME(NR50) (((NR50) >> 4) & 0x7)
 #define RIGHT_MASTER_VOLUME(NR50) ((NR50) & 0x7)
@@ -201,20 +218,20 @@ void enable_timer(struct apu *apu, uint8_t ch_number)
     unsigned int init_len_mask = 0x3F;
     switch (ch_number)
     {
-        case 1:
-            ch = (void *) apu->ch1;
-            break;
-        case 2:
-            ch = (void *) apu->ch2;
-            break;
-        case 3:
-            ch = (void *) apu->ch3;
-            val = 256;
-            init_len_mask = 0xFF;
-            break;
-        case 4:
-            ch = (void *) apu->ch4;
-            break;
+    case 1:
+        ch = (void *)apu->ch1;
+        break;
+    case 2:
+        ch = (void *)apu->ch2;
+        break;
+    case 3:
+        ch = (void *)apu->ch3;
+        val = 256;
+        init_len_mask = 0xFF;
+        break;
+    case 4:
+        ch = (void *)apu->ch4;
+        break;
     }
     unsigned int initial_length = apu->cpu->membus[NRXY(ch_number, 1)] & init_len_mask;
 
@@ -422,7 +439,7 @@ static unsigned int get_channel_amplitude(struct apu *apu, uint8_t number, uint8
     {
         unsigned int wave_duty = WAVE_DUTY(apu->cpu->membus[NR11]);
         unsigned int duty_pos = apu->ch1->duty_pos;
-        return duty_table[wave_duty][duty_pos]  * apu->ch1->current_volume;
+        return duty_table[wave_duty][duty_pos] * apu->ch1->current_volume;
     }
 
     if (number == 2)
@@ -445,15 +462,19 @@ static float mix_channels(struct apu *apu, uint8_t panning)
 {
     float sum = 0.0f;
     for (size_t i = 1; i < 5; ++i)
+    {
         sum += dac_output(get_channel_amplitude(apu, i, panning));
+    }
     return sum / 4.0f;
 }
 
 static void queue_audio(struct apu *apu)
 {
     uint8_t nr50 = apu->cpu->membus[NR50];
-    float left_sample = mix_channels(apu, PANNING_LEFT) * (float)LEFT_MASTER_VOLUME(nr50) / 8.0f * EMULATOR_SOUND_VOLUME;
-    float right_sample = mix_channels(apu, PANNING_RIGHT) * (float)RIGHT_MASTER_VOLUME(nr50) / 8.0f * EMULATOR_SOUND_VOLUME;
+    float left_sample =
+        mix_channels(apu, PANNING_LEFT) * (float)LEFT_MASTER_VOLUME(nr50) / 8.0f * EMULATOR_SOUND_VOLUME;
+    float right_sample =
+        mix_channels(apu, PANNING_RIGHT) * (float)RIGHT_MASTER_VOLUME(nr50) / 8.0f * EMULATOR_SOUND_VOLUME;
     apu->audio_buffer[apu->buffer_len] = left_sample;
     apu->audio_buffer[apu->buffer_len + 1] = right_sample;
     apu->buffer_len += 2;

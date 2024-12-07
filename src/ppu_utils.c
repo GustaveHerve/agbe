@@ -1,16 +1,18 @@
+#include "ppu_utils.h"
+
 #include <stdlib.h>
+
 #include "cpu.h"
 #include "interrupts.h"
-#include "ppu_utils.h"
-#include "queue.h"
 #include "ppu.h"
+#include "queue.h"
 
 // Pixel and slice utils
 struct pixel make_pixel(uint8_t hi, uint8_t lo, int i, uint8_t *attributes, int obj_i)
 {
     struct pixel res;
-    uint8_t hi_bit =  (hi >> (7-i)) & 0x01;
-    uint8_t lo_bit = (lo >> (7-i)) & 0x01;
+    uint8_t hi_bit = (hi >> (7 - i)) & 0x01;
+    uint8_t lo_bit = (lo >> (7 - i)) & 0x01;
     res.color = (hi_bit << 1) | lo_bit;
     res.obj = -1;
     if (attributes != NULL)
@@ -38,7 +40,8 @@ uint8_t slice_xflip(uint8_t slice)
 
 int on_window(struct ppu *ppu)
 {
-    return get_lcdc(ppu, LCDC_BG_WINDOW_ENABLE) && get_lcdc(ppu, LCDC_WINDOW_ENABLE) && ppu->wy_trigger && ppu->lx == *ppu->wx + 1;
+    return get_lcdc(ppu, LCDC_BG_WINDOW_ENABLE) && get_lcdc(ppu, LCDC_WINDOW_ENABLE) && ppu->wy_trigger &&
+           ppu->lx == *ppu->wx + 1;
 }
 
 int on_object(struct ppu *ppu, int *bottom_part)
@@ -51,8 +54,7 @@ int on_object(struct ppu *ppu, int *bottom_part)
 
         // 8x16 (LCDC bit 2 = 1) or 8x8 (LCDC bit 2 = 0)
         int y_max_offset = get_lcdc(ppu, LCDC_OBJ_SIZE) ? 16 : 8;
-        if (ppu->obj_slots[i].x == ppu->lx &&
-            *ppu->ly + 16 >= ppu->obj_slots[i].y &&
+        if (ppu->obj_slots[i].x == ppu->lx && *ppu->ly + 16 >= ppu->obj_slots[i].y &&
             *ppu->ly + 16 < ppu->obj_slots[i].y + y_max_offset)
         {
             if (bottom_part != NULL && y_max_offset == 16 && *ppu->ly + 16 >= ppu->obj_slots[i].y + 8)
@@ -94,7 +96,7 @@ int push_slice(struct ppu *ppu, struct queue *q, uint8_t hi, uint8_t lo, int obj
     for (int i = 0; i < 8; ++i)
     {
         struct pixel p = make_pixel(hi, lo, i, attributes, obj_i);
-        //TODO verify this
+        // TODO verify this
         if (!get_lcdc(ppu, LCDC_BG_WINDOW_ENABLE))
             p.color = 0;
         push_pixel(q, p);

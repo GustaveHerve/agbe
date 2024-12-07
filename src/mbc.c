@@ -1,9 +1,11 @@
-#include <math.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include "cpu.h"
 #include "mbc.h"
+
+#include <math.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "cpu.h"
 #include "save.h"
 
 void mbc_init(struct mbc *mbc, char *rom_path)
@@ -52,21 +54,21 @@ void set_mbc(struct cpu *cpu, uint8_t *rom)
 
     switch (mbc->ram_size)
     {
-        case 0x00:
-            mbc->ram_bank_count = 0;
-            break;
-        case 0x02:
-            mbc->ram_bank_count = 1;
-            break;
-        case 0x03:
-            mbc->ram_bank_count = 4;
-            break;
-        case 0x04:
-            mbc->ram_bank_count = 16;
-            break;
-        case 0x05:
-            mbc->ram_bank_count = 8;
-            break;
+    case 0x00:
+        mbc->ram_bank_count = 0;
+        break;
+    case 0x02:
+        mbc->ram_bank_count = 1;
+        break;
+    case 0x03:
+        mbc->ram_bank_count = 4;
+        break;
+    case 0x04:
+        mbc->ram_bank_count = 16;
+        break;
+    case 0x05:
+        mbc->ram_bank_count = 8;
+        break;
     }
 
     mbc->bank2 = 0;
@@ -79,7 +81,9 @@ void set_mbc(struct cpu *cpu, uint8_t *rom)
     mbc->ram = calloc(8192 * mbc->ram_bank_count, sizeof(uint8_t));
 
     // Create / Load save file if battery
-    if (mbc->type == 0x03 || mbc->type == 0x06 || mbc->type == 0x09 || mbc->type == 0x0D || mbc->type == 0x0F || mbc->type == 0x10 || mbc->type == 0x13 || mbc->type == 0x1B || mbc->type == 0x1E || mbc->type == 0x22 || mbc->type == 0xFF)
+    if (mbc->type == 0x03 || mbc->type == 0x06 || mbc->type == 0x09 || mbc->type == 0x0D || mbc->type == 0x0F ||
+        mbc->type == 0x10 || mbc->type == 0x13 || mbc->type == 0x1B || mbc->type == 0x1E || mbc->type == 0x22 ||
+        mbc->type == 0xFF)
         mbc->save_file = open_save_file(mbc);
 }
 

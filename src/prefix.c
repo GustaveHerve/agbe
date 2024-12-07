@@ -1,18 +1,19 @@
-#include <stdint.h>
 #include <err.h>
+#include <stdint.h>
+
 #include "cpu.h"
-#include "utils.h"
 #include "emulation.h"
+#include "utils.h"
 
 // rlc
 // x0(0-7)   2 MCycle
 int rlc(struct cpu *cpu, uint8_t *dest)
 {
-	rotl(dest);
-	set_z(cpu->regist, *dest == 0);
+    rotl(dest);
+    set_z(cpu->regist, *dest == 0);
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 0);
-	cflag_rotl_set(cpu->regist, *dest);
+    cflag_rotl_set(cpu->regist, *dest);
     return 2;
 }
 
@@ -24,10 +25,10 @@ int rlc_hl(struct cpu *cpu)
     uint8_t val = read_mem_tick(cpu, address);
     rotl(&val);
     write_mem(cpu, address, val);
-	set_z(cpu->regist, val == 0);
+    set_z(cpu->regist, val == 0);
     set_n(cpu->regist, 0);
     set_h(cpu->regist, 0);
-	cflag_rotl_set(cpu->regist, val);
+    cflag_rotl_set(cpu->regist, val);
     return 4;
 }
 
@@ -64,8 +65,8 @@ int rl(struct cpu *cpu, uint8_t *dest)
 {
     rotl_carry(cpu->regist, dest);
     set_z(cpu->regist, *dest == 0);
-	set_n(cpu->regist, 0);
-	set_h(cpu->regist, 0);
+    set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
     return 2;
 }
 
@@ -78,8 +79,8 @@ int rl_hl(struct cpu *cpu)
     rotl_carry(cpu->regist, &val);
     write_mem(cpu, address, val);
     set_z(cpu->regist, val == 0);
-	set_n(cpu->regist, 0);
-	set_h(cpu->regist, 0);
+    set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
     return 4;
 }
 
@@ -89,8 +90,8 @@ int rr(struct cpu *cpu, uint8_t *dest)
 {
     rotr_carry(cpu->regist, dest);
     set_z(cpu->regist, *dest == 0);
-	set_n(cpu->regist, 0);
-	set_h(cpu->regist, 0);
+    set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
     return 2;
 }
 
@@ -103,8 +104,8 @@ int rr_hl(struct cpu *cpu)
     rotr_carry(cpu->regist, &val);
     write_mem(cpu, address, val);
     set_z(cpu->regist, val == 0);
-	set_n(cpu->regist, 0);
-	set_h(cpu->regist, 0);
+    set_n(cpu->regist, 0);
+    set_h(cpu->regist, 0);
     return 4;
 }
 
@@ -166,8 +167,8 @@ int sra_hl(struct cpu *cpu)
     return 4;
 }
 
-//swap
-//0x3(0-7)  2 MCycle
+// swap
+// 0x3(0-7)  2 MCycle
 int swap(struct cpu *cpu, uint8_t *dest)
 {
     uint8_t val = get_msb_nibble(*dest) | (get_lsb_nibble(*dest) << 4);

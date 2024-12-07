@@ -1,20 +1,22 @@
-#include <stdlib.h>
 #include "cpu.h"
-#include "ppu.h"
+
+#include <stdlib.h>
+
 #include "apu.h"
 #include "control.h"
+#include "emulation.h"
 #include "jump.h"
 #include "load.h"
-#include "utils.h"
-#include "emulation.h"
 #include "mbc.h"
+#include "ppu.h"
+#include "utils.h"
 
 #define MEMBUS_SIZE 65536 // In bytes
 
 void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
 {
-	cpu->regist = malloc(sizeof(struct cpu_register));
-	cpu->membus = calloc(MEMBUS_SIZE, sizeof(uint8_t));
+    cpu->regist = malloc(sizeof(struct cpu_register));
+    cpu->membus = calloc(MEMBUS_SIZE, sizeof(uint8_t));
     cpu->mbc = malloc(sizeof(struct mbc));
     cpu->ppu = malloc(sizeof(struct ppu));
     cpu->apu = malloc(sizeof(struct apu));
@@ -39,7 +41,7 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
     cpu->serial_clock = 0;
     cpu->serial_acc = 0;
 
-    //Joypad
+    // Joypad
     cpu->joyp_a = 0xFF;
     cpu->joyp_d = 0xFF;
 
@@ -96,9 +98,9 @@ void cpu_init_registers(struct cpu *cpu, int checksum)
 void cpu_free(struct cpu *todelete)
 {
     ppu_free(todelete->ppu);
-	free(todelete->membus);
+    free(todelete->membus);
     free(todelete->regist);
     mbc_free(todelete->mbc);
     apu_free(todelete->apu);
-	free(todelete);
+    free(todelete);
 }

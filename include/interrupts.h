@@ -3,11 +3,13 @@
 
 #include "cpu.h"
 
+// clang-format off
 #define INTERRUPT_VBLANK    0
 #define INTERRUPT_LCD       1
 #define INTERRUPT_TIMER     2
 #define INTERRUPT_SERIAL    3
 #define INTERRUPT_JOYPAD    4
+// clang-format on
 
 static inline int get_if(struct cpu *cpu, int bit)
 {

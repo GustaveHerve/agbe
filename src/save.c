@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "mbc.h"
 
 FILE *open_save_file(struct mbc *mbc)

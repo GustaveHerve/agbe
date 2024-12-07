@@ -4,7 +4,7 @@
 #define TAC_TIMER_ENABLED (0x1 << 2)
 #define TAC_CLOCK_SELECT 0x3
 
-static unsigned int clock_masks[] = { 1 << 9, 1 << 3, 1 << 5, 1 << 7 };
+static unsigned int clock_masks[] = {1 << 9, 1 << 3, 1 << 5, 1 << 7};
 
 void update_timers(struct cpu *cpu)
 {

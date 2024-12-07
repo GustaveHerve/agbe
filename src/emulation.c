@@ -1,15 +1,17 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <err.h>
-#include "cpu.h"
-#include "apu.h"
-#include "interrupts.h"
-#include "ppu.h"
-#include "timers.h"
-#include "disassembler.h"
 #include "emulation.h"
+
+#include <err.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "apu.h"
+#include "cpu.h"
+#include "disassembler.h"
+#include "interrupts.h"
 #include "mbc.h"
+#include "ppu.h"
 #include "serial.h"
+#include "timers.h"
 
 #define CYCLE_PER_FRAME 1048576.0f
 #define FRAMERATE 59.73f
@@ -74,7 +76,7 @@ void init_hardware(struct cpu *cpu)
     cpu->membus[0xFF70] = 0xFF;
     cpu->membus[0xFFFF] = 0x00;
 
-    //ppu_reset(cpu->ppu);
+    // ppu_reset(cpu->ppu);
 
     cpu->ppu->current_mode = 1;
     cpu->ppu->line_dot_count = 400;
@@ -162,11 +164,11 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
         if (!cpu->halt)
             next_op(cpu);
-            //cycle_count += next_op(cpu);
+        // cycle_count += next_op(cpu);
         else
         {
             tick_m(cpu); // Previous instruction tick + next OPCode fetch
-            //cycle_count += 1;
+            // cycle_count += 1;
         }
 
         check_interrupt(cpu);
@@ -283,7 +285,7 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
             low_nibble = cpu->joyp_a;
         uint8_t new = low_nibble & 0x0F;
         new |= val;
-        new |= (cpu->membus[address] & 0xC0); //keep the 7-6 bit
+        new |= (cpu->membus[address] & 0xC0); // keep the 7-6 bit
         cpu->membus[address] = new;
     }
 
@@ -325,11 +327,12 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         /* Trigger event */
         if (val & NRx4_TRIGGER_MASK)
         {
-            static void (*trigger_handlers[])(struct apu *) 
-                = { &handle_trigger_event_ch1,
-                    &handle_trigger_event_ch2,
-                    &handle_trigger_event_ch3,
-                    &handle_trigger_event_ch4, };
+            static void (*trigger_handlers[])(struct apu *) = {
+                &handle_trigger_event_ch1,
+                &handle_trigger_event_ch2,
+                &handle_trigger_event_ch3,
+                &handle_trigger_event_ch4,
+            };
 
             trigger_handlers[ch_number - 1](cpu->apu);
         }
@@ -354,7 +357,7 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         cpu->ppu->dma_acc = 0;
         cpu->ppu->dma_source = val;
     }
-    
+
     // BOOT
     else if (address == 0xFF50)
     {

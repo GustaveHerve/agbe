@@ -1,10 +1,12 @@
-#include <stdlib.h>
-#include <err.h>
-#include "cpu.h"
-#include "interrupts.h"
 #include "ppu.h"
-#include "ppu_utils.h"
+
+#include <err.h>
+#include <stdlib.h>
+
+#include "cpu.h"
 #include "emulation.h"
+#include "interrupts.h"
+#include "ppu_utils.h"
 #include "queue.h"
 #include "rendering.h"
 
@@ -26,13 +28,12 @@ uint8_t get_tileid(struct ppu *ppu, int obj_index, int bottom_part)
         }
         else
         {
-            x_part =  ((uint8_t) (ppu->bg_fetcher->lx_save + *ppu->scx)) / 8;
-            y_part =  ((uint8_t) (*ppu->ly + *ppu->scy)) / 8;
+            x_part = ((uint8_t)(ppu->bg_fetcher->lx_save + *ppu->scx)) / 8;
+            y_part = ((uint8_t)(*ppu->ly + *ppu->scy)) / 8;
             bit = LCDC_BG_TILE_MAP;
         }
 
-        uint16_t address = (0x13 << 11) | (get_lcdc(ppu, bit) << 10)
-            | (y_part << 5) | x_part;
+        uint16_t address = (0x13 << 11) | (get_lcdc(ppu, bit) << 10) | (y_part << 5) | x_part;
 
         tileid = ppu->cpu->membus[address];
     }
@@ -92,9 +93,7 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
         bit_12 = !(get_lcdc(ppu, LCDC_BG_WINDOW_TILES) | (tileid & 0x80));
     }
 
-
-    uint16_t address_low = (0x4 << 13) | (bit_12 << 12) |
-        (tileid << 4) | (y_part << 1) | 0;
+    uint16_t address_low = (0x4 << 13) | (bit_12 << 12) | (tileid << 4) | (y_part << 1) | 0;
 
     uint8_t slice_low = ppu->cpu->membus[address_low];
 
@@ -137,8 +136,7 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
         bit_12 = !(get_lcdc(ppu, LCDC_BG_WINDOW_TILES) | (tileid & 0x80));
     }
 
-    uint16_t address_high = (0x4 << 13) | (bit_12 << 12) |
-        (tileid << 4) | (y_part << 1) | 1;
+    uint16_t address_high = (0x4 << 13) | (bit_12 << 12) | (tileid << 4) | (y_part << 1) | 1;
 
     uint8_t slice_high = ppu->cpu->membus[address_high];
 
@@ -185,31 +183,31 @@ int bg_fetcher_step(struct ppu *ppu)
 
     switch (f->current_step)
     {
-        case 0:
-            f->tileid = get_tileid(ppu, -1, 0);
-            f->current_step = 1;
-            break;
-        case 1:
-            f->lo = get_tile_lo(ppu, f->tileid, -1);
-            f->current_step = 2;
-            break;
-        case 2:
-            f->hi = get_tile_hi(ppu, f->tileid, -1);
-            f->current_step = 3;
-            break;
-        case 3:
-            {
-                f->tick = 0;
+    case 0:
+        f->tileid = get_tileid(ppu, -1, 0);
+        f->current_step = 1;
+        break;
+    case 1:
+        f->lo = get_tile_lo(ppu, f->tileid, -1);
+        f->current_step = 2;
+        break;
+    case 2:
+        f->hi = get_tile_hi(ppu, f->tileid, -1);
+        f->current_step = 3;
+        break;
+    case 3:
+    {
+        f->tick = 0;
 
-                //If BG empty, refill it
-                if (queue_isempty(ppu->bg_fifo))
-                {
-                    push_slice(ppu, ppu->bg_fifo, f->hi, f->lo, -1);
-                    f->current_step = 0;
-                    return bg_fetcher_step(ppu);
-                }
-                return 0;
-            }
+        // If BG empty, refill it
+        if (queue_isempty(ppu->bg_fifo))
+        {
+            push_slice(ppu, ppu->bg_fifo, f->hi, f->lo, -1);
+            f->current_step = 0;
+            return bg_fetcher_step(ppu);
+        }
+        return 0;
+    }
     }
 
     f->tick = 0;
@@ -230,34 +228,34 @@ int obj_fetcher_step(struct ppu *ppu)
 
     switch (f->current_step)
     {
-        case 0:
-            f->tileid = get_tileid(ppu, f->obj_index, f->bottom_part);
-            f->current_step = 1;
-            break;
-        case 1:
-            f->lo = get_tile_lo(ppu, f->tileid, f->obj_index);
-            f->current_step = 2;
-            break;
-        case 2:
-            f->hi = get_tile_hi(ppu, f->tileid, f->obj_index);
-            f->current_step = 3;
-            break;
-        case 3:
-            {
-                if (queue_isempty(ppu->obj_fifo))
-                    push_slice(ppu, ppu->obj_fifo, f->hi, f->lo, f->obj_index);
-                else
-                    merge_obj(ppu, f->hi, f->lo, f->obj_index);
+    case 0:
+        f->tileid = get_tileid(ppu, f->obj_index, f->bottom_part);
+        f->current_step = 1;
+        break;
+    case 1:
+        f->lo = get_tile_lo(ppu, f->tileid, f->obj_index);
+        f->current_step = 2;
+        break;
+    case 2:
+        f->hi = get_tile_hi(ppu, f->tileid, f->obj_index);
+        f->current_step = 3;
+        break;
+    case 3:
+    {
+        if (queue_isempty(ppu->obj_fifo))
+            push_slice(ppu, ppu->obj_fifo, f->hi, f->lo, f->obj_index);
+        else
+            merge_obj(ppu, f->hi, f->lo, f->obj_index);
 
-                // Fetch is done, we can reset the index
-                // so that we can detect other (overlapped or not) objects
-                // also mark it done
-                ppu->obj_slots[f->obj_index].done = 1;
-                f->obj_index = -1;
-                f->current_step = 0;
-                f->tick = 0;
-                return 0;
-            }
+        // Fetch is done, we can reset the index
+        // so that we can detect other (overlapped or not) objects
+        // also mark it done
+        ppu->obj_slots[f->obj_index].done = 1;
+        f->obj_index = -1;
+        f->current_step = 0;
+        f->tick = 0;
+        return 0;
+    }
     }
 
     f->tick = 0;
@@ -279,7 +277,7 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
     ppu->wy = cpu->membus + 0xFF4A;
     ppu->wx = cpu->membus + 0xFF4B;
     ppu->stat = cpu->membus + 0xFF41;
-    //TODO set bit 7 of stat to 1 (unused bit)
+    // TODO set bit 7 of stat to 1 (unused bit)
 
     ppu->bgp = cpu->membus + 0xFF47;
     ppu->obp0 = cpu->membus + 0xFF48;
@@ -313,7 +311,7 @@ void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer)
     ppu->win_ly = 0;
     ppu->win_lx = 7;
     ppu->wy_trigger = 0;
-    
+
     ppu->obj_mode = 0;
 
     *ppu->lcdc = 0x00;
@@ -374,8 +372,7 @@ int oam_scan(struct ppu *ppu)
         // 8x16 (LCDC bit 2 = 1) or 8x8 (LCDC bit 2 = 0)
         // TODO: obj_y + 1 != 0 is weird ? check this
         int y_max_offset = get_lcdc(ppu, LCDC_OBJ_SIZE) ? 16 : 8;
-        if (*(obj_y + 1) != 0 && *ppu->ly + 16 >= *obj_y
-                && *ppu->ly + 16 < *obj_y + y_max_offset)
+        if (*(obj_y + 1) != 0 && *ppu->ly + 16 >= *obj_y && *ppu->ly + 16 < *obj_y + y_max_offset)
         {
             ppu->obj_slots[ppu->obj_count].y = *obj_y;
             ppu->obj_slots[ppu->obj_count].x = *(obj_y + 1);
@@ -410,7 +407,7 @@ uint8_t mode2_handler(struct ppu *ppu)
     }
 
     check_lyc(ppu, 0);
-    
+
     ppu->first_tile = 1;
     oam_scan(ppu);
     return 2;
@@ -448,7 +445,6 @@ uint8_t send_pixel(struct ppu *ppu)
 {
     if (queue_isempty(ppu->bg_fifo))
         return 0;
-
 
     // Don't draw BG prefetch + shift SCX for first BG tile
     if (!ppu->win_mode && ppu->first_tile && ppu->lx > 7)
@@ -525,7 +521,7 @@ uint8_t mode3_handler(struct ppu *ppu)
     int bottom_part = 0;
     if (ppu->obj_fetcher->obj_index == -1 && get_lcdc(ppu, LCDC_OBJ_ENABLE))
     {
-        obj = on_object(ppu,  &bottom_part);
+        obj = on_object(ppu, &bottom_part);
         if (obj > -1)
         {
             ppu->obj_fetcher->obj_index = obj;
@@ -624,7 +620,7 @@ uint8_t mode1_handler(struct ppu *ppu)
     {
         clear_stat(ppu, 1);
         set_stat(ppu, 0);
-        set_if(ppu->cpu, INTERRUPT_VBLANK); // VBlank Interrupt
+        set_if(ppu->cpu, INTERRUPT_VBLANK);        // VBlank Interrupt
         if (get_stat(ppu, 4) && !get_stat(ppu, 3)) // STAT VBlank Interrupt
             set_if(ppu->cpu, INTERRUPT_LCD);
     }
@@ -643,7 +639,7 @@ uint8_t mode1_handler(struct ppu *ppu)
         return 1;
     }
 
-    if (!ppu->mode1_153th && *ppu->ly < 153)    // Go to next VBlank line
+    if (!ppu->mode1_153th && *ppu->ly < 153) // Go to next VBlank line
     {
         *ppu->ly += 1;
         ppu->line_dot_count = 0;
@@ -667,18 +663,18 @@ void ppu_tick_m(struct ppu *ppu)
     {
         switch (ppu->current_mode)
         {
-            case 2:
-                dots += mode2_handler(ppu);
-                break;
-            case 3:
-                dots += mode3_handler(ppu);
-                break;
-            case 0:
-                dots += mode0_handler(ppu);
-                break;
-            case 1:
-                dots += mode1_handler(ppu);
-                break;
+        case 2:
+            dots += mode2_handler(ppu);
+            break;
+        case 3:
+            dots += mode3_handler(ppu);
+            break;
+        case 0:
+            dots += mode0_handler(ppu);
+            break;
+        case 1:
+            dots += mode1_handler(ppu);
+            break;
         }
     }
 
@@ -688,8 +684,7 @@ void ppu_tick_m(struct ppu *ppu)
         ppu->dma = 1;
     else if (ppu->dma == 1)
     {
-        ppu->cpu->membus[0xFE00 + ppu->dma_acc] =
-            read_mem(ppu->cpu, (ppu->dma_source << 8) + ppu->dma_acc);
+        ppu->cpu->membus[0xFE00 + ppu->dma_acc] = read_mem(ppu->cpu, (ppu->dma_source << 8) + ppu->dma_acc);
         ++ppu->dma_acc;
         if (ppu->dma_acc >= 160)
             ppu->dma = 0;

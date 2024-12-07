@@ -1,6 +1,7 @@
+#include "interrupts.h"
+
 #include "cpu.h"
 #include "emulation.h"
-#include "interrupts.h"
 #include "utils.h"
 
 int check_interrupt(struct cpu *cpu)
@@ -8,14 +9,12 @@ int check_interrupt(struct cpu *cpu)
     if (!cpu->halt && !cpu->ime)
         return 0;
 
-    //Joypad check
-    if (((cpu->membus[0xFF00] >> 5 & 0x01) == 0x00) ||
-        (cpu->membus[0xFF00] >> 4 & 0x01) == 0x00)
+    // Joypad check
+    if (((cpu->membus[0xFF00] >> 5 & 0x01) == 0x00) || (cpu->membus[0xFF00] >> 4 & 0x01) == 0x00)
     {
         for (int i = 0; i < 4; ++i)
         {
-            if (((cpu->membus[0xFF00] >> 5 & 0x01) == 0x00) ||
-                (cpu->membus[0xFF00] >> 4 & 0x01) == 0x00)
+            if (((cpu->membus[0xFF00] >> 5 & 0x01) == 0x00) || (cpu->membus[0xFF00] >> 4 & 0x01) == 0x00)
             {
                 if (((cpu->membus[0xFF00] >> i) & 0x01) == 0x00)
                     set_if(cpu, INTERRUPT_JOYPAD);
@@ -36,8 +35,8 @@ int check_interrupt(struct cpu *cpu)
     return 1;
 }
 
-                                /* VBlank, LCD STAT, Timer, Serial, Joypad */
-static unsigned int handler_vectors[] = { 0x40, 0x48, 0x50, 0x58, 0x60 };
+/* VBlank, LCD STAT, Timer, Serial, Joypad */
+static unsigned int handler_vectors[] = {0x40, 0x48, 0x50, 0x58, 0x60};
 
 int handle_interrupt(struct cpu *cpu, int bit)
 {

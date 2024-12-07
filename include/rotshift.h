@@ -9,5 +9,3 @@ int rrca(struct cpu *cpu);
 int rra(struct cpu *cpu);
 
 #endif
-
-

@@ -1,14 +1,18 @@
 BasedOnStyle: LLVM
-IndentWidth: 4
-BreakBeforeBraces: Allman
-PointerAlignment: Left
-AlignAfterOpenBracket: Align
 AllowAllArgumentsOnNextLine: false
+AllowShortFunctionsOnASingleLine: None
 BinPackArguments: false
 BinPackParameters: false
-AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBraces: Allman
 BreakConstructorInitializers: BeforeComma
-SortIncludes: false
 ColumnLimit: 120
+IndentWidth: 4
+IncludeBlocks: Regroup
+IncludeCategories:
+    - Regex: '<.*>'
+      Priority: 1
+    - Regex: '.*'
+      Priority: 2
+SortIncludes: true
 TabWidth: 4
-UseTab: Never
+AlwaysBreakTemplateDeclarations: Yes
