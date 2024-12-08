@@ -46,6 +46,7 @@
 
 #define NRx4_TRIGGER_MASK (1 << 7)
 #define NRx4_LENGTH_ENABLE (1 << 6)
+#define NRx4_UNUSED_PART (0x7 << 3)
 #define NRx4_PERIOD (0x7 << 0)
 
 struct apu

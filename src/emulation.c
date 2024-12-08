@@ -324,7 +324,7 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
     else if (address == NR14 || address == NR24 || address == NR34 || address == NR44)
     {
         write = 0;
-        cpu->membus[address] = val & ~(0x17 << 3);
+        cpu->membus[address] = val & ~(NRx4_UNUSED_PART);
         uint8_t ch_number = ((address - NR14) / (NR24 - NR14)) + 1;
         /* Trigger event */
         if (val & NRx4_TRIGGER_MASK)
