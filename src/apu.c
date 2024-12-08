@@ -260,15 +260,15 @@ static void volume_env_clock(struct apu *apu, struct ch_generic *ch, uint8_t num
     if (ch->period_timer > 0)
         --ch->period_timer;
 
-    if (ch->period_timer != 0)
-        return;
+    if (ch->period_timer == 0)
+    {
+        ch->period_timer = ch->env_period;
 
-    ch->period_timer = ch->env_period;
-
-    if (ch->env_dir == ENVELOPE_DIR_INCREMENT && ch->current_volume < 0xF)
-        ++ch->current_volume;
-    else if (ch->env_dir == ENVELOPE_DIR_DECREMENT && ch->current_volume > 0)
-        --ch->current_volume;
+        if (ch->env_dir == ENVELOPE_DIR_INCREMENT && ch->current_volume < 0xF)
+            ++ch->current_volume;
+        else if (ch->env_dir == ENVELOPE_DIR_DECREMENT && ch->current_volume > 0)
+            --ch->current_volume;
+    }
 }
 
 static unsigned int calculate_frequency(struct apu *apu, uint8_t sweep_shift, uint8_t dir)
@@ -314,8 +314,8 @@ static void frequency_sweep_clock(struct apu *apu)
         if (new_frequency < 2048 && shift != 0)
         {
             apu->cpu->membus[NR13] = new_frequency & 0xFF;
-            apu->cpu->membus[NR14] = apu->cpu->membus[NR14] & ~(0x07);
-            apu->cpu->membus[NR14] = apu->cpu->membus[NR14] | (new_frequency >> 8);
+            apu->cpu->membus[NR14] &= ~(0x07);
+            apu->cpu->membus[NR14] |= (new_frequency >> 8);
             ch1->shadow_frequency = new_frequency;
 
             calculate_frequency(apu, shift, dir);
@@ -494,7 +494,7 @@ void apu_tick_m(struct apu *apu)
     {
         uint16_t div = apu->previous_div + 1;
 
-        /* DIV bit 5 falling edge detection */
+        /* DIV bit 4 falling edge detection */
         if ((apu->previous_div & DIV_APU_MASK) && !(div & DIV_APU_MASK))
             frame_sequencer_step(apu);
 
