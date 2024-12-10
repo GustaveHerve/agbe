@@ -27,5 +27,5 @@ endif()
 # Link to the actual SDL2 library. SDL2::SDL2 is the shared SDL library, SDL2::SDL2-static is the static SDL libarary.
 target_link_libraries(agbe PRIVATE SDL2::SDL2)
 
-# Math C library
+# Link Math C library
 target_link_libraries(agbe PRIVATE m)

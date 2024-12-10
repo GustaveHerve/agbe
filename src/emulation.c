@@ -229,6 +229,14 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address)
             return 0xFF;
     }
 
+    // JOYP
+    else if (address == 0xFF00)
+    {
+        // Neither directions nor actions buttons selected, low nibble = 0xF
+        if ((cpu->membus[address] & 0x30) == 0x30)
+            return cpu->membus[address] | 0xF;
+    }
+
     return cpu->membus[address];
 }
 
@@ -277,12 +285,14 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
     else if (address == 0xFF00)
     {
         write = 0;
-        val &= 0x30; // don't write in bit 3-0 and keep only bit 6-5
+        val &= 0x30; // don't write in bit 3-0 and keep only bit 5-4
         uint8_t low_nibble = 0x00;
         if (((val >> 4) & 0x01) == 0x00)
             low_nibble = cpu->joyp_d;
-        if (((val >> 5) & 0x01) == 0x00)
+        else if (((val >> 5) & 0x01) == 0x00)
             low_nibble = cpu->joyp_a;
+        else
+            low_nibble = 0xF;
         uint8_t new = low_nibble & 0x0F;
         new |= val;
         new |= (cpu->membus[address] & 0xC0); // keep the 7-6 bit

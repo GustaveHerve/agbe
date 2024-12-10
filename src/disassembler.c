@@ -12,6 +12,8 @@
 #include "rotshift.h"
 #include "utils.h"
 
+int prefix_op(struct cpu *cpu);
+
 int next_op(struct cpu *cpu)
 {
     int mcycles = 0;

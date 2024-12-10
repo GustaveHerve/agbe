@@ -4,6 +4,5 @@
 struct cpu;
 
 int next_op(struct cpu *cpu);
-int prefix_op(struct cpu *cpu);
 
 #endif

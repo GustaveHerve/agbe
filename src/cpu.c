@@ -42,8 +42,8 @@ void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
     cpu->serial_acc = 0;
 
     // Joypad
-    cpu->joyp_a = 0xFF;
-    cpu->joyp_d = 0xFF;
+    cpu->joyp_a = 0xF;
+    cpu->joyp_d = 0xF;
 
     cpu->regist->a = 0x00;
     cpu->regist->f = 0x00;
