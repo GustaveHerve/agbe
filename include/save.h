@@ -3,10 +3,10 @@
 
 #include <stdio.h>
 
-struct mbc;
+struct mbc_base;
 
-FILE *open_save_file(struct mbc *mbc);
+FILE *open_save_file(struct mbc_base *mbc);
 
-int save_ram_to_file(struct mbc *mbc);
+int save_ram_to_file(struct mbc_base *mbc);
 
 #endif

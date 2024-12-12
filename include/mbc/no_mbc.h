@@ -8,4 +8,6 @@ struct no_mbc
     struct mbc_base base;
 };
 
+void set_no_mbc(struct mbc_base *mbc);
+
 #endif
