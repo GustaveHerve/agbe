@@ -1,6 +1,5 @@
 #include "mbc.h"
 
-#include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,7 +48,8 @@ void set_mbc(struct cpu *cpu, uint8_t *rom)
     mbc->rom_size = rom[0x0148];
     mbc->ram_size = rom[0x0149];
 
-    mbc->rom_bank_count = pow(2, cpu->mbc->rom_size + 1);
+    // mbc->rom_bank_count = pow(2, cpu->mbc->rom_size + 1);
+    mbc->rom_bank_count = 1 << (cpu->mbc->rom_size + 1);
     mbc->bank1 = 1;
 
     switch (mbc->ram_size)

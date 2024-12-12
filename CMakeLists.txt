@@ -5,7 +5,7 @@ project(agbe VERSION 1.0 LANGUAGES C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED 99)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-add_compile_options(-Wall -Wextra -pedantic -std=c99 -g)
+add_compile_options(-Wall -Wextra -pedantic -std=c99 -g -Ofast)
 
 # 1. Look for a SDL2 package, 2. look for the SDL2 component and 3. fail if none can be found
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
@@ -17,6 +17,7 @@ add_executable(agbe)
 
 add_subdirectory(src)
 target_include_directories(agbe PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_include_directories(agbe PUBLIC "${PROJECT_SOURCE_DIR}/include/mbc")
 
 # SDL2::SDL2main may or may not be available. It is e.g. required by Windows GUI applications
 if(TARGET SDL2::SDL2main)
