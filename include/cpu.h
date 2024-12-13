@@ -5,7 +5,6 @@
 
 struct ppu;
 struct renderer;
-struct mbc;
 struct mbc_generic;
 
 #define CPU_FREQUENCY 4194304
@@ -54,8 +53,7 @@ struct cpu
     uint8_t serial_clock;
     uint8_t serial_acc;
 
-    struct mbc *mbc;
-    struct mbc_base *mbc_g;
+    struct mbc_base *mbc;
 
     uint8_t joyp_a;
     uint8_t joyp_d;

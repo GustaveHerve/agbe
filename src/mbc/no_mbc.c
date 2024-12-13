@@ -1,15 +1,9 @@
-#include "mbc/no_mbc.h"
+#include "no_mbc.h"
 
-#include <stdint.h>
+#include <stdlib.h>
 
 #include "cpu.h"
-
-static void _mbc_init(struct mbc_base *mbc_base)
-{
-    (void)mbc_base;
-    /* Nothing to do, all is handled in mbc_base */
-    return;
-}
+#include "mbc_base.h"
 
 static void _mbc_free(struct mbc_base *mbc)
 {
@@ -50,18 +44,12 @@ static void _write_mbc_ram(struct cpu *cpu, uint16_t address, uint8_t val)
     return;
 }
 
-static void _write_mbc(struct cpu *cpu, uint16_t address, uint8_t val)
+struct mbc_base *make_no_mbc(void)
 {
-    (void)cpu;
-    (void)address;
-    (void)val;
-    /* There is no register to write to without an MBC, don't do anything */
-    return;
-}
+    struct mbc_base *mbc = malloc(sizeof(struct no_mbc));
 
-void set_no_mbc(struct mbc_base *mbc)
-{
-    mbc->_mbc_init = &_mbc_init;
+    mbc->type = NO_MBC;
+
     mbc->_mbc_free = &_mbc_free;
 
     mbc->_read_mbc_rom = &_read_mbc_rom;
@@ -70,5 +58,5 @@ void set_no_mbc(struct mbc_base *mbc)
     mbc->_read_mbc_ram = &_read_mbc_ram;
     mbc->_write_mbc_ram = &_write_mbc_ram;
 
-    mbc->_write_mbc = &_write_mbc;
+    return mbc;
 }

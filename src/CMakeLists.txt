@@ -8,7 +8,9 @@ target_sources(agbe PUBLIC
     jump.c
     load.c
     logic.c
-    mbc.c
+    mbc/mbc_base.c
+    mbc/mbc1.c
+    mbc/no_mbc.c
     ppu.c
     ppu_utils.c
     prefix.c
@@ -20,5 +22,4 @@ target_sources(agbe PUBLIC
     save.c
     serial.c
     apu.c
-    # mbc/mbc_generic.c
 )

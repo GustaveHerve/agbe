@@ -33,7 +33,6 @@ struct mbc_base
     unsigned int ram_total_size;
 
     /* Functions pointers */
-    void (*_mbc_init)(struct mbc_base *mbc_base);
     void (*_mbc_free)(struct mbc_base *mbc_base);
 
     uint8_t (*_read_mbc_rom)(struct cpu *cpu, uint16_t address);
@@ -41,8 +40,6 @@ struct mbc_base
 
     uint8_t (*_read_mbc_ram)(struct cpu *cpu, uint16_t address);
     void (*_write_mbc_ram)(struct cpu *cpu, uint16_t address, uint8_t val);
-
-    void (*_write_mbc)(struct cpu *cpu, uint16_t address, uint8_t val);
 };
 
 void set_mbc(struct mbc_base **output, uint8_t *rom, char *rom_path);
@@ -52,7 +49,5 @@ void write_mbc_rom(struct cpu *cpu, uint16_t address, uint8_t val);
 
 uint8_t read_mbc_ram(struct cpu *cpu, uint16_t address);
 void write_mbc_ram(struct cpu *cpu, uint16_t address, uint8_t val);
-
-void write_mbc(struct cpu *cpu, uint16_t address, uint8_t val);
 
 #endif

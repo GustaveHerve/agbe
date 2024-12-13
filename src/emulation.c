@@ -8,7 +8,7 @@
 #include "cpu.h"
 #include "disassembler.h"
 #include "interrupts.h"
-#include "mbc.h"
+#include "mbc_base.h"
 #include "ppu.h"
 #include "serial.h"
 #include "timers.h"
@@ -125,7 +125,7 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
     uint8_t checksum = rom[0x14d];
 
     // Init MBC / cartridge info and fill rom in buffer
-    set_mbc(cpu, rom);
+    set_mbc(&cpu->mbc, rom, rom_path);
 
     lcd_off(cpu);
 
@@ -253,7 +253,7 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
     if (address <= 0x7FFF)
     {
         write = 0;
-        write_mbc(cpu, address, val);
+        write_mbc_rom(cpu, address, val);
     }
 
     // VRAM
@@ -267,7 +267,7 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
     else if (address >= 0xA000 && address <= 0xBFFF)
     {
         write = 0;
-        write_mbc(cpu, address, val);
+        write_mbc_ram(cpu, address, val);
     }
 
     // Echo RAM
