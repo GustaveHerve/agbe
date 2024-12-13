@@ -10,6 +10,9 @@
 
 void mbc_free(struct mbc_base *mbc)
 {
+    if (!mbc)
+        return;
+
     mbc->_mbc_free(mbc);
 
     if (mbc->save_file)
@@ -49,6 +52,10 @@ static struct mbc_base *make_mbc(uint8_t type_byte)
 #endif
     }
 
+    // Unsupported MBC type
+    if (!res)
+        return NULL;
+
     res->rom_path = NULL;
     res->save_file = NULL;
     res->rom = NULL;
@@ -60,8 +67,7 @@ static struct mbc_base *make_mbc(uint8_t type_byte)
     res->rom_total_size = 0;
     res->ram_total_size = 0;
 
-    // Unsupported MBC type
-    return NULL;
+    return res;
 }
 
 void set_mbc(struct mbc_base **output, uint8_t *rom, char *rom_path)
@@ -119,6 +125,7 @@ void set_mbc(struct mbc_base **output, uint8_t *rom, char *rom_path)
 
     *output = mbc;
 }
+
 uint8_t read_mbc_rom(struct cpu *cpu, uint16_t address)
 {
     return cpu->mbc->_read_mbc_rom(cpu, address);

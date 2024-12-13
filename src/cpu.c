@@ -7,21 +7,21 @@
 #include "emulation.h"
 #include "jump.h"
 #include "load.h"
-#include "mbc.h"
+#include "mbc_base.h"
 #include "ppu.h"
 #include "utils.h"
 
 #define MEMBUS_SIZE 65536 // In bytes
 
-void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path)
+void cpu_init(struct cpu *cpu, struct renderer *rend)
 {
     cpu->regist = malloc(sizeof(struct cpu_register));
     cpu->membus = calloc(MEMBUS_SIZE, sizeof(uint8_t));
-    cpu->mbc = malloc(sizeof(struct mbc));
     cpu->ppu = malloc(sizeof(struct ppu));
     cpu->apu = malloc(sizeof(struct apu));
 
-    mbc_init(cpu->mbc, rom_path);
+    cpu->mbc = NULL;
+
     ppu_init(cpu->ppu, cpu, rend);
     apu_init(cpu, cpu->apu);
 

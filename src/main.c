@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     rend->texture = texture;
 
     struct cpu *cpu = malloc(sizeof(struct cpu));
-    cpu_init(cpu, rend, settings.rom_path);
+    cpu_init(cpu, rend);
 
     main_loop(cpu, settings.rom_path, settings.bootrom_path);
 

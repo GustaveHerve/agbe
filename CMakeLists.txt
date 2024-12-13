@@ -5,7 +5,13 @@ project(agbe VERSION 1.0 LANGUAGES C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED 99)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-add_compile_options(-Wall -Wextra -pedantic -std=c99 -g -Ofast)
+add_compile_options(-Wall -Wextra -pedantic -std=c99)
+
+# Check if the build type is Debug
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-g -fsanitize=address)
+    add_link_options(-fsanitize=address)
+endif()
 
 # 1. Look for a SDL2 package, 2. look for the SDL2 component and 3. fail if none can be found
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
@@ -27,6 +33,3 @@ endif()
 
 # Link to the actual SDL2 library. SDL2::SDL2 is the shared SDL library, SDL2::SDL2-static is the static SDL libarary.
 target_link_libraries(agbe PRIVATE SDL2::SDL2)
-
-# Link Math C library
-target_link_libraries(agbe PRIVATE m)

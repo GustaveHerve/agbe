@@ -64,7 +64,7 @@ struct cpu
     uint8_t *sc;
 };
 
-void cpu_init(struct cpu *cpu, struct renderer *rend, char *rom_path);
+void cpu_init(struct cpu *cpu, struct renderer *rend);
 void cpu_start(struct cpu *cpu);
 void cpu_free(struct cpu *todelete);
 

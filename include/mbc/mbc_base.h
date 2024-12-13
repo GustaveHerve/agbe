@@ -42,6 +42,7 @@ struct mbc_base
     void (*_write_mbc_ram)(struct cpu *cpu, uint16_t address, uint8_t val);
 };
 
+void mbc_free(struct mbc_base *mbc);
 void set_mbc(struct mbc_base **output, uint8_t *rom, char *rom_path);
 
 uint8_t read_mbc_rom(struct cpu *cpu, uint16_t address);
