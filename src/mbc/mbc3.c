@@ -1,4 +1,4 @@
-#include "mbc1.h"
+#include "mbc3.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -14,17 +14,11 @@ static void _mbc_free(struct mbc_base *mbc)
 
 static uint8_t _read_mbc_rom(struct cpu *cpu, uint16_t address)
 {
-    struct mbc1 *mbc = (struct mbc1 *)cpu->mbc;
+    struct mbc3 *mbc = (struct mbc3 *)cpu->mbc;
 
     unsigned int res_addr = address & 0x3FFF;
-    if (address <= 0x3FFF)
-    {
-        if (mbc->mbc1_mode)
-            res_addr = (mbc->bank2 << 19) | res_addr;
-    }
-
-    else if (address >= 0x4000 && address <= 0x7FFF)
-        res_addr = (mbc->bank2 << 19) | (mbc->bank1 << 14) | res_addr;
+    if (address >= 0x4000 && address <= 0x7FFF)
+        res_addr = (mbc->bank1 << 14) | res_addr;
 
     // If address is too big for the size of ROM, only keep necessary bit count
     // to address total ROM size values
@@ -40,21 +34,21 @@ static uint8_t _read_mbc_rom(struct cpu *cpu, uint16_t address)
 
 static void _write_mbc_rom(struct cpu *cpu, uint16_t address, uint8_t val)
 {
-    struct mbc1 *mbc = (struct mbc1 *)cpu->mbc;
+    struct mbc3 *mbc = (struct mbc3 *)cpu->mbc;
 
     // RAM Enable
     if (address <= 0x1FFF)
     {
         if ((val & 0x0F) == 0x0A)
-            mbc->ram_enabled = 1;
+            mbc->ram_rtc_registers_enabled = 1;
         else
-            mbc->ram_enabled = 0;
+            mbc->ram_rtc_registers_enabled = 0;
     }
 
     else if (address >= 0x2000 && address <= 0x3FFF)
     {
-        uint8_t bank = val & 0x1F;
-        // Prevent bank 0x00 duplication (only if uses 5 bits)
+        uint8_t bank = val & 0x7F;
+        // Prevent bank 0x00 duplication (only if uses 7 bits)
         if (bank == 0x00)
             mbc->bank1 = 0x01;
         else
@@ -64,31 +58,55 @@ static void _write_mbc_rom(struct cpu *cpu, uint16_t address, uint8_t val)
         }
     }
 
-    // RAM bank switch OR Upper bits of ROM bank switch
+    // RAM bank switch OR RTC register select
     else if (address >= 0x4000 && address <= 0x5FFF)
-        mbc->bank2 = val & 0x03;
+    {
+        if (val < 0x08 || val > 0x0C)
+            mbc->bank2 = val & 0x03;
+    }
 
-    // Banking mode select
+    // Latch Clock Data
     else if (address >= 0x6000 && address <= 0x7FFF)
-        mbc->mbc1_mode = val & 0x01;
+    {
+        if (mbc->latch_last_write == 0x00 && val == 0x01)
+        {
+            // Latch RTC registers
+        }
+        mbc->latch_last_write = val;
+    }
 }
 
 static uint8_t _read_mbc_ram(struct cpu *cpu, uint16_t address)
 {
-    struct mbc1 *mbc = (struct mbc1 *)cpu->mbc;
+    struct mbc3 *mbc = (struct mbc3 *)cpu->mbc;
 
-    if (!mbc->ram_enabled || cpu->mbc->ram_bank_count == 0)
+    if (!mbc->ram_rtc_registers_enabled || cpu->mbc->ram_bank_count == 0)
         return 0xFF;
 
+    // RTC register mapping
+    switch (mbc->bank2)
+    {
+    case 0x08:
+        return mbc->rtc_clock.s;
+    case 0x09:
+        return mbc->rtc_clock.m;
+    case 0x0A:
+        return mbc->rtc_clock.h;
+    case 0x0B:
+        return mbc->rtc_clock.dl;
+    case 0x0C:
+        return mbc->rtc_clock.dh;
+    }
+
     unsigned int res_addr = address & 0x1FFF;
-    if (mbc->mbc1_mode)
-        res_addr = (mbc->bank2 << 13) | res_addr;
+    // RAM bank mapping
+    res_addr = (mbc->bank2 << 13) | res_addr;
 
     // If address is too big for the size of RAM, ignore as many bits as needed
     unsigned int mask = 0x4000;
     while (res_addr > cpu->mbc->ram_total_size)
     {
-        res_addr &= (~mask);
+        res_addr &= ~mask;
         mask >>= 1;
     }
     return cpu->mbc->ram[res_addr];
@@ -96,10 +114,10 @@ static uint8_t _read_mbc_ram(struct cpu *cpu, uint16_t address)
 
 static void _write_mbc_ram(struct cpu *cpu, uint16_t address, uint8_t val)
 {
-    struct mbc1 *mbc = (struct mbc1 *)cpu->mbc;
+    struct mbc3 *mbc = (struct mbc3 *)cpu->mbc;
 
     // Ignore writes if RAM is disabled or if there is no external RAM
-    if (!mbc->ram_enabled || cpu->mbc->ram_bank_count == 0)
+    if (!mbc->ram_rtc_registers_enabled || cpu->mbc->ram_bank_count == 0)
         return;
 
     unsigned int res_addr = address & 0x1FFF;
@@ -121,12 +139,12 @@ static void _write_mbc_ram(struct cpu *cpu, uint16_t address, uint8_t val)
         save_ram_to_file(cpu->mbc);
 }
 
-struct mbc_base *make_mbc1(void)
+struct mbc_base *make_mbc3(void)
 {
-    struct mbc_base *mbc = calloc(1, sizeof(struct mbc1));
-    struct mbc1 *mbc1 = (struct mbc1 *)mbc;
+    struct mbc_base *mbc = calloc(1, sizeof(struct mbc3));
+    struct mbc3 *mbc3 = (struct mbc3 *)mbc;
 
-    mbc->type = MBC1;
+    mbc->type = MBC3;
 
     mbc->_mbc_free = &_mbc_free;
 
@@ -136,10 +154,15 @@ struct mbc_base *make_mbc1(void)
     mbc->_read_mbc_ram = &_read_mbc_ram;
     mbc->_write_mbc_ram = &_write_mbc_ram;
 
-    mbc1->bank1 = 1;
-    mbc1->bank2 = 0;
-    mbc1->ram_enabled = 0;
-    mbc1->mbc1_mode = 1;
+    mbc3->bank1 = 1;
+    mbc3->bank2 = 0;
+    mbc3->ram_rtc_registers_enabled = 0;
+
+    mbc3->rtc_clock.s = 0;
+    mbc3->rtc_clock.m = 0;
+    mbc3->rtc_clock.h = 0;
+    mbc3->rtc_clock.dl = 0;
+    mbc3->rtc_clock.dh = 0;
 
     return mbc;
 }
