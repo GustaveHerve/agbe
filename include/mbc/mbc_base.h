@@ -10,7 +10,9 @@ enum MBC_TYPE
 {
     NO_MBC = 0,
     MBC1,
-    MBC3 = 3,
+    MBC2,
+    MBC3,
+    MBC5,
 };
 
 struct mbc_base

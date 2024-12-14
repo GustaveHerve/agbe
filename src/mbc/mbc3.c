@@ -3,9 +3,20 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "cpu.h"
 #include "save.h"
+
+// clang-format off
+#define RTC_SECONDS         0x08
+#define RTC_MINUTES         0x09
+#define RTC_HOURS           0x0A
+#define RTC_DAY_LOWER       0x0B
+#define RTC_DAY_UPPER       0x0C
+
+#define RTC_DAY_UPPER_MASK  0xC1
+// clang-format on
 
 static void _mbc_free(struct mbc_base *mbc)
 {
@@ -61,7 +72,7 @@ static void _write_mbc_rom(struct cpu *cpu, uint16_t address, uint8_t val)
     // RAM bank switch OR RTC register select
     else if (address >= 0x4000 && address <= 0x5FFF)
     {
-        if (val < 0x08 || val > 0x0C)
+        if (val < RTC_SECONDS || val > RTC_DAY_UPPER)
             mbc->bank2 = val & 0x03;
     }
 
@@ -76,6 +87,24 @@ static void _write_mbc_rom(struct cpu *cpu, uint16_t address, uint8_t val)
     }
 }
 
+static uint8_t read_rtc_register(struct mbc3 *mbc)
+{
+    switch (mbc->bank2)
+    {
+    case RTC_SECONDS:
+        return mbc->rtc_clock.s;
+    case RTC_MINUTES:
+        return mbc->rtc_clock.m;
+    case RTC_HOURS:
+        return mbc->rtc_clock.h;
+    case RTC_DAY_LOWER:
+        return mbc->rtc_clock.dl;
+    case RTC_DAY_UPPER:
+        return mbc->rtc_clock.dh;
+    }
+    return 0;
+}
+
 static uint8_t _read_mbc_ram(struct cpu *cpu, uint16_t address)
 {
     struct mbc3 *mbc = (struct mbc3 *)cpu->mbc;
@@ -84,19 +113,7 @@ static uint8_t _read_mbc_ram(struct cpu *cpu, uint16_t address)
         return 0xFF;
 
     // RTC register mapping
-    switch (mbc->bank2)
-    {
-    case 0x08:
-        return mbc->rtc_clock.s;
-    case 0x09:
-        return mbc->rtc_clock.m;
-    case 0x0A:
-        return mbc->rtc_clock.h;
-    case 0x0B:
-        return mbc->rtc_clock.dl;
-    case 0x0C:
-        return mbc->rtc_clock.dh;
-    }
+    read_rtc_register(mbc);
 
     if (cpu->mbc->ram_bank_count == 0)
         return 0xFF;
@@ -119,32 +136,32 @@ static int write_rtc_register(struct mbc3 *mbc, uint8_t val)
 {
     switch (mbc->bank2)
     {
-    case 0x08:
+    case RTC_SECONDS:
     {
-        if (val <= 0x3B)
+        if (val < 60)
             mbc->rtc_clock.s = val;
         return 1;
     }
-    case 0x09:
+    case RTC_MINUTES:
     {
-        if (val <= 0x3B)
+        if (val < 60)
             mbc->rtc_clock.m = val;
         return 1;
     }
-    case 0x0A:
+    case RTC_HOURS:
     {
-        if (val <= 0x17)
+        if (val < 24)
             mbc->rtc_clock.h = val;
         return 1;
     }
-    case 0x0B:
+    case RTC_DAY_LOWER:
     {
         mbc->rtc_clock.dl = val;
         return 1;
     }
-    case 0x0C:
+    case RTC_DAY_UPPER:
     {
-        val &= 0xC1;
+        val &= RTC_DAY_UPPER_MASK;
         mbc->rtc_clock.dh = val;
         return 1;
     }
@@ -204,6 +221,7 @@ struct mbc_base *make_mbc3(void)
     mbc3->bank2 = 0;
     mbc3->ram_rtc_registers_enabled = 0;
 
+    // Set to 0xFFFF (purposefully impossible value) and not 0 to handle the first write to it
     mbc3->latch_last_write = -1;
 
     mbc3->rtc_clock.s = 0;

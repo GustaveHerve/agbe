@@ -11,6 +11,7 @@ target_sources(agbe PUBLIC
     mbc/mbc_base.c
     mbc/mbc1.c
     mbc/mbc3.c
+    mbc/mbc5.c
     mbc/no_mbc.c
     ppu.c
     ppu_utils.c

@@ -129,12 +129,6 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
     lcd_off(cpu);
 
-#if 0
-    size_t cycle_threshold = CYCLE_PER_FRAME / FRAMERATE;
-    size_t cycle_count = 0;
-    Uint64 start = SDL_GetPerformanceCounter();
-#endif
-
     if (boot_rom_path == NULL)
     {
         cpu->regist->pc = 0x0100;
@@ -144,17 +138,6 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
     while (cpu->running)
     {
-#if 0
-        if (cycle_count >= cycle_threshold)
-        {
-            Uint64 end = SDL_GetPerformanceCounter();
-            float elapsedMS = (end - start) / (float)SDL_GetPerformanceFrequency() * 1000.0f;
-            if (floor(16.666f - elapsedMS > 0))
-                SDL_Delay(floor(16.666f - elapsedMS));
-            cycle_count -=cycle_threshold;
-            start = SDL_GetPerformanceCounter();
-        }
-#endif
         if (SDL_GetQueuedAudioSize(cpu->apu->device_id) == AUDIO_BUFFER_SIZE * sizeof(float))
         {
             /* Wait for audio queue to be cleared */
@@ -164,12 +147,8 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
         if (!cpu->halt)
             next_op(cpu);
-        // cycle_count += next_op(cpu);
         else
-        {
             tick_m(cpu); // Previous instruction tick + next OPCode fetch
-            // cycle_count += 1;
-        }
 
         check_interrupt(cpu);
     }
