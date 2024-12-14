@@ -10,6 +10,7 @@ target_sources(agbe PUBLIC
     logic.c
     mbc/mbc_base.c
     mbc/mbc1.c
+    mbc/mbc3.c
     mbc/no_mbc.c
     ppu.c
     ppu_utils.c

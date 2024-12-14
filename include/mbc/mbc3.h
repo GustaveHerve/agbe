@@ -24,6 +24,6 @@ struct mbc3
     uint16_t latch_last_write;
 };
 
-struct mbc_base *make_mbc1(void);
+struct mbc_base *make_mbc3(void);
 
 #endif

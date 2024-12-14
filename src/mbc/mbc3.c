@@ -48,7 +48,7 @@ static void _write_mbc_rom(struct cpu *cpu, uint16_t address, uint8_t val)
     else if (address >= 0x2000 && address <= 0x3FFF)
     {
         uint8_t bank = val & 0x7F;
-        // Prevent bank 0x00 duplication (only if uses 7 bits)
+        // Prevent bank 0x00 duplication
         if (bank == 0x00)
             mbc->bank1 = 0x01;
         else
@@ -80,7 +80,7 @@ static uint8_t _read_mbc_ram(struct cpu *cpu, uint16_t address)
 {
     struct mbc3 *mbc = (struct mbc3 *)cpu->mbc;
 
-    if (!mbc->ram_rtc_registers_enabled || cpu->mbc->ram_bank_count == 0)
+    if (!mbc->ram_rtc_registers_enabled)
         return 0xFF;
 
     // RTC register mapping
@@ -98,6 +98,9 @@ static uint8_t _read_mbc_ram(struct cpu *cpu, uint16_t address)
         return mbc->rtc_clock.dh;
     }
 
+    if (cpu->mbc->ram_bank_count == 0)
+        return 0xFF;
+
     unsigned int res_addr = address & 0x1FFF;
     // RAM bank mapping
     res_addr = (mbc->bank2 << 13) | res_addr;
@@ -112,17 +115,60 @@ static uint8_t _read_mbc_ram(struct cpu *cpu, uint16_t address)
     return cpu->mbc->ram[res_addr];
 }
 
+static int write_rtc_register(struct mbc3 *mbc, uint8_t val)
+{
+    switch (mbc->bank2)
+    {
+    case 0x08:
+    {
+        if (val <= 0x3B)
+            mbc->rtc_clock.s = val;
+        return 1;
+    }
+    case 0x09:
+    {
+        if (val <= 0x3B)
+            mbc->rtc_clock.m = val;
+        return 1;
+    }
+    case 0x0A:
+    {
+        if (val <= 0x17)
+            mbc->rtc_clock.h = val;
+        return 1;
+    }
+    case 0x0B:
+    {
+        mbc->rtc_clock.dl = val;
+        return 1;
+    }
+    case 0x0C:
+    {
+        val &= 0xC1;
+        mbc->rtc_clock.dh = val;
+        return 1;
+    }
+    }
+    return 0;
+}
+
 static void _write_mbc_ram(struct cpu *cpu, uint16_t address, uint8_t val)
 {
     struct mbc3 *mbc = (struct mbc3 *)cpu->mbc;
 
-    // Ignore writes if RAM is disabled or if there is no external RAM
-    if (!mbc->ram_rtc_registers_enabled || cpu->mbc->ram_bank_count == 0)
+    // Ignore writes if RAM / RTC registers are disabled
+    if (!mbc->ram_rtc_registers_enabled)
+        return;
+
+    // RTC register bank case
+    if (write_rtc_register(mbc, val))
         return;
 
     unsigned int res_addr = address & 0x1FFF;
-    if (mbc->mbc1_mode)
-        res_addr = (mbc->bank2 << 13) | res_addr;
+    res_addr = (mbc->bank2 << 13) | res_addr;
+
+    if (cpu->mbc->ram_bank_count == 0)
+        return;
 
     // If address is too big for the size of RAM, ignore as many bits as needed
     unsigned int mask = 0x4000;
@@ -135,7 +181,7 @@ static void _write_mbc_ram(struct cpu *cpu, uint16_t address, uint8_t val)
     cpu->mbc->ram[res_addr] = val;
 
     // Save if MBC has a save battery
-    if (cpu->mbc != NULL)
+    if (cpu->mbc->save_file != NULL)
         save_ram_to_file(cpu->mbc);
 }
 
@@ -157,6 +203,8 @@ struct mbc_base *make_mbc3(void)
     mbc3->bank1 = 1;
     mbc3->bank2 = 0;
     mbc3->ram_rtc_registers_enabled = 0;
+
+    mbc3->latch_last_write = -1;
 
     mbc3->rtc_clock.s = 0;
     mbc3->rtc_clock.m = 0;

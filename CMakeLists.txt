@@ -9,7 +9,7 @@ add_compile_options(-Wall -Wextra -pedantic -std=c99)
 
 # Check if the build type is Debug
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(-g -fsanitize=address)
+    add_compile_options(-g -Og -fsanitize=address)
     add_link_options(-fsanitize=address)
 endif()
 

@@ -5,6 +5,7 @@
 
 #include "cpu.h"
 #include "mbc1.h"
+#include "mbc3.h"
 #include "no_mbc.h"
 #include "save.h"
 
@@ -39,7 +40,6 @@ static struct mbc_base *make_mbc(uint8_t type_byte)
     case 0x03:
         res = make_mbc1();
         break;
-#if 0
     case 0x11:
         res = make_mbc3();
         break;
@@ -49,7 +49,6 @@ static struct mbc_base *make_mbc(uint8_t type_byte)
     case 0x13:
         res = make_mbc3();
         break;
-#endif
     }
 
     // Unsupported MBC type

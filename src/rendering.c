@@ -20,7 +20,7 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
         c_regist = cpu->ppu->bgp;
 
     int color = (*c_regist >> (p.color * 2)) & 0x03;
-    Uint8 r, g, b;
+    Uint8 r = 0, g = 0, b = 0;
     switch (color)
     {
     case 0:

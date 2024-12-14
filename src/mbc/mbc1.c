@@ -117,7 +117,7 @@ static void _write_mbc_ram(struct cpu *cpu, uint16_t address, uint8_t val)
     cpu->mbc->ram[res_addr] = val;
 
     // Save if MBC has a save battery
-    if (cpu->mbc != NULL)
+    if (cpu->mbc->save_file != NULL)
         save_ram_to_file(cpu->mbc);
 }
 
