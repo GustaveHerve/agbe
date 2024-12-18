@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "SDL_timer.h"
 #include "apu.h"
 #include "cpu.h"
 #include "disassembler.h"
@@ -142,7 +143,7 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
         {
             /* Wait for audio queue to be cleared */
             while (SDL_GetQueuedAudioSize(cpu->apu->device_id) > 0)
-                continue;
+                SDL_Delay(1);
         }
 
         if (!cpu->halt)

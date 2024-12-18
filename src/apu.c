@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 
+#include "SDL_timer.h"
 #include "cpu.h"
 
 // clang-format off
@@ -110,6 +111,11 @@ void apu_init(struct cpu *cpu, struct apu *apu)
 void apu_free(struct apu *apu)
 {
     SDL_PauseAudioDevice(apu->device_id, 1);
+    SDL_ClearQueuedAudio(apu->device_id);
+
+    while (SDL_GetQueuedAudioSize(apu->device_id) > 0)
+        SDL_Delay(1);
+
     SDL_CloseAudioDevice(apu->device_id);
     free(apu->ch1);
     free(apu->ch2);
