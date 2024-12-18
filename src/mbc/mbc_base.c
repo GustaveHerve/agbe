@@ -73,12 +73,16 @@ static struct mbc_base *make_mbc(uint8_t type_byte)
 
     res->rom_path = NULL;
     res->save_file = NULL;
+
     res->rom = NULL;
     res->ram = NULL;
-    res->rom_size = 0;
-    res->ram_size = 0;
+
+    res->rom_size_header = 0;
+    res->ram_size_header = 0;
+
     res->rom_bank_count = 0;
     res->ram_bank_count = 0;
+
     res->rom_total_size = 0;
     res->ram_total_size = 0;
 
@@ -98,12 +102,12 @@ void set_mbc(struct mbc_base **output, uint8_t *rom, char *rom_path)
 
     mbc->rom = rom;
 
-    mbc->rom_size = rom[0x0148];
-    mbc->ram_size = rom[0x0149];
+    mbc->rom_size_header = rom[0x0148];
+    mbc->ram_size_header = rom[0x0149];
 
-    mbc->rom_bank_count = 1 << (mbc->rom_size + 1);
+    mbc->rom_bank_count = 1 << (mbc->rom_size_header + 1);
 
-    switch (mbc->ram_size)
+    switch (mbc->ram_size_header)
     {
     case 0x00:
         mbc->ram_bank_count = 0;

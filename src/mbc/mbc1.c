@@ -26,14 +26,8 @@ static uint8_t _read_mbc_rom(struct cpu *cpu, uint16_t address)
     else if (address >= 0x4000 && address <= 0x7FFF)
         res_addr = (mbc->bank2 << 19) | (mbc->bank1 << 14) | res_addr;
 
-    // If address is too big for the size of ROM, only keep necessary bit count
-    // to address total ROM size values
-    unsigned int mask = 0x00100000;
-    while (res_addr > cpu->mbc->rom_total_size)
-    {
-        res_addr &= (~mask);
-        mask >>= 1;
-    }
+    // Ensure that res_addr doesn't overflow the ROM size
+    res_addr &= cpu->mbc->rom_total_size - 1;
 
     return cpu->mbc->rom[res_addr];
 }
@@ -84,13 +78,9 @@ static uint8_t _read_mbc_ram(struct cpu *cpu, uint16_t address)
     if (mbc->mbc1_mode)
         res_addr = (mbc->bank2 << 13) | res_addr;
 
-    // If address is too big for the size of RAM, ignore as many bits as needed
-    unsigned int mask = 0x4000;
-    while (res_addr > cpu->mbc->ram_total_size)
-    {
-        res_addr &= (~mask);
-        mask >>= 1;
-    }
+    // Ensure that res_addr doesn't overflow the RAM size
+    res_addr &= cpu->mbc->ram_total_size - 1;
+
     return cpu->mbc->ram[res_addr];
 }
 
@@ -106,13 +96,8 @@ static void _write_mbc_ram(struct cpu *cpu, uint16_t address, uint8_t val)
     if (mbc->mbc1_mode)
         res_addr = (mbc->bank2 << 13) | res_addr;
 
-    // If address is too big for the size of RAM, ignore as many bits as needed
-    unsigned int mask = 0x4000;
-    while (res_addr > cpu->mbc->ram_total_size)
-    {
-        res_addr &= (~mask);
-        mask >>= 1;
-    }
+    // Ensure that res_addr doesn't overflow the RAM size
+    res_addr &= cpu->mbc->ram_total_size - 1;
 
     cpu->mbc->ram[res_addr] = val;
 

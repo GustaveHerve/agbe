@@ -25,8 +25,8 @@ struct mbc_base
     uint8_t *rom;
     uint8_t *ram;
 
-    uint8_t rom_size;
-    uint8_t ram_size;
+    uint8_t rom_size_header;
+    uint8_t ram_size_header;
 
     uint16_t rom_bank_count;
     uint8_t ram_bank_count;
