@@ -1,5 +1,7 @@
 #include "interrupts.h"
 
+#include <stddef.h>
+
 #include "cpu.h"
 #include "emulation.h"
 #include "utils.h"
@@ -12,13 +14,10 @@ int check_interrupt(struct cpu *cpu)
     // Joypad check
     if (((cpu->membus[0xFF00] >> 5 & 0x01) == 0x00) || (cpu->membus[0xFF00] >> 4 & 0x01) == 0x00)
     {
-        for (int i = 0; i < 4; ++i)
+        for (size_t i = 0; i < 4; ++i)
         {
-            if (((cpu->membus[0xFF00] >> 5 & 0x01) == 0x00) || (cpu->membus[0xFF00] >> 4 & 0x01) == 0x00)
-            {
-                if (((cpu->membus[0xFF00] >> i) & 0x01) == 0x00)
-                    set_if(cpu, INTERRUPT_JOYPAD);
-            }
+            if (((cpu->membus[0xFF00] >> i) & 0x01) == 0x00)
+                set_if(cpu, INTERRUPT_JOYPAD);
         }
     }
 
@@ -36,7 +35,7 @@ int check_interrupt(struct cpu *cpu)
 }
 
 /* VBlank, LCD STAT, Timer, Serial, Joypad */
-static unsigned int handler_vectors[] = {0x40, 0x48, 0x50, 0x58, 0x60};
+static unsigned int handlers_vector[] = {0x40, 0x48, 0x50, 0x58, 0x60};
 
 int handle_interrupt(struct cpu *cpu, int bit)
 {
@@ -50,7 +49,7 @@ int handle_interrupt(struct cpu *cpu, int bit)
     write_mem(cpu, cpu->regist->sp, hi);
     --cpu->regist->sp;
     write_mem(cpu, cpu->regist->sp, lo);
-    uint16_t handler = handler_vectors[bit];
+    uint16_t handler = handlers_vector[bit];
     cpu->regist->pc = handler;
     tick_m(cpu);
     return 1;

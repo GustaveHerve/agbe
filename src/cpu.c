@@ -1,6 +1,7 @@
 #include "cpu.h"
 
 #include <stdlib.h>
+#include <time.h>
 
 #include "apu.h"
 #include "control.h"
@@ -68,6 +69,10 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
 
     cpu->sb = &cpu->membus[0xFF01];
     cpu->sc = &cpu->membus[0xFF02];
+
+    cpu->tcycles_since_sync = 0;
+
+    cpu->last_sync_timestamp = get_nanoseconds();
 }
 
 void cpu_init_registers(struct cpu *cpu, int checksum)

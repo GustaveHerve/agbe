@@ -1,10 +1,13 @@
+#define _POSIX_C_SOURCE 199309L
+
 #include "emulation.h"
 
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
 
-#include "SDL_timer.h"
 #include "apu.h"
 #include "cpu.h"
 #include "disassembler.h"
@@ -139,17 +142,20 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
     while (cpu->running)
     {
-        if (SDL_GetQueuedAudioSize(cpu->apu->device_id) == AUDIO_BUFFER_SIZE * sizeof(float))
-        {
-            /* Wait for audio queue to be cleared */
-            while (SDL_GetQueuedAudioSize(cpu->apu->device_id) > 0)
-                SDL_Delay(1);
-        }
+        // if (SDL_GetQueuedAudioSize(cpu->apu->device_id) == AUDIO_BUFFER_SIZE * sizeof(float))
+        //{
+        //     /* Wait for audio queue to be cleared */
+        //     while (SDL_GetQueuedAudioSize(cpu->apu->device_id) > 0)
+        //         SDL_Delay(1);
+        // }
 
         if (!cpu->halt)
             next_op(cpu);
         else
+        {
             tick_m(cpu); // Previous instruction tick + next OPCode fetch
+            synchronize(cpu);
+        }
 
         check_interrupt(cpu);
     }
@@ -157,6 +163,8 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
 void tick_m(struct cpu *cpu)
 {
+    cpu->tcycles_since_sync += 4;
+
     if (cpu->ime == 2)
         cpu->ime = 1;
 
@@ -371,4 +379,38 @@ void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
         cpu->membus[address] = val;
 
     tick_m(cpu);
+}
+
+int64_t get_nanoseconds(void)
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    return now.tv_usec * 1000 + now.tv_sec * 1000000000L;
+}
+
+#define LCDC_PERIOD 70224
+
+void synchronize(struct cpu *cpu)
+{
+    int64_t target_nanoseconds = cpu->tcycles_since_sync * 1000000000LL / CPU_FREQUENCY;
+    int64_t nanoseconds = get_nanoseconds();
+    int64_t time_to_sleep = target_nanoseconds + cpu->last_sync_timestamp - nanoseconds;
+    if (time_to_sleep > 0 && time_to_sleep < LCDC_PERIOD * 1200000000LL / CPU_FREQUENCY)
+    {
+        struct timespec sleep = {0, time_to_sleep};
+        nanosleep(&sleep, NULL);
+        cpu->last_sync_timestamp += target_nanoseconds;
+    }
+    else
+    {
+        // Emulation is late if time_to_sleep is negative
+        if (time_to_sleep < 0 && -time_to_sleep < LCDC_PERIOD * 1200000000LL / CPU_FREQUENCY)
+        {
+            // The difference is small enough to be negligible
+            return;
+        }
+        cpu->last_sync_timestamp = nanoseconds;
+    }
+
+    cpu->tcycles_since_sync = 0;
 }

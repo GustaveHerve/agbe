@@ -101,9 +101,7 @@ uint8_t get_tile_lo(struct ppu *ppu, uint8_t tileid, int obj_index)
     {
         // X flip
         if ((attributes >> 5) & 0x01)
-        {
             slice_low = slice_xflip(slice_low);
-        }
     }
 
     return slice_low;
@@ -144,9 +142,7 @@ uint8_t get_tile_hi(struct ppu *ppu, uint8_t tileid, int obj_index)
     {
         /* X flip */
         if ((attributes >> 5) & 0x01)
-        {
             slice_high = slice_xflip(slice_high);
-        }
     }
 
     return slice_high;
@@ -658,8 +654,7 @@ uint8_t mode1_handler(struct ppu *ppu)
 
 void ppu_tick_m(struct ppu *ppu)
 {
-    int dots = 0;
-    while (dots < 4)
+    for (size_t dots = 0; dots < 4;)
     {
         switch (ppu->current_mode)
         {
@@ -677,7 +672,6 @@ void ppu_tick_m(struct ppu *ppu)
             break;
         }
     }
-
     // DMA handling
     // DMA first setup MCycle
     if (ppu->dma == 2)

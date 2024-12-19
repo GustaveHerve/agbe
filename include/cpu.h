@@ -1,6 +1,7 @@
 #ifndef CPU_H
 #define CPU_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 struct ppu;
@@ -62,6 +63,9 @@ struct cpu
 
     uint8_t *sb;
     uint8_t *sc;
+
+    size_t tcycles_since_sync;
+    int64_t last_sync_timestamp;
 };
 
 void cpu_init(struct cpu *cpu, struct renderer *rend);

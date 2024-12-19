@@ -1,5 +1,6 @@
 #include "SDL_events.h"
 #include "cpu.h"
+#include "emulation.h"
 #include "ppu.h"
 #include "ppu_utils.h"
 
@@ -44,14 +45,19 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
         b = 32;
         break;
     }
+
+    /* TODO: stop using SDL Surface and use directly texture. Just do directly this:
+        UpdateTexture -> RenderClear -> RenderCopy -> RenderPresent */
     SDL_LockSurface(rend->surface);
     sdlPixel = SDL_MapRGB(rend->surface->format, r, g, b);
     pixels[*cpu->ppu->ly * 160 + (cpu->ppu->lx - 8)] = sdlPixel;
     SDL_UnlockSurface(rend->surface);
 
+    // Render a frame and handle inputs
     if (*cpu->ppu->ly == 143 && cpu->ppu->lx == 167)
     {
-        // TODO cleaner handler...
+        // TODO: replace by a vblank callback like function that will run the SDL event handler loop and
+        // synchronize the emulation speed according to elapsed cycle count
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -130,6 +136,8 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
         SDL_RenderClear(rend->renderer);
         SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
         SDL_RenderPresent(rend->renderer);
+
+        synchronize(cpu);
     }
 }
 

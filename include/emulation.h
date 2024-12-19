@@ -16,4 +16,8 @@ uint8_t read_mem(struct cpu *cpu, uint16_t address);
 
 uint8_t read_mem_tick(struct cpu *cpu, uint16_t address);
 
+int64_t get_nanoseconds(void);
+
+void synchronize(struct cpu *cpu);
+
 #endif
