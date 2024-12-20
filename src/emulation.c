@@ -142,13 +142,6 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
     while (cpu->running)
     {
-        // if (SDL_GetQueuedAudioSize(cpu->apu->device_id) == AUDIO_BUFFER_SIZE * sizeof(float))
-        //{
-        //     /* Wait for audio queue to be cleared */
-        //     while (SDL_GetQueuedAudioSize(cpu->apu->device_id) > 0)
-        //         SDL_Delay(1);
-        // }
-
         if (!cpu->halt)
             next_op(cpu);
         else
@@ -389,13 +382,15 @@ int64_t get_nanoseconds(void)
 }
 
 #define LCDC_PERIOD 70224
+#define SECONDS_TO_NANOSECONDS 1000000000LL
+#define MARGIN_OF_ERROR 200000000LL
 
 void synchronize(struct cpu *cpu)
 {
-    int64_t target_nanoseconds = cpu->tcycles_since_sync * 1000000000LL / CPU_FREQUENCY;
+    int64_t target_nanoseconds = cpu->tcycles_since_sync * SECONDS_TO_NANOSECONDS / CPU_FREQUENCY;
     int64_t nanoseconds = get_nanoseconds();
     int64_t time_to_sleep = target_nanoseconds + cpu->last_sync_timestamp - nanoseconds;
-    if (time_to_sleep > 0 && time_to_sleep < LCDC_PERIOD * 1200000000LL / CPU_FREQUENCY)
+    if (time_to_sleep > 0 && time_to_sleep < LCDC_PERIOD * (SECONDS_TO_NANOSECONDS + MARGIN_OF_ERROR) / CPU_FREQUENCY)
     {
         struct timespec sleep = {0, time_to_sleep};
         nanosleep(&sleep, NULL);

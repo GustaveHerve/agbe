@@ -79,6 +79,7 @@ struct ch_generic
     unsigned int env_period;
 };
 
+// TODO: dissociate SDL audio handling with APU handling
 void apu_init(struct cpu *cpu, struct apu *apu)
 {
     apu->cpu = cpu;
@@ -90,14 +91,14 @@ void apu_init(struct cpu *cpu, struct apu *apu)
     apu->sampling_counter = SAMPLING_TCYCLES_INTERVAL;
     apu->previous_div = 0;
 
-    apu->audio_buffer = calloc(AUDIO_BUFFER_SIZE, sizeof(float));
+    apu->audio_buffer = calloc(AUDIO_BUFFER_SIZE * 2, sizeof(float));
     apu->buffer_len = 0;
 
     SDL_AudioSpec desired_spec = {
         .freq = SAMPLING_RATE,
         .format = AUDIO_F32SYS,
         .channels = 2,
-        .samples = AUDIO_BUFFER_SIZE / 2,
+        .samples = AUDIO_BUFFER_SIZE,
         .callback = NULL,
     };
 
@@ -108,6 +109,7 @@ void apu_init(struct cpu *cpu, struct apu *apu)
     SDL_PauseAudioDevice(apu->device_id, 0);
 }
 
+// TODO: dissociate SDL audio handling with APU handling
 void apu_free(struct apu *apu)
 {
     SDL_PauseAudioDevice(apu->device_id, 1);
@@ -474,8 +476,13 @@ static float mix_channels(struct apu *apu, uint8_t panning)
     return sum / 4.0f;
 }
 
+// TODO: dissociate SDL audio handling with APU handling
 static void queue_audio(struct apu *apu)
 {
+    // If we have more than 0.125s of lag, skip this sample
+    if (SDL_GetQueuedAudioSize(apu->device_id) / sizeof(float) / 2 > SAMPLING_RATE / 8)
+        return;
+
     uint8_t nr50 = apu->cpu->membus[NR50];
     float left_sample =
         mix_channels(apu, PANNING_LEFT) * (float)LEFT_MASTER_VOLUME(nr50) / 8.0f * EMULATOR_SOUND_VOLUME;
@@ -484,9 +491,9 @@ static void queue_audio(struct apu *apu)
     apu->audio_buffer[apu->buffer_len] = left_sample;
     apu->audio_buffer[apu->buffer_len + 1] = right_sample;
     apu->buffer_len += 2;
-    if (apu->buffer_len == AUDIO_BUFFER_SIZE)
+    if (apu->buffer_len == AUDIO_BUFFER_SIZE * 2)
     {
-        SDL_QueueAudio(apu->device_id, apu->audio_buffer, sizeof(float) * AUDIO_BUFFER_SIZE);
+        SDL_QueueAudio(apu->device_id, apu->audio_buffer, sizeof(float) * AUDIO_BUFFER_SIZE * 2);
         apu->buffer_len = 0;
     }
 }
