@@ -6,9 +6,9 @@
 #include "SDL_audio.h"
 #include "cpu.h"
 
-#define SAMPLING_RATE 48000
+#define SAMPLING_RATE 44100
 #define SAMPLING_TCYCLES_INTERVAL (CPU_FREQUENCY / SAMPLING_RATE)
-#define AUDIO_BUFFER_SIZE 1024
+#define AUDIO_BUFFER_SIZE 512
 
 /* Default GB audio samples are WAY too loud by default, scale them back */
 #define EMULATOR_SOUND_VOLUME 0.4f;

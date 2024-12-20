@@ -91,7 +91,7 @@ void apu_init(struct cpu *cpu, struct apu *apu)
     apu->ch3 = calloc(1, sizeof(struct ch3));
     apu->ch4 = calloc(1, sizeof(struct ch4));
     apu->fs_pos = 0;
-    apu->sampling_counter = SAMPLING_TCYCLES_INTERVAL;
+    apu->sampling_counter = 0;
     apu->previous_div = 0;
 
     SDL_AudioSpec desired_spec = {
@@ -247,7 +247,7 @@ static void length_clock(struct apu *apu, struct ch_generic *ch, uint8_t number)
     if (!LENGTH_ENABLE(nrx4))
         return;
 
-    ch->length_timer -= 1;
+    --ch->length_timer;
     if (ch->length_timer == 0)
         turn_channel_off(apu, number);
 }
@@ -475,7 +475,7 @@ static float mix_channels(struct apu *apu, uint8_t panning)
 static void queue_audio_sample(struct apu *apu)
 {
     // If we have more than 0.125s of lag, skip this sample
-    if (SDL_GetQueuedAudioSize(apu->device_id) / sizeof(float) / 2 > SAMPLING_RATE / 8)
+    if (SDL_GetQueuedAudioSize(apu->device_id) / sizeof(union audio_sample) > SAMPLING_RATE / 8)
         return;
 
     uint8_t nr50 = apu->cpu->membus[NR50];
@@ -519,11 +519,11 @@ void apu_tick_m(struct apu *apu)
         ch3_tick(apu);
         ch4_tick(apu);
 
-        --apu->sampling_counter;
-        if (apu->sampling_counter == 0)
+        apu->sampling_counter += SAMPLING_RATE;
+        if (apu->sampling_counter >= CPU_FREQUENCY)
         {
             queue_audio_sample(apu);
-            apu->sampling_counter = SAMPLING_TCYCLES_INTERVAL;
+            apu->sampling_counter -= CPU_FREQUENCY;
         }
 
         apu->previous_div += 1;
