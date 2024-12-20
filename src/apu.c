@@ -2,7 +2,6 @@
 
 #include <stdlib.h>
 
-#include "SDL_timer.h"
 #include "cpu.h"
 
 // clang-format off
@@ -69,6 +68,10 @@ static unsigned int ch4_divisors[] = {
 
 #define LENGTH_ENABLE(NRX4) (((NRX4) >> 6) & 0x1)
 
+// TODO: dissociate SDL audio handling from APU handling
+static union audio_sample audio_buffer[AUDIO_BUFFER_SIZE];
+static size_t audio_buffer_len = 0;
+
 struct ch_generic
 {
     unsigned int length_timer;
@@ -91,9 +94,6 @@ void apu_init(struct cpu *cpu, struct apu *apu)
     apu->sampling_counter = SAMPLING_TCYCLES_INTERVAL;
     apu->previous_div = 0;
 
-    apu->audio_buffer = calloc(AUDIO_BUFFER_SIZE * 2, sizeof(float));
-    apu->buffer_len = 0;
-
     SDL_AudioSpec desired_spec = {
         .freq = SAMPLING_RATE,
         .format = AUDIO_F32SYS,
@@ -109,21 +109,16 @@ void apu_init(struct cpu *cpu, struct apu *apu)
     SDL_PauseAudioDevice(apu->device_id, 0);
 }
 
-// TODO: dissociate SDL audio handling with APU handling
+// TODO: dissociate SDL audio handling from APU handling
 void apu_free(struct apu *apu)
 {
     SDL_PauseAudioDevice(apu->device_id, 1);
     SDL_ClearQueuedAudio(apu->device_id);
-
-    while (SDL_GetQueuedAudioSize(apu->device_id) > 0)
-        SDL_Delay(1);
-
     SDL_CloseAudioDevice(apu->device_id);
     free(apu->ch1);
     free(apu->ch2);
     free(apu->ch3);
     free(apu->ch4);
-    free(apu->audio_buffer);
     free(apu);
 }
 
@@ -345,7 +340,7 @@ static void frame_sequencer_step(struct apu *apu)
     /* Volume Envelope tick */
     if (apu->fs_pos == 7)
     {
-        /* CH3 doesn't have an envelope functionality */
+        // CH3 doesn't have an envelope functionality
         volume_env_clock(apu, (struct ch_generic *)apu->ch1, 1);
         volume_env_clock(apu, (struct ch_generic *)apu->ch2, 2);
         volume_env_clock(apu, (struct ch_generic *)apu->ch4, 4);
@@ -354,7 +349,7 @@ static void frame_sequencer_step(struct apu *apu)
     /* Frequency Sweep tick */
     if (apu->fs_pos == 2 || apu->fs_pos == 6)
     {
-        /* Only CH1 has a sweep functionality */
+        // Only CH1 has a sweep functionality
         frequency_sweep_clock(apu);
     }
 
@@ -399,7 +394,7 @@ static void ch3_tick(struct apu *apu)
         apu->ch3->wave_pos = (apu->ch3->wave_pos + 1) % 32;
 
         unsigned int sample = apu->cpu->membus[WAVE_RAM + (apu->ch3->wave_pos / 2)];
-        /* Each byte has two 4-bit samples */
+        // Each byte has two 4-bit samples
         if (apu->ch3->wave_pos % 2 == 0)
             sample >>= 4;
         else
@@ -476,25 +471,33 @@ static float mix_channels(struct apu *apu, uint8_t panning)
     return sum / 4.0f;
 }
 
-// TODO: dissociate SDL audio handling with APU handling
-static void queue_audio(struct apu *apu)
+// TODO: dissociate SDL audio handling from APU handling
+static void queue_audio_sample(struct apu *apu)
 {
     // If we have more than 0.125s of lag, skip this sample
     if (SDL_GetQueuedAudioSize(apu->device_id) / sizeof(float) / 2 > SAMPLING_RATE / 8)
         return;
 
     uint8_t nr50 = apu->cpu->membus[NR50];
+
     float left_sample =
         mix_channels(apu, PANNING_LEFT) * (float)LEFT_MASTER_VOLUME(nr50) / 8.0f * EMULATOR_SOUND_VOLUME;
     float right_sample =
         mix_channels(apu, PANNING_RIGHT) * (float)RIGHT_MASTER_VOLUME(nr50) / 8.0f * EMULATOR_SOUND_VOLUME;
-    apu->audio_buffer[apu->buffer_len] = left_sample;
-    apu->audio_buffer[apu->buffer_len + 1] = right_sample;
-    apu->buffer_len += 2;
-    if (apu->buffer_len == AUDIO_BUFFER_SIZE * 2)
+
+    union audio_sample sample = {
+        .stereo_sample =
+            {
+                .left_sample = left_sample,
+                .right_sample = right_sample,
+            },
+    };
+
+    audio_buffer[audio_buffer_len++] = sample;
+    if (audio_buffer_len == AUDIO_BUFFER_SIZE)
     {
-        SDL_QueueAudio(apu->device_id, apu->audio_buffer, sizeof(float) * AUDIO_BUFFER_SIZE * 2);
-        apu->buffer_len = 0;
+        SDL_QueueAudio(apu->device_id, audio_buffer, AUDIO_BUFFER_SIZE * sizeof(union audio_sample));
+        audio_buffer_len = 0;
     }
 }
 
@@ -507,7 +510,7 @@ void apu_tick_m(struct apu *apu)
     {
         uint16_t div = apu->previous_div + 1;
 
-        /* DIV bit 4 falling edge detection */
+        // DIV bit 4 falling edge detection
         if ((apu->previous_div & DIV_APU_MASK) && !(div & DIV_APU_MASK))
             frame_sequencer_step(apu);
 
@@ -519,7 +522,7 @@ void apu_tick_m(struct apu *apu)
         --apu->sampling_counter;
         if (apu->sampling_counter == 0)
         {
-            queue_audio(apu);
+            queue_audio_sample(apu);
             apu->sampling_counter = SAMPLING_TCYCLES_INTERVAL;
         }
 

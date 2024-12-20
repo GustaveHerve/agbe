@@ -8,7 +8,7 @@
 
 #define SAMPLING_RATE 48000
 #define SAMPLING_TCYCLES_INTERVAL (CPU_FREQUENCY / SAMPLING_RATE)
-#define AUDIO_BUFFER_SIZE 128
+#define AUDIO_BUFFER_SIZE 1024
 
 /* Default GB audio samples are WAY too loud by default, scale them back */
 #define EMULATOR_SOUND_VOLUME 0.4f;
@@ -49,6 +49,16 @@
 #define NRx4_UNUSED_PART (0x7 << 3)
 #define NRx4_PERIOD (0x7 << 0)
 
+union audio_sample
+{
+    struct
+    {
+        float left_sample;
+        float right_sample;
+    } stereo_sample;
+    uint64_t full_sample_packed;
+};
+
 struct apu
 {
     struct cpu *cpu;
@@ -63,8 +73,6 @@ struct apu
     unsigned int sampling_counter;
 
     SDL_AudioDeviceID device_id;
-    float *audio_buffer;
-    size_t buffer_len;
 
     uint16_t previous_div;
 };

@@ -77,7 +77,7 @@ int main(int argc, char **argv)
                               960,
                               864,
                               SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetLogicalSize(renderer, 160, 144);
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
 
