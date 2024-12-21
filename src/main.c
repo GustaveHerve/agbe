@@ -66,6 +66,7 @@ int main(int argc, char **argv)
 {
     parse_arguments(argc, argv);
 
+    // TODO: dissociate SDL handling from the rest of the program
     if (SDL_Init(SDL_INIT_EVERYTHING))
         return EXIT_FAILURE;
 
@@ -76,20 +77,18 @@ int main(int argc, char **argv)
                               SDL_WINDOWPOS_CENTERED,
                               960,
                               864,
-                              SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+                              SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetLogicalSize(renderer, 160, 144);
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
 
     SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, 160, 144);
 
-    SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, 160, 144, 32, SDL_PIXELFORMAT_RGB888);
-
     struct renderer *rend = malloc(sizeof(struct renderer));
     ;
+    rend->format = SDL_AllocFormat(SDL_PIXELFORMAT_RGB888);
     rend->renderer = renderer;
     rend->window = window;
-    rend->surface = surface;
     rend->texture = texture;
 
     struct cpu *cpu = malloc(sizeof(struct cpu));

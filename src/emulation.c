@@ -17,9 +17,6 @@
 #include "serial.h"
 #include "timers.h"
 
-#define CYCLE_PER_FRAME 1048576.0f
-#define FRAMERATE 59.73f
-
 void init_hardware(struct cpu *cpu)
 {
     cpu->membus[0xFF00] = 0xCF;

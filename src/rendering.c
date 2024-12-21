@@ -4,57 +4,35 @@
 #include "ppu.h"
 #include "ppu_utils.h"
 
+#define WIDTH 160
+#define HEIGHT 144
+#define SCREEN_RESOLUTION (WIDTH * HEIGHT)
+
+static Uint32 frame_buffer[SCREEN_RESOLUTION] = {0};
+
+struct color
+{
+    Uint8 r;
+    Uint8 g;
+    Uint8 b;
+};
+
+static struct color color_palette[4] = {{224, 248, 208}, {136, 192, 112}, {52, 104, 86}, {8, 24, 32}};
+
 void draw_pixel(struct cpu *cpu, struct pixel p)
 {
     struct renderer *rend = cpu->ppu->renderer;
-    Uint32 *pixels = (Uint32 *)rend->surface->pixels;
-    Uint32 sdlPixel;
-    uint8_t *c_regist;
-    if (p.obj > -1)
-    {
-        if (p.palette)
-            c_regist = cpu->ppu->obp1;
-        else
-            c_regist = cpu->ppu->obp0;
-    }
-    else
-        c_regist = cpu->ppu->bgp;
 
-    int color = (*c_regist >> (p.color * 2)) & 0x03;
-    Uint8 r = 0, g = 0, b = 0;
-    switch (color)
-    {
-    case 0:
-        r = 224;
-        g = 248;
-        b = 208;
-        break;
-    case 1:
-        r = 136;
-        g = 192;
-        b = 112;
-        break;
-    case 2:
-        r = 52;
-        g = 104;
-        b = 86;
-        break;
-    case 3:
-        r = 8;
-        g = 24;
-        b = 32;
-        break;
-    }
+    uint8_t *c_regist = p.obj > -1 ? (p.palette ? cpu->ppu->obp1 : cpu->ppu->obp0) : cpu->ppu->bgp;
 
-    /* TODO: stop using SDL Surface and use directly texture. Just do directly this:
-        UpdateTexture -> RenderClear -> RenderCopy -> RenderPresent */
-    SDL_LockSurface(rend->surface);
-    sdlPixel = SDL_MapRGB(rend->surface->format, r, g, b);
-    pixels[*cpu->ppu->ly * 160 + (cpu->ppu->lx - 8)] = sdlPixel;
-    SDL_UnlockSurface(rend->surface);
+    unsigned int color_index = (*c_regist >> (p.color * 2)) & 0x03;
+    struct color *color = color_palette + color_index;
+
+    Uint32 pixel = SDL_MapRGB(rend->format, color->r, color->g, color->b);
+    frame_buffer[*cpu->ppu->ly * WIDTH + (cpu->ppu->lx - 8)] = pixel;
 
     // Render a frame and handle inputs
-    if (*cpu->ppu->ly == 143 && cpu->ppu->lx == 167)
+    if (*cpu->ppu->ly == HEIGHT - 1 && cpu->ppu->lx == WIDTH + 7)
     {
         // TODO: replace by a vblank callback like function that will run the SDL event handler loop and
         // synchronize the emulation speed according to elapsed cycle count
@@ -132,7 +110,8 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
                 return;
             }
         }
-        SDL_UpdateTexture(rend->texture, NULL, pixels, 160 * sizeof(Uint32));
+
+        SDL_UpdateTexture(rend->texture, NULL, frame_buffer, WIDTH * sizeof(Uint32));
         SDL_RenderClear(rend->renderer);
         SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
         SDL_RenderPresent(rend->renderer);
@@ -144,18 +123,14 @@ void draw_pixel(struct cpu *cpu, struct pixel p)
 void lcd_off(struct cpu *cpu)
 {
     struct renderer *rend = cpu->ppu->renderer;
-    Uint32 *pixels = (Uint32 *)rend->surface->pixels;
-    Uint32 sdlPixel;
-    SDL_LockSurface(rend->surface);
-    sdlPixel = SDL_MapRGB(rend->surface->format, 229, 245, 218);
-    int total = 160 * 144;
-    for (int i = 0; i < total; ++i)
+    Uint32 color = SDL_MapRGB(rend->format, 229, 245, 218);
+
+    for (size_t i = 0; i < SCREEN_RESOLUTION; ++i)
     {
-        pixels[i] = sdlPixel;
+        frame_buffer[i] = color;
     }
 
-    SDL_UnlockSurface(rend->surface);
-    SDL_UpdateTexture(rend->texture, NULL, pixels, 160 * sizeof(Uint32));
+    SDL_UpdateTexture(rend->texture, NULL, frame_buffer, WIDTH * sizeof(Uint32));
     SDL_RenderClear(rend->renderer);
     SDL_RenderCopy(rend->renderer, rend->texture, NULL, NULL);
     SDL_RenderPresent(rend->renderer);
@@ -166,6 +141,5 @@ void free_renderer(struct renderer *rend)
     SDL_DestroyWindow(rend->window);
     SDL_DestroyRenderer(rend->renderer);
     SDL_DestroyTexture(rend->texture);
-    SDL_FreeSurface(rend->surface);
     free(rend);
 }
