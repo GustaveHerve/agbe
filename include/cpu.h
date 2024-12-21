@@ -72,6 +72,6 @@ void cpu_init(struct cpu *cpu, struct renderer *rend);
 void cpu_start(struct cpu *cpu);
 void cpu_free(struct cpu *todelete);
 
-void cpu_init_registers(struct cpu *cpu, int checksum);
+void cpu_set_registers_post_boot(struct cpu *cpu, int checksum);
 
 #endif

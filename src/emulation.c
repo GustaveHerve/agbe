@@ -17,7 +17,7 @@
 #include "serial.h"
 #include "timers.h"
 
-void init_hardware(struct cpu *cpu)
+static void set_memory_post_boot(struct cpu *cpu)
 {
     cpu->membus[0xFF00] = 0xCF;
     cpu->membus[0xFF01] = 0x00;
@@ -94,7 +94,7 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
         cpu->membus[0xFF50] = 0xFE;
 
         // Open BOOTROM
-        FILE *fptr = fopen("testroms/boot.gb", "rb");
+        FILE *fptr = fopen(boot_rom_path, "rb");
         if (!fptr)
         {
             fprintf(stderr, "Invalid boot rom path: %s\n", boot_rom_path);
@@ -133,8 +133,8 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
     if (boot_rom_path == NULL)
     {
         cpu->regist->pc = 0x0100;
-        cpu_init_registers(cpu, checksum);
-        init_hardware(cpu);
+        cpu_set_registers_post_boot(cpu, checksum);
+        set_memory_post_boot(cpu);
     }
 
     while (cpu->running)
@@ -396,7 +396,8 @@ void synchronize(struct cpu *cpu)
     else
     {
         // Emulation is late if time_to_sleep is negative
-        if (time_to_sleep < 0 && -time_to_sleep < LCDC_PERIOD * 1200000000LL / CPU_FREQUENCY)
+        if (time_to_sleep < 0 &&
+            -time_to_sleep < LCDC_PERIOD * (SECONDS_TO_NANOSECONDS + MARGIN_OF_ERROR) / CPU_FREQUENCY)
         {
             // The difference is small enough to be negligible
             return;

@@ -75,7 +75,7 @@ void cpu_init(struct cpu *cpu, struct renderer *rend)
     cpu->last_sync_timestamp = get_nanoseconds();
 }
 
-void cpu_init_registers(struct cpu *cpu, int checksum)
+void cpu_set_registers_post_boot(struct cpu *cpu, int checksum)
 {
     cpu->regist->a = 0x01;
     set_z(cpu->regist, 1);
