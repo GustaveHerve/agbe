@@ -1,5 +1,6 @@
 #include "emulation.h"
 
+#include <SDL_stdinc.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,14 +76,17 @@ static void set_memory_post_boot(struct cpu *cpu)
     cpu->membus[0xFF70] = 0xFF;
     cpu->membus[0xFFFF] = 0x00;
 
-    // ppu_reset(cpu->ppu);
-
     cpu->ppu->current_mode = 1;
     cpu->ppu->line_dot_count = 400;
     cpu->ppu->mode1_153th = 1;
 }
 
-static SDL_bool paused = SDL_FALSE;
+struct global_settings settings = {0};
+
+struct global_settings *get_global_settings(void)
+{
+    return &settings;
+}
 
 void handle_events(struct cpu *cpu)
 {
@@ -122,13 +126,16 @@ void handle_events(struct cpu *cpu)
                 break;
             case SDLK_p:
             {
-                paused = !paused;
-                if (paused)
+                settings.paused = !settings.paused;
+                if (settings.paused)
                     SDL_SetWindowTitle(cpu->ppu->renderer->window, "GemuProject - Paused");
                 else
                     SDL_SetWindowTitle(cpu->ppu->renderer->window, "GemuProject");
                 break;
             }
+            case SDLK_t:
+                settings.turbo = SDL_TRUE;
+                break;
             }
             break;
         }
@@ -160,6 +167,9 @@ void handle_events(struct cpu *cpu)
                 break;
             case SDLK_RETURN:
                 cpu->joyp_a |= 0x08;
+                break;
+            case SDLK_t:
+                settings.turbo = SDL_FALSE;
                 break;
             }
         }
@@ -226,7 +236,7 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
     while (cpu->running)
     {
-        if (paused)
+        if (settings.paused)
         {
             SDL_WaitEvent(NULL);
             handle_events(cpu);

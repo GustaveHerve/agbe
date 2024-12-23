@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include "cpu.h"
+#include "emulation.h"
 
 #define LCDC_PERIOD 70224
 #define SECONDS_TO_NANOSECONDS 1000000000LL
@@ -19,6 +20,12 @@ int64_t get_nanoseconds(void)
 
 void synchronize(struct cpu *cpu)
 {
+    if (get_global_settings()->turbo)
+    {
+        cpu->tcycles_since_sync = 0;
+        return;
+    }
+
     int64_t target_nanoseconds = cpu->tcycles_since_sync * SECONDS_TO_NANOSECONDS / CPU_FREQUENCY;
     int64_t nanoseconds = get_nanoseconds();
     int64_t time_to_sleep = target_nanoseconds + cpu->last_sync_timestamp - nanoseconds;

@@ -3,8 +3,18 @@
 
 #include <stdint.h>
 
+#include "SDL_stdinc.h"
+
 struct cpu;
 struct ppu;
+
+struct global_settings
+{
+    SDL_bool paused;
+    SDL_bool turbo;
+};
+
+struct global_settings *get_global_settings(void);
 
 void handle_events(struct cpu *cpu);
 

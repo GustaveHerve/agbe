@@ -13,7 +13,7 @@
 #include "sync.h"
 #include "utils.h"
 
-#define MEMBUS_SIZE 65536 // In bytes
+#define MEMBUS_SIZE 65536
 
 void cpu_init(struct cpu *cpu, struct renderer *rend)
 {

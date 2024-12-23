@@ -96,13 +96,12 @@ struct ppu
 
 static inline int get_lcdc(struct ppu *ppu, int bit)
 {
-    uint8_t lcdc = *ppu->lcdc;
-    return (lcdc >> bit & 0x01);
+    return *ppu->lcdc >> bit & 0x01;
 }
 
 static inline void set_stat(struct ppu *ppu, int bit)
 {
-    *ppu->stat = *ppu->stat | (0x01 << bit);
+    *ppu->stat |= 0x01 << bit;
 }
 
 static inline int get_stat(struct ppu *ppu, int bit)
@@ -112,7 +111,7 @@ static inline int get_stat(struct ppu *ppu, int bit)
 
 static inline void clear_stat(struct ppu *ppu, int bit)
 {
-    *ppu->stat = *ppu->stat & ~(0x01 << bit);
+    *ppu->stat &= ~(0x01 << bit);
 }
 
 void ppu_init(struct ppu *ppu, struct cpu *cpu, struct renderer *renderer);
