@@ -18,7 +18,7 @@ static struct
 
 static void print_usage(FILE *stream)
 {
-    fprintf(stream, "Usage: agbe [-b BOOT_ROM_PATH] ROM_PATH");
+    fprintf(stream, "Usage: gemu [-b BOOT_ROM_PATH] ROM_PATH");
     fprintf(stream, "\nOptions:\n");
     fprintf(stream, "  -b BOOT_ROM_PATH   Specify the path to the boot ROM file.\n");
     fprintf(stream, "  -h                 Show this help message and exit.\n");
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
-    window = SDL_CreateWindow("AGBE",
+    window = SDL_CreateWindow("GemuProject",
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
                               960,
