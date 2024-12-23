@@ -1,21 +1,21 @@
 # GemuProject
 GemuProject is a simple work-in-progress emulator for the GameBoy game system. (Most specifically emulating the DMG black and white model).
 
-This is a personal project that I started in the process of learning more about C programming, low level programming, assembly and video game system emulation in general. As such, it is not aimed to be an alternative for already existing GameBoy emulators and is only targeting a moderate level of accuracy (at best M-cycle level).
+This is a personal project that I started in the process of learning more about C programming, low level programming, assembly and video game system emulation in general. As such, it is not aimed to be an alternative for already existing GameBoy emulators and is only targeting a moderate level of accuracy (for now it is at best M-cycle level).
 
 Currently the following is implemented:
 - Opcodes intepreter and full CPU emulation
 - PPU using pixel FIFOs
 - Basic audio emulation
 - Basic keyboard input support (B: Z key, A: X key, Space: Select, Enter: Start, Arrow keys for D-Pad)
-- Support for no mapper, MBC1, MBC3 and MBC5, including exporting external RAM in a .sav file if the mapper has a battery
+- Support for no mapper, MBC1, MBC3 (no RTC support for now) and MBC5, including exporting external RAM in a .sav file if the mapper has a battery
 
 ## Usage
 ### Building
-For now, you can simply use the included barebones Makefile: `make`
+To build the project, you can currently run CMake (ideally in a separate build directory)
 
 ### Usage
-`./agbe [-b BOOT_ROM_PATH] ROM_PATH`
+`./gemu [-b BOOT_ROM_PATH] ROM_PATH`
 
 ## Credits
 ### Documentation
@@ -28,6 +28,6 @@ This emulator was made using the following documentation:
 
 
 ### Frameworks
-I used the following technologies and frameworks to make AGBE:
+I used the following technologies and frameworks to make GemuProject:
 - C language
 - [SDL2](https://www.libsdl.org/) for rendering, input and audio
