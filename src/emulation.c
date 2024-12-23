@@ -1,13 +1,10 @@
-#define _POSIX_C_SOURCE 199309L
-
 #include "emulation.h"
 
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <time.h>
 
+#include "SDL_events.h"
 #include "apu.h"
 #include "cpu.h"
 #include "disassembler.h"
@@ -15,6 +12,7 @@
 #include "mbc_base.h"
 #include "ppu.h"
 #include "serial.h"
+#include "sync.h"
 #include "timers.h"
 
 static void set_memory_post_boot(struct cpu *cpu)
@@ -84,6 +82,95 @@ static void set_memory_post_boot(struct cpu *cpu)
     cpu->ppu->mode1_153th = 1;
 }
 
+static SDL_bool paused = SDL_FALSE;
+
+void handle_events(struct cpu *cpu)
+{
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
+    {
+        switch (event.type)
+        {
+        case SDL_KEYDOWN:
+        {
+            switch (event.key.keysym.sym)
+            {
+            case SDLK_RIGHT:
+                cpu->joyp_d &= ~(0x01);
+                break;
+            case SDLK_LEFT:
+                cpu->joyp_d &= ~(0x02);
+                break;
+            case SDLK_UP:
+                cpu->joyp_d &= ~(0x04);
+                break;
+            case SDLK_DOWN:
+                cpu->joyp_d &= ~(0x08);
+                break;
+
+            case SDLK_x:
+                cpu->joyp_a &= ~(0x01);
+                break;
+            case SDLK_z:
+                cpu->joyp_a &= ~(0x02);
+                break;
+            case SDLK_SPACE:
+                cpu->joyp_a &= ~(0x04);
+                break;
+            case SDLK_RETURN:
+                cpu->joyp_a &= ~(0x08);
+                break;
+            case SDLK_p:
+            {
+                paused = !paused;
+                if (paused)
+                    SDL_SetWindowTitle(cpu->ppu->renderer->window, "GemuProject - Paused");
+                else
+                    SDL_SetWindowTitle(cpu->ppu->renderer->window, "GemuProject");
+                break;
+            }
+            }
+            break;
+        }
+        case SDL_KEYUP:
+        {
+            switch (event.key.keysym.sym)
+            {
+            case SDLK_RIGHT:
+                cpu->joyp_d |= 0x01;
+                break;
+            case SDLK_LEFT:
+                cpu->joyp_d |= 0x02;
+                break;
+            case SDLK_UP:
+                cpu->joyp_d |= 0x04;
+                break;
+            case SDLK_DOWN:
+                cpu->joyp_d |= 0x08;
+                break;
+
+            case SDLK_x:
+                cpu->joyp_a |= 0x01;
+                break;
+            case SDLK_z:
+                cpu->joyp_a |= 0x02;
+                break;
+            case SDLK_SPACE:
+                cpu->joyp_a |= 0x04;
+                break;
+            case SDLK_RETURN:
+                cpu->joyp_a |= 0x08;
+                break;
+            }
+        }
+        break;
+        case SDL_QUIT:
+            cpu->running = 0;
+            return;
+        }
+    }
+}
+
 void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 {
     cpu->running = 1;
@@ -139,6 +226,13 @@ void main_loop(struct cpu *cpu, char *rom_path, char *boot_rom_path)
 
     while (cpu->running)
     {
+        if (paused)
+        {
+            SDL_WaitEvent(NULL);
+            handle_events(cpu);
+            continue;
+        }
+
         if (!cpu->halt)
             next_op(cpu);
         else
@@ -165,245 +259,4 @@ void tick_m(struct cpu *cpu)
 
     if (get_lcdc(cpu->ppu, LCDC_LCD_PPU_ENABLE))
         ppu_tick_m(cpu->ppu);
-}
-
-uint8_t read_mem(struct cpu *cpu, uint16_t address)
-{
-    // DMA, can only access HRAM
-    /*
-    if (cpu->ppu->dma == 1 && (address < 0xFF80 || address > 0xFFFE))
-    {
-        return 0xFF;
-    }
-    */
-
-    // BOOTROM mapping
-    if (!(*cpu->boot & 0x01) && address <= 0x00FF)
-        return cpu->membus[address];
-
-    // ROM
-    else if (address <= 0x7FFF)
-        return read_mbc_rom(cpu, address);
-
-    // VRAM
-    else if (address >= 0x8000 && address <= 0x9FFF)
-    {
-        if (cpu->ppu->vram_locked)
-            return 0xFF;
-    }
-
-    // External RAM read
-    else if (address >= 0xA000 && address <= 0xBFFF)
-        return read_mbc_ram(cpu, address);
-
-    // Echo RAM
-    else if (address >= 0xE000 && address <= 0xFDFF)
-        return cpu->membus[address - 0x2000];
-
-    // OAM
-    else if (address >= 0xFE00 && address <= 0xFEFF)
-    {
-        if (cpu->ppu->oam_locked)
-            return 0xFF;
-    }
-
-    // JOYP
-    else if (address == 0xFF00)
-    {
-        // Neither directions nor actions buttons selected, low nibble = 0xF
-        if ((cpu->membus[address] & 0x30) == 0x30)
-            return cpu->membus[address] | 0xF;
-    }
-
-    return cpu->membus[address];
-}
-
-uint8_t read_mem_tick(struct cpu *cpu, uint16_t address)
-{
-    uint8_t res = read_mem(cpu, address);
-    tick_m(cpu);
-    return res;
-}
-
-void write_mem(struct cpu *cpu, uint16_t address, uint8_t val)
-{
-    uint8_t write = 1;
-    if (address <= 0x7FFF)
-    {
-        write = 0;
-        write_mbc_rom(cpu, address, val);
-    }
-
-    // VRAM
-    else if (address >= 0x8000 && address <= 0x9FFF)
-    {
-        if (cpu->ppu->vram_locked)
-            write = 0;
-    }
-
-    // External RAM
-    else if (address >= 0xA000 && address <= 0xBFFF)
-    {
-        write = 0;
-        write_mbc_ram(cpu, address, val);
-    }
-
-    // Echo RAM
-    else if (address >= 0xE000 && address <= 0xFDFF)
-        address -= 0x2000;
-
-    // OAM
-    else if (address >= 0xFE00 && address <= 0xFEFF)
-    {
-        if (cpu->ppu->oam_locked)
-            write = 0;
-    }
-
-    // JOYP
-    else if (address == 0xFF00)
-    {
-        write = 0;
-        val &= 0x30; // don't write in bit 3-0 and keep only bit 5-4
-        uint8_t low_nibble = 0x00;
-        if (((val >> 4) & 0x01) == 0x00)
-            low_nibble = cpu->joyp_d;
-        else if (((val >> 5) & 0x01) == 0x00)
-            low_nibble = cpu->joyp_a;
-        else
-            low_nibble = 0xF;
-        uint8_t new = low_nibble & 0x0F;
-        new |= val;
-        new |= (cpu->membus[address] & 0xC0); // keep the 7-6 bit
-        cpu->membus[address] = new;
-    }
-
-    // SC
-    else if (address == 0xFF02)
-    {
-        *cpu->sc = 0x7C | (val & 0x81);
-        write = 0;
-    }
-
-    // DIV
-    else if (address == 0xFF04)
-    {
-        cpu->internal_div = 0;
-        *cpu->div = 0;
-        write = 0;
-    }
-
-    // TAC
-    else if (address == 0xFF07)
-    {
-        *cpu->tac = 0xF8 | (val & 0x7);
-        write = 0;
-    }
-
-    // IF
-    else if (address == 0xFF0F)
-    {
-        write = 0;
-        uint8_t temp = (cpu->membus[address] & 0xE0);
-        temp |= (val & 0x1F);
-        cpu->membus[address] = temp;
-    }
-
-    // APU registers
-    else if (address == NR14 || address == NR24 || address == NR34 || address == NR44)
-    {
-        write = 0;
-        cpu->membus[address] = val & ~(NRx4_UNUSED_PART);
-        uint8_t ch_number = ((address - NR14) / (NR24 - NR14)) + 1;
-        /* Trigger event */
-        if (val & NRx4_TRIGGER_MASK)
-        {
-            static void (*trigger_handlers[])(struct apu *) = {
-                &handle_trigger_event_ch1,
-                &handle_trigger_event_ch2,
-                &handle_trigger_event_ch3,
-                &handle_trigger_event_ch4,
-            };
-
-            trigger_handlers[ch_number - 1](cpu->apu);
-        }
-
-        if (val & NRx4_LENGTH_ENABLE)
-            enable_timer(cpu->apu, ch_number);
-    }
-
-    // STAT
-    else if (address == 0xFF40)
-    {
-        // LCD off
-        if (!(val >> 6))
-            ppu_reset(cpu->ppu);
-    }
-
-    // DMA
-    else if (address == 0xFF46)
-    {
-        write = 0;
-        cpu->ppu->dma = 2;
-        cpu->ppu->dma_acc = 0;
-        cpu->ppu->dma_source = val;
-    }
-
-    // BOOT
-    else if (address == 0xFF50)
-    {
-        // Prevent enabling bootrom again
-        if (cpu->membus[0xFF50] & 0x01)
-            write = 0;
-    }
-
-    // IE
-    else if (address == 0xFFFF)
-    {
-        write = 0;
-        uint8_t temp = (cpu->membus[address] & 0xE0);
-        temp |= (val & 0x1F);
-        cpu->membus[address] = temp;
-    }
-
-    if (write)
-        cpu->membus[address] = val;
-
-    tick_m(cpu);
-}
-
-int64_t get_nanoseconds(void)
-{
-    struct timeval now;
-    gettimeofday(&now, NULL);
-    return now.tv_usec * 1000 + now.tv_sec * 1000000000L;
-}
-
-#define LCDC_PERIOD 70224
-#define SECONDS_TO_NANOSECONDS 1000000000LL
-#define MARGIN_OF_ERROR 200000000LL
-
-void synchronize(struct cpu *cpu)
-{
-    int64_t target_nanoseconds = cpu->tcycles_since_sync * SECONDS_TO_NANOSECONDS / CPU_FREQUENCY;
-    int64_t nanoseconds = get_nanoseconds();
-    int64_t time_to_sleep = target_nanoseconds + cpu->last_sync_timestamp - nanoseconds;
-    if (time_to_sleep > 0 && time_to_sleep < LCDC_PERIOD * (SECONDS_TO_NANOSECONDS + MARGIN_OF_ERROR) / CPU_FREQUENCY)
-    {
-        struct timespec sleep = {0, time_to_sleep};
-        nanosleep(&sleep, NULL);
-        cpu->last_sync_timestamp += target_nanoseconds;
-    }
-    else
-    {
-        // Emulation is late if time_to_sleep is negative
-        if (time_to_sleep < 0 &&
-            -time_to_sleep < LCDC_PERIOD * (SECONDS_TO_NANOSECONDS + MARGIN_OF_ERROR) / CPU_FREQUENCY)
-        {
-            // The difference is small enough to be negligible
-            return;
-        }
-        cpu->last_sync_timestamp = nanoseconds;
-    }
-
-    cpu->tcycles_since_sync = 0;
 }

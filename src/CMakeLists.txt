@@ -24,4 +24,6 @@ target_sources(gemu PUBLIC
     save.c
     serial.c
     apu.c
+    memory.c
+    sync.c
 )

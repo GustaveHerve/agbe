@@ -2,6 +2,7 @@
 
 #include "cpu.h"
 #include "emulation.h"
+#include "memory.h"
 #include "utils.h"
 
 // jr e (signed 8 bit)

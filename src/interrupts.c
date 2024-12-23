@@ -4,6 +4,7 @@
 
 #include "cpu.h"
 #include "emulation.h"
+#include "memory.h"
 #include "utils.h"
 
 int check_interrupt(struct cpu *cpu)

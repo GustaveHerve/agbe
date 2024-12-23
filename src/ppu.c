@@ -6,6 +6,7 @@
 #include "cpu.h"
 #include "emulation.h"
 #include "interrupts.h"
+#include "memory.h"
 #include "ppu_utils.h"
 #include "queue.h"
 #include "rendering.h"

@@ -3,6 +3,7 @@
 
 #include "cpu.h"
 #include "emulation.h"
+#include "memory.h"
 #include "utils.h"
 
 // rlc

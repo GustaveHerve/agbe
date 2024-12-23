@@ -10,6 +10,7 @@
 #include "load.h"
 #include "mbc_base.h"
 #include "ppu.h"
+#include "sync.h"
 #include "utils.h"
 
 #define MEMBUS_SIZE 65536 // In bytes
